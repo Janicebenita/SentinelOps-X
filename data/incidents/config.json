@@ -1,0 +1,1 @@
+{"title":"Payment startup configuration missing","severity":"SEV2","repair_scope":"escalate","signal":"PAYMENT_PROVIDER_KEY missing; secret value cannot be inferred"}

@@ -1,0 +1,1 @@
+{"title":"Catalog latency regression","severity":"SEV2","repair_scope":"diagnosis-only","signal":"p95 latency increased after repeated lookup loop"}

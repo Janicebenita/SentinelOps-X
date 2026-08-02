@@ -1,0 +1,60 @@
+services:
+  - type: web
+    name: janicebenita-sentinelops-nexus-api
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -e ".[dev]"
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: LLM_PROVIDER
+        value: mock
+      - key: DATABASE_URL
+        value: sqlite:////tmp/sentinelops-nexus.db
+      - key: DEMO_REPO_PATH
+        value: .
+      - key: DEMO_APP_URL
+        value: https://janicebenita-sentinelops-nexus-simulator.onrender.com
+      - key: CORS_ORIGINS
+        value: https://janicebenita-sentinelops-nexus.onrender.com
+
+  - type: web
+    name: janicebenita-sentinelops-nexus-simulator
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -e .
+    startCommand: uvicorn demo_app.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+
+  - type: web
+    name: janicebenita-sentinelops-nexus
+    runtime: static
+    branch: main
+    buildCommand: corepack enable && cd frontend && pnpm install --frozen-lockfile && pnpm run build
+    staticPublishPath: frontend/dist
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: VITE_API_BASE_URL
+        value: https://janicebenita-sentinelops-nexus-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

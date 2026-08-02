@@ -1,0 +1,2 @@
+allowed: [pytest, python, ruff, mypy, bandit, "git diff", "git status", "git show"]
+network: false

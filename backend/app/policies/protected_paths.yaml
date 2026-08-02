@@ -1,0 +1,1 @@
+paths: [.env, .github/, policies/, sandbox/, deployment/, secrets/, migrations/]

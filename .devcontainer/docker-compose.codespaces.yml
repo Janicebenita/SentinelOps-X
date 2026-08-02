@@ -1,0 +1,5 @@
+services:
+  backend:
+    environment:
+      CODESPACES: "true"
+      LLM_PROVIDER: mock

@@ -1,0 +1,35 @@
+name: Validate SentinelOps
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - run: python -m pip install -e ".[dev]"
+      - run: npm install
+        working-directory: frontend
+      - name: Frontend type check
+        run: npm exec tsc -- --noEmit
+        working-directory: frontend
+      - name: Frontend production build
+        run: npm run build
+        working-directory: frontend
+      - run: make test
+      - run: make lint
+      - run: make typecheck
+      - run: make security
+      - name: Start complete demo
+        run: make demo > /tmp/sentinelops-demo.log 2>&1 &
+      - run: python scripts/health_check.py
+      - run: python scripts/validate_e2e.py
+      - name: Demo log
+        if: always()
+        run: cat /tmp/sentinelops-demo.log

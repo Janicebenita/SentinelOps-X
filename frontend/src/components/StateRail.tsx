@@ -1,0 +1,2 @@
+const states=['ALERT_RECEIVED','COLLECTING_EVIDENCE','HYPOTHESES_READY','REPRODUCTION_CONFIRMED','PATCH_READY','VERIFICATION_PASSED','AWAITING_APPROVAL','COMPLETED']
+export function StateRail({current}:{current:string}){const at=states.indexOf(current);return <div className="rail" aria-label={`Workflow state ${current}`}>{states.map((s,i)=><div key={s} className={`rail-step ${i<=at||current==='COMPLETED'?'done':''}`}><i/ ><span>{s.replaceAll('_',' ')}</span></div>)}</div>}

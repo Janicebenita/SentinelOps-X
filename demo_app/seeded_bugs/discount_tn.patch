@@ -1,0 +1,5 @@
+--- a/demo_app/app/main.py
++++ b/demo_app/app/main.py
+@@
+-        tax = taxable * cast(Decimal, rate) if order.discount_code else taxable * (rate or Decimal("0"))
++        tax = taxable * (rate or Decimal("0"))

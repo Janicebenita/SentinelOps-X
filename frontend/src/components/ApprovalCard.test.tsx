@@ -1,0 +1,1 @@
+import {render,screen} from '@testing-library/react';import {describe,it,expect} from 'vitest';import {ApprovalCard} from './ApprovalCard';describe('ApprovalCard',()=>{it('blocks approval until ready',()=>{render(<ApprovalCard ready={false} onApprove={()=>{}} onReject={()=>{}}/>);expect((screen.getByText('Approve PR') as HTMLButtonElement).disabled).toBe(true)})})
