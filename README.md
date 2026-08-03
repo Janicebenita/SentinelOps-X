@@ -21,11 +21,11 @@
 
 <p align="center">
   <a href="https://janicebenita-sentinelops-nexus.onrender.com"><strong>Open Live Demo</strong></a> ·
-  <a href="#-quick-start"><strong>Quick Start</strong></a> ·
-  <a href="#-architecture"><strong>Architecture</strong></a> ·
-  <a href="#-guided-product-demo"><strong>Product Demo</strong></a> ·
-  <a href="#-safety-by-design"><strong>Safety</strong></a> ·
-  <a href="#-validation-evidence"><strong>Evidence</strong></a>
+  <a href="#quick-start"><strong>Quick Start</strong></a> ·
+  <a href="#architecture"><strong>Architecture</strong></a> ·
+  <a href="#product-demo"><strong>Product Demo</strong></a> ·
+  <a href="#safety"><strong>Safety</strong></a> ·
+  <a href="#validation-evidence"><strong>Evidence</strong></a>
 </p>
 
 > [!IMPORTANT]
