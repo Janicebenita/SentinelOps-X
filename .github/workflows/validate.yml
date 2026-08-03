@@ -30,7 +30,8 @@ jobs:
       - name: Start complete demo
         run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
       - run: python scripts/health_check.py
-      - run: python scripts/validate_e2e.py
+      - name: Validate Nexus workflow end to end
+        run: python scripts/nexus_e2e.py
       - name: Demo log
         if: always()
         run: test ! -f /tmp/sentinelops-demo.log || cat /tmp/sentinelops-demo.log
