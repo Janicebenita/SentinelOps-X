@@ -13,8 +13,7 @@
 - **Why one fully repairable incident?** The MVP prioritizes one credible end-to-end proof over shallow templates.
 - **What data is required?** Scoped logs, metrics, traces, repository history and tests.
 - **How are credentials protected?** Environment-only configuration, redacted provider errors, no sandbox secrets, and ignored `.env` files.
-# Finale judge Q&A
-
+# Finale Q & A
 **What is novel?** SentinelOps evaluates several plausible repairs inside one immutable incident twin, then uses counterfactual replay and deterministic eligibility to detect false fixes before human approval.
 
 **Why are multiple candidates safer?** A single generated patch can pass the original regression while masking a symptom. The tournament makes alternatives, risks, failed gates, and nearby behavior directly comparable.
