@@ -2,7 +2,7 @@
 
 - **Is this just a coding assistant?** No. It owns a persisted incident lifecycle, gathers evidence, runs experiments, applies deterministic gates, and requests approval.
 - **Why is it agentic?** It selects and executes bounded tools across observation, hypothesis, reproduction, repair and verification states.
-- **Why is mock mode acceptable?** It makes judging deterministic and key-free while exercising the real state machine, tests, sandbox and policy.
+- **Why is mock mode acceptable?** It makes validation deterministic and key-free while exercising the real state machine, tests, sandbox and policy.
 - **What executes for real?** The failing API, telemetry, regression, copied workspace patch, tests, lint, type and security gates.
 - **What is simulated?** The default PR is a local record and incidents 2–3 abstain after diagnosis.
 - **How is unsafe code contained?** Network-disabled Docker or an allowlisted temporary Local Sandbox.
