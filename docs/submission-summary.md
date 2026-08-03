@@ -1,6 +1,6 @@
 # Submission summary
 
-The complete product requirements are documented in the [SentinelOps Nexus PRD](product-requirements.md).
+The complete product requirements are documented in the [SentinelOps Nexus PRD](PRD.md).
 
 ## SentinelOps Nexus — The Enterprise Operational Digital Twin
 
