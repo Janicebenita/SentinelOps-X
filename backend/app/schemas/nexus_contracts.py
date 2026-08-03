@@ -25,7 +25,13 @@ class TwinControls(StrictModel):
     dependency_latency_ms: int = Field(20, ge=0, le=5000)
     failover_state: Literal["primary", "replica", "unavailable"] = "primary"
     seed: int = 20260808
-    business: BusinessAssumptions = Field(default_factory=BusinessAssumptions)
+    business: BusinessAssumptions = Field(default_factory=lambda: BusinessAssumptions(
+        conversion_rate=0.034,
+        average_order_value_inr=3200,
+        risk_window_minutes=60,
+        projected_failure_rate=0.18,
+        sla_penalty_inr=250000,
+    ))
 
 
 class TelemetryPoint(StrictModel):
@@ -189,4 +195,11 @@ class HumanDecisionInput(StrictModel):
 
 class RunCreate(StrictModel):
     name: str = Field("Payment Service capacity forecast", min_length=3, max_length=160)
-    controls: TwinControls = Field(default_factory=TwinControls)
+    controls: TwinControls = Field(default_factory=lambda: TwinControls(
+        traffic_multiplier=1,
+        redis_capacity=12000,
+        application_replicas=4,
+        dependency_latency_ms=20,
+        failover_state="primary",
+        seed=20260808,
+    ))

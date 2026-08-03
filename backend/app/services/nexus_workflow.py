@@ -7,7 +7,7 @@ import zipfile
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -36,6 +36,7 @@ SCENARIOS = [
     "baseline-growth", "redis-crash", "redis-latency", "replica-failover",
     "10x-traffic", "million-user-stress", "reduced-redis-capacity",
     "increased-app-replicas", "rollback-intervention", "rate-limiting-intervention",
+    "cache-policy-correction", "configuration-drift",
 ]
 STATE_ORDER = ["CREATED", "OBSERVED", "PREDICTED", "TWIN_READY", "SIMULATED", "TOURNAMENT_READY", "VERIFIED", "IMPACT_READY", "RECOMMENDED", "DECIDED"]
 
@@ -115,7 +116,7 @@ def create_run(db: Session, payload: RunCreate) -> NexusRun:
 
 def observe(db: Session, run: NexusRun) -> list[EvidenceRecord]:
     require_state(run, "CREATED"); controls=TwinControls.model_validate(run.inputs_json); points=telemetry(controls)
-    evidence_specs=[
+    evidence_specs: list[tuple[str, str, str, dict[str, Any], str]] = [
         ("ev-telemetry","telemetry","seeded/payment-service",{"points":[x.model_dump(mode="json") for x in points]},"Five-point operational window normalised."),
         ("ev-topology","topology","seeded/service-map",{"path":["checkout-api","payment-service","redis-primary"]},"Critical payment path reconstructed."),
         ("ev-config","configuration","seeded/runtime-config",{"redis_capacity":controls.redis_capacity,"application_replicas":controls.application_replicas},"Capacity constraints captured."),
@@ -123,8 +124,9 @@ def observe(db: Session, run: NexusRun) -> list[EvidenceRecord]:
     ]
     records=[]
     for eid,category,source,payload,summary in evidence_specs:
-        content_hash=digest(payload); row=NexusEvidence(run_id=run.id,evidence_id=eid,category=category,source=source,payload_json=payload,summary=summary,content_hash=content_hash); db.add(row)
-        records.append(EvidenceRecord(evidence_id=eid,category=category,source=source,observed_at=row.observed_at,payload=payload,summary=summary,content_hash=content_hash))
+        observed_at = datetime.now(timezone.utc)
+        content_hash=digest(payload); row=NexusEvidence(run_id=run.id,evidence_id=eid,category=category,source=source,observed_at=observed_at,payload_json=payload,summary=summary,content_hash=content_hash); db.add(row)
+        records.append(EvidenceRecord(evidence_id=eid,category=category,source=source,observed_at=observed_at,payload=payload,summary=summary,content_hash=content_hash))
     db.commit(); transition(db,run,"OBSERVED","observer-agent",{"evidence_ids":[x.evidence_id for x in records]}); return records
 
 
@@ -144,14 +146,15 @@ def predict(db: Session, run: NexusRun) -> ForecastResult:
 
 def build_twin(db: Session, run: NexusRun) -> TwinManifestContract:
     require_state(run,"PREDICTED"); controls=TwinControls.model_validate(run.inputs_json); forecast=ForecastResult.model_validate(run.forecast_json); topo=topology(db,run); evidence=[x.evidence_id for x in db.scalars(select(NexusEvidence).where(NexusEvidence.run_id==run.id))]
-    created=datetime.now(timezone.utc); core={"source_revision":source_revision(),"service_topology_hash":digest(topo.model_dump(mode="json")),"telemetry_window_hash":digest([x.model_dump(mode="json") for x in telemetry(controls)]),"configuration_hash":digest(controls.model_dump(mode="json")),"dependency_fingerprint":digest({"python":"3.11+","engine":"deterministic-v1"}),"forecasting_parameters":forecast.model_dump(mode="json"),"random_seed":controls.seed,"capacity_constraints":{"redis_capacity":controls.redis_capacity,"application_replicas":controls.application_replicas},"slo_definitions":{"p95_ms":500,"error_rate_pct":5},"business_assumptions":controls.business.model_dump(mode="json"),"network_policy":"disabled","allowed_scenarios":SCENARIOS,"resource_limits":{"cpu":1,"memory_mb":512,"timeout_seconds":30},"evidence_references":evidence}
-    manifest_hash=digest(core); result=TwinManifestContract(twin_id=f"twin-{manifest_hash[:12]}",created_at=created,manifest_hash=manifest_hash,limitation="Bounded operational model under documented assumptions; not a perfect replica.",**core)
+    created=datetime.now(timezone.utc)
+    result=TwinManifestContract(twin_id="pending",created_at=created,source_revision=source_revision(),service_topology_hash=digest(topo.model_dump(mode="json")),telemetry_window_hash=digest([x.model_dump(mode="json") for x in telemetry(controls)]),configuration_hash=digest(controls.model_dump(mode="json")),dependency_fingerprint=digest({"python":"3.11+","engine":"deterministic-v1"}),forecasting_parameters=forecast.model_dump(mode="json"),random_seed=controls.seed,capacity_constraints={"redis_capacity":controls.redis_capacity,"application_replicas":controls.application_replicas},slo_definitions={"p95_ms":500,"error_rate_pct":5},business_assumptions=controls.business,network_policy="disabled",allowed_scenarios=SCENARIOS,resource_limits={"cpu":1,"memory_mb":512,"timeout_seconds":30},evidence_references=evidence,manifest_hash="pending",limitation="Bounded operational model under documented assumptions; not a perfect replica.")
+    core=result.model_dump(mode="json",exclude={"twin_id","created_at","manifest_hash","limitation"}); manifest_hash=digest(core); result=result.model_copy(update={"twin_id":f"twin-{manifest_hash[:12]}","manifest_hash":manifest_hash})
     run.twin_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"TWIN_READY","digital-twin-agent",{"twin_id":result.twin_id,"manifest_hash":result.manifest_hash}); return result
 
 
 def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
-    require_state(run,"TWIN_READY"); controls=TwinControls.model_validate(run.inputs_json); twin=TwinManifestContract.model_validate(run.twin_json); definitions=[
-        ("baseline-growth",{},"fail",False,620,7.4,45),("redis-crash",{"redis":"crashed"},"fail",False,5000,100,18),("redis-latency",{"latency_ms":250},"degraded",False,780,3.2,20),("replica-failover",{"failover":"replica"},"degraded",True,410,1.1,8),("10x-traffic",{"traffic_multiplier":10},"fail",False,3400,42,30),("million-user-stress",{"sessions":1000000},"fail",False,4200,58,35),("reduced-redis-capacity",{"capacity":round(controls.redis_capacity*.6)},"fail",False,1800,22,25),("increased-app-replicas",{"application_replicas":8},"degraded",False,560,5.4,12),("rollback-intervention",{"rollback":True},"pass",True,230,.3,6),("rate-limiting-intervention",{"rate_limit_pct":15},"pass",True,280,.4,5)]
+    require_state(run,"TWIN_READY"); controls=TwinControls.model_validate(run.inputs_json); twin=TwinManifestContract.model_validate(run.twin_json); definitions: list[tuple[str, dict[str, Any], Literal["pass", "degraded", "fail"], bool, float, float, int]] = [
+        ("baseline-growth",{},"fail",False,620,7.4,45),("redis-crash",{"redis":"crashed"},"fail",False,5000,100,18),("redis-latency",{"latency_ms":250},"degraded",False,780,3.2,20),("replica-failover",{"failover":"replica"},"degraded",True,410,1.1,8),("10x-traffic",{"traffic_multiplier":10},"fail",False,3400,42,30),("million-user-stress",{"sessions":1000000},"fail",False,4200,58,35),("reduced-redis-capacity",{"capacity":round(controls.redis_capacity*.6)},"fail",False,1800,22,25),("increased-app-replicas",{"application_replicas":8},"degraded",False,560,5.4,12),("rollback-intervention",{"rollback":True},"pass",True,230,.3,6),("rate-limiting-intervention",{"rate_limit_pct":15},"pass",True,280,.4,5),("cache-policy-correction",{"cache_ttl_seconds":180},"pass",True,205,.2,7),("configuration-drift",{"replica_capacity_mismatch_pct":35},"degraded",False,690,2.6,14)]
     results=[]
     for sid,inputs,status,avoided,p95,error,recovery in definitions:
         body={"scenario_id":sid,"seed":twin.random_seed,"inputs":inputs,"p95_ms":p95,"error_rate_pct":error}; results.append(ScenarioResultContract(scenario_id=sid,name=sid.replace("-"," ").title(),inputs=inputs,status=status,bottleneck_avoided=avoided,p95_ms=p95,error_rate_pct=error,recovery_minutes=recovery,result_hash=digest(body),evidence_ids=["ev-telemetry","ev-config","ev-topology"]))
@@ -164,14 +167,14 @@ WEIGHTS={"benefit":.22,"stability":.16,"safety":.16,"performance":.12,"cost":.10
 
 def tournament(db: Session, run: NexusRun) -> TournamentResult:
     require_state(run,"SIMULATED"); twin=TwinManifestContract.model_validate(run.twin_json)
-    specs=[("fast","FAST","Immediately scale application replicas",42000,32,4,False,"failover_test"),("safe","SAFE","Scale Redis capacity, enable controlled failover, and apply bounded traffic shaping",118000,14,9,True,""),("optimal","OPTIMAL","Increase Redis capacity, correct cache policy, and scale applications gradually",154000,9,6,True,"")]
+    specs: list[tuple[Literal["fast", "safe", "optimal"], str, str, int, int, int, bool, str]] = [("fast","FAST","Immediately scale application replicas",42000,32,4,False,"failover_test"),("safe","SAFE","Scale Redis capacity, enable controlled failover, and apply bounded traffic shaping",118000,14,9,True,""),("optimal","OPTIMAL","Increase Redis capacity, correct cache policy, and scale applications gradually",154000,9,6,True,"")]
     candidates=[]
     for cid,name,action,cost,risk,recovery,reversible,failed_gate in specs:
         gates=[GateResult(gate=g,passed=g!=failed_gate,details=("Replica oscillation exceeded the bounded failover policy." if g==failed_gate else "Deterministic check passed under the shared Twin manifest."),evidence_ids=["ev-config","ev-topology"]) for g in GATE_NAMES]
         components={"benefit":.92 if cid!="fast" else .78,"stability":.96 if cid=="optimal" else .84,"safety":1-risk/100,"performance":.94 if cid=="optimal" else .86,"cost":max(0,1-cost/250000),"recovery":1-recovery/30,"reversibility":1.0 if reversible else .35,"evidence":1.0}
         score=round(100*sum(WEIGHTS[k]*v for k,v in components.items()),1); eligible=all(g.passed for g in gates)
         candidates.append(InterventionCandidate(candidate_id=cid,name=name,action=action,expected_benefit="Avoid the projected Redis safe-capacity crossing while preserving checkout SLO.",cost_estimate_inr=cost,risk_score=risk,recovery_minutes=recovery,reversible=reversible,assumptions=["Capacity can be provisioned within the stated recovery window","Traffic-shaping policy is available"],gates=gates,score_components=components,score=score,eligible=eligible,verdict=("Eligible: all mandatory gates passed." if eligible else f"Disqualified: mandatory gate {failed_gate} failed.")))
-    eligible=[x for x in candidates if x.eligible]; winner=max(eligible,key=lambda x:x.score)
+    eligible_candidates=[x for x in candidates if x.eligible]; winner=max(eligible_candidates,key=lambda x:x.score)
     result=TournamentResult(candidates=candidates,recommended_candidate_id=winner.candidate_id,weights=WEIGHTS,rule="Eligibility overrides score; an ineligible candidate can never be recommended.",twin_id=twin.twin_id)
     run.tournament_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"TOURNAMENT_READY","optimisation-agent",{"recommended":winner.candidate_id,"fast_eligible":candidates[0].eligible}); return result
 

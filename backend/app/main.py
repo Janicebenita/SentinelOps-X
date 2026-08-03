@@ -2,7 +2,7 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, text
-from .api import router
+from .api import nexus_router, router
 from .config import settings
 from .database import Base,SessionLocal,engine
 from .models import Incident
@@ -15,6 +15,7 @@ with SessionLocal() as startup_db:
 app=FastAPI(title="SentinelOps Nexus API",version="2.0.0",description="The Enterprise Operational Digital Twin: predictive, evidence-driven, and human-controlled")
 app.add_middleware(CORSMiddleware,allow_origins=[x.strip() for x in settings.cors_origins.split(",") if x.strip()],allow_methods=["GET","POST"],allow_headers=["Content-Type"])
 app.include_router(router)
+app.include_router(nexus_router)
 @app.get("/health")
 def health():
     database=False; seeded=False
