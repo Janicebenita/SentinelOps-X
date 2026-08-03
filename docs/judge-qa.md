@@ -1,4 +1,4 @@
-# Judge Q&A
+# Technical Q&A
 
 - **Is this just a coding assistant?** No. It owns a persisted incident lifecycle, gathers evidence, runs experiments, applies deterministic gates, and requests approval.
 - **Why is it agentic?** It selects and executes bounded tools across observation, hypothesis, reproduction, repair and verification states.
