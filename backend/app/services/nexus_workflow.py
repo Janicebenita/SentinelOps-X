@@ -16,6 +16,7 @@ from ..models import NexusAuditEvent, NexusEvidence, NexusRun
 from ..schemas.nexus_contracts import (
     AgentEnvelope,
     BusinessImpactResult,
+    EvidenceUpload,
     EvidenceRecord,
     ExecutiveBrief,
     ForecastResult,
@@ -63,6 +64,18 @@ def require_run(db: Session, run_id: int) -> NexusRun:
 def require_state(run: NexusRun, *states: str) -> None:
     if run.state not in states:
         raise ValueError(f"State {run.state} cannot perform this action; expected {', '.join(states)}")
+
+
+def upload_evidence(db: Session, run: NexusRun, upload: EvidenceUpload) -> NexusEvidence:
+    try:
+        parsed: Any = json.loads(upload.content)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Uploaded evidence must contain valid JSON") from exc
+    content_hash = digest(parsed)
+    row = NexusEvidence(run_id=run.id,evidence_id=f"manual-{content_hash[:12]}",category=upload.category,source=f"manual-upload/{upload.filename}",observed_at=datetime.now(timezone.utc),payload_json={"document":parsed},summary=f"User-uploaded {upload.category} evidence: {upload.filename}",content_hash=content_hash)
+    db.add(row); db.commit(); db.refresh(row)
+    append_event(db,run,"evidence.uploaded","human-operator",{"evidence_id":row.evidence_id,"filename":upload.filename,"category":upload.category,"content_hash":content_hash})
+    return row
 
 
 def append_event(db: Session, run: NexusRun, event_type: str, actor: str, payload: dict[str, Any]) -> NexusAuditEvent:
@@ -153,11 +166,45 @@ def build_twin(db: Session, run: NexusRun) -> TwinManifestContract:
 
 
 def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
-    require_state(run,"TWIN_READY"); controls=TwinControls.model_validate(run.inputs_json); twin=TwinManifestContract.model_validate(run.twin_json); definitions: list[tuple[str, dict[str, Any], Literal["pass", "degraded", "fail"], bool, float, float, int]] = [
-        ("baseline-growth",{},"fail",False,620,7.4,45),("redis-crash",{"redis":"crashed"},"fail",False,5000,100,18),("redis-latency",{"latency_ms":250},"degraded",False,780,3.2,20),("replica-failover",{"failover":"replica"},"degraded",True,410,1.1,8),("10x-traffic",{"traffic_multiplier":10},"fail",False,3400,42,30),("million-user-stress",{"sessions":1000000},"fail",False,4200,58,35),("reduced-redis-capacity",{"capacity":round(controls.redis_capacity*.6)},"fail",False,1800,22,25),("increased-app-replicas",{"application_replicas":8},"degraded",False,560,5.4,12),("rollback-intervention",{"rollback":True},"pass",True,230,.3,6),("rate-limiting-intervention",{"rate_limit_pct":15},"pass",True,280,.4,5),("cache-policy-correction",{"cache_ttl_seconds":180},"pass",True,205,.2,7),("configuration-drift",{"replica_capacity_mismatch_pct":35},"degraded",False,690,2.6,14)]
+    require_state(run,"TWIN_READY"); controls=TwinControls.model_validate(run.inputs_json); twin=TwinManifestContract.model_validate(run.twin_json)
+    # Every scenario is evaluated from the submitted controls.  The modifiers are
+    # explicit so the lab remains explainable while still behaving like a model,
+    # rather than a collection of pre-recorded outcomes.
+    definitions: list[tuple[str, dict[str, Any]]] = [
+        ("baseline-growth",{"load_factor":1.18}),
+        ("redis-crash",{"redis_available":False}),
+        ("redis-latency",{"additional_latency_ms":250}),
+        ("replica-failover",{"failover":"replica","capacity_factor":.82}),
+        ("10x-traffic",{"traffic_multiplier":10}),
+        ("million-user-stress",{"sessions":1000000,"load_factor":7.5}),
+        ("reduced-redis-capacity",{"redis_capacity":round(controls.redis_capacity*.6)}),
+        ("increased-app-replicas",{"application_replicas":min(50,controls.application_replicas+4)}),
+        ("rollback-intervention",{"load_factor":.72,"latency_factor":.82}),
+        ("rate-limiting-intervention",{"load_factor":.76,"rate_limit_pct":24}),
+        ("cache-policy-correction",{"load_factor":.62,"cache_ttl_seconds":180}),
+        ("configuration-drift",{"capacity_factor":.65,"replica_capacity_mismatch_pct":35}),
+    ]
     results=[]
-    for sid,inputs,status,avoided,p95,error,recovery in definitions:
-        body={"scenario_id":sid,"seed":twin.random_seed,"inputs":inputs,"p95_ms":p95,"error_rate_pct":error}; results.append(ScenarioResultContract(scenario_id=sid,name=sid.replace("-"," ").title(),inputs=inputs,status=status,bottleneck_avoided=avoided,p95_ms=p95,error_rate_pct=error,recovery_minutes=recovery,result_hash=digest(body),evidence_ids=["ev-telemetry","ev-config","ev-topology"]))
+    for sid,modifier in definitions:
+        scenario_traffic=float(modifier.get("traffic_multiplier",controls.traffic_multiplier))*float(modifier.get("load_factor",1))
+        scenario_capacity=float(modifier.get("redis_capacity",controls.redis_capacity))*float(modifier.get("capacity_factor",1))
+        scenario_replicas=int(modifier.get("application_replicas",controls.application_replicas))
+        dependency_latency=(controls.dependency_latency_ms+int(modifier.get("additional_latency_ms",0)))*float(modifier.get("latency_factor",1))
+        effective_capacity=scenario_capacity*max(.65,scenario_replicas/4)
+        saturation=min(180,98*12000/max(1,effective_capacity)*scenario_traffic)
+        if modifier.get("redis_available") is False:
+            p95,error,recovery=5000.0,100.0,max(8,round(24/scenario_replicas+12))
+        else:
+            pressure=max(0,saturation-68)
+            p95=round(120+pressure**1.55+dependency_latency,1)
+            error=round(min(100,max(0,saturation-88)**1.35/6),2)
+            recovery=max(2,round(3+pressure/5+dependency_latency/100))
+            if modifier.get("failover")=="replica": p95=round(p95*1.18,1); recovery+=3
+        status: Literal["pass","degraded","fail"] = "fail" if error>=5 or p95>=900 else ("degraded" if error>=1 or p95>=500 else "pass")
+        avoided=status=="pass" and sid in {"replica-failover","increased-app-replicas","rollback-intervention","rate-limiting-intervention","cache-policy-correction"}
+        inputs={"base_controls":controls.model_dump(mode="json",exclude={"business"}),"scenario_modifier":modifier,"calculated_saturation_pct":round(saturation,1)}
+        body={"scenario_id":sid,"seed":twin.random_seed,"inputs":inputs,"status":status,"p95_ms":p95,"error_rate_pct":error,"recovery_minutes":recovery}
+        results.append(ScenarioResultContract(scenario_id=sid,name=sid.replace("-"," ").title(),inputs=inputs,status=status,bottleneck_avoided=avoided,p95_ms=p95,error_rate_pct=error,recovery_minutes=recovery,result_hash=digest(body),evidence_ids=["ev-telemetry","ev-config","ev-topology"]))
     run.scenarios_json=[x.model_dump(mode="json") for x in results]; db.commit(); transition(db,run,"SIMULATED","simulation-agent",{"scenario_count":len(results),"result_hashes":[x.result_hash for x in results]}); return results
 
 

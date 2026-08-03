@@ -57,7 +57,9 @@ Eligibility overrides score. A failed mandatory gate can never be outweighed by 
 The command centre now supports two complementary paths from the mode switcher at the top of the live UI:
 
 - **One-click Guided Demo** starts a six-stop auto-playing tour of the early signal, transparent forecast, bounded Twin, deterministic scenarios, false-fix rejection, and human decision boundary. The tour can be paused, moved forwards or backwards, or exited at any point. It never presses the approval button.
-- **Explore Mode** exposes four bounded controls and four presets. Change traffic, Redis capacity, application replicas, and dependency latency; persist a new workflow; replay all twelve scenarios; then select any scenario to inspect its inputs, recovery, outcome, and deterministic hash.
+- **Explore Mode** exposes four bounded controls, four presets, and a manual operational-JSON upload. Change or import traffic, Redis capacity, application replicas, and dependency latency; persist a new workflow; replay all twelve backend-calculated scenarios; then select any scenario to inspect its inputs, recovery, outcome, and deterministic hash. Uploaded evidence is content-hashed and recorded in the backend audit chain.
+
+Use [`docs/sample-explore-controls.json`](docs/sample-explore-controls.json) to exercise the upload workflow.
 
 Both modes use the real versioned API. Rerun means simulation only, approval means decision recording only, and **PRODUCTION ACTION: NOT EXECUTED** remains visible throughout.
 

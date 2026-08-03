@@ -47,6 +47,23 @@ def test_full_workflow_is_reproducible_and_human_gated(db):
     assert [item["result_hash"] for item in replay.scenarios_json] == scenario_hashes
 
 
+def test_scenarios_are_calculated_from_explore_controls(db):
+    baseline = nexus.create_run(db, RunCreate(name="Baseline"))
+    nexus.run_all(db, baseline)
+    resilient = nexus.create_run(db, RunCreate(
+        name="Resilient",
+        controls=TwinControls(redis_capacity=50000, application_replicas=12, dependency_latency_ms=10),
+    ))
+    nexus.run_all(db, resilient)
+
+    base_growth = next(x for x in baseline.scenarios_json if x["scenario_id"] == "baseline-growth")
+    resilient_growth = next(x for x in resilient.scenarios_json if x["scenario_id"] == "baseline-growth")
+    assert resilient_growth["p95_ms"] < base_growth["p95_ms"]
+    assert resilient_growth["error_rate_pct"] < base_growth["error_rate_pct"]
+    assert resilient_growth["result_hash"] != base_growth["result_hash"]
+    assert resilient_growth["inputs"]["base_controls"]["redis_capacity"] == 50000
+
+
 def test_invalid_transition_and_approval_bypass_are_blocked(db):
     run = nexus.create_run(db, RunCreate(name="Payment Service capacity forecast"))
     try:
@@ -97,6 +114,15 @@ def test_versioned_api_end_to_end(client):
     assert len(client.get(f"/api/v1/workflows/{run_id}/evidence").json()) == 4
     assert len(client.get(f"/api/v1/workflows/{run_id}/timeline").json()) >= 9
     assert len(client.get(f"/api/v1/workflows/{run_id}/agents").json()) >= 9
+
+    uploaded = client.post(f"/api/v1/workflows/{run_id}/evidence/upload", json={
+        "filename": "capacity.json",
+        "category": "configuration",
+        "content": '{"controls":{"redis_capacity":24000}}',
+    })
+    assert uploaded.status_code == 200
+    assert uploaded.json()["source"] == "manual-upload/capacity.json"
+    assert client.get(f"/api/v1/workflows/{run_id}/timeline").json()[-1]["event_type"] == "evidence.uploaded"
 
     wrong = client.post(f"/api/v1/workflows/{run_id}/approve", json={"actor": "judge", "decision": "reject", "rationale": "No"})
     assert wrong.status_code == 422

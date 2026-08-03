@@ -34,6 +34,12 @@ class TwinControls(StrictModel):
     ))
 
 
+class EvidenceUpload(StrictModel):
+    filename: str = Field(min_length=1, max_length=160)
+    category: Literal["telemetry", "configuration", "topology", "slo", "other"] = "configuration"
+    content: str = Field(min_length=2, max_length=262144)
+
+
 class TelemetryPoint(StrictModel):
     label: str
     minute: int

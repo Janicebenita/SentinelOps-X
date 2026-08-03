@@ -10,6 +10,7 @@ export const nexusApi={
  create:(controls:Record<string,unknown>)=>req<NexusRun>('/api/v1/workflows',{method:'POST',body:JSON.stringify({name:'Payment Service capacity forecast',controls})}),
  telemetry:(id:number)=>req<NexusTelemetry[]>(`/api/v1/telemetry?run_id=${id}`),
  evidence:(id:number)=>req<NexusEvidenceV1[]>(`/api/v1/workflows/${id}/evidence`),
+ uploadEvidence:(id:number,payload:{filename:string;category:string;content:string})=>req<NexusEvidenceV1>(`/api/v1/workflows/${id}/evidence/upload`,{method:'POST',body:JSON.stringify(payload)}),
  timeline:(id:number)=>req<NexusAuditV1[]>(`/api/v1/workflows/${id}/timeline`),
  agents:(id:number)=>req<NexusAgent[]>(`/api/v1/workflows/${id}/agents`),
  approve:(id:number)=>req<Record<string,unknown>>(`/api/v1/workflows/${id}/approve`,{method:'POST',body:JSON.stringify({actor:'finale-judge',decision:'approve',rationale:'Reviewed all deterministic gates and evidence references.'})}),

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import NexusAuditEvent, NexusEvidence, NexusRun
-from ..schemas.nexus_contracts import HumanDecisionInput, RunCreate, TwinControls
+from ..schemas.nexus_contracts import EvidenceUpload, HumanDecisionInput, RunCreate, TwinControls
 from ..services import nexus_workflow as workflow
 
 router = APIRouter(prefix="/api/v1", tags=["SentinelOps Nexus"])
@@ -166,6 +166,11 @@ def evidence(run_id: int, db: Db) -> list[dict[str, Any]]:
     _run(db, run_id)
     rows = db.scalars(select(NexusEvidence).where(NexusEvidence.run_id == run_id).order_by(NexusEvidence.id)).all()
     return [workflow.serialize(row) for row in rows]
+
+
+@router.post("/workflows/{run_id}/evidence/upload")
+def upload_evidence(run_id: int, payload: EvidenceUpload, db: Db) -> dict[str, Any]:
+    return workflow.serialize(_action(lambda: workflow.upload_evidence(db, _run(db, run_id), payload)))
 
 
 @router.get("/workflows/{run_id}/agents")
