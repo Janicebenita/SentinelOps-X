@@ -62,17 +62,17 @@ This is not another alert dashboard. It is a bounded, reproducible operational d
 | Capability | What the operator receives | Why it matters |
 |---|---|---|
 | 🔭 Early bottleneck forecast | Safe-capacity crossing and likely customer-impact window | Moves response from reactive to preventive |
-| 🧬 Bounded Digital Twin | Immutable, content-hashed operational model | Makes every replay traceable and comparable |
+| 🧬 Bounded Digital Twin | Version-locked, content-hashed operational model | Makes every replay traceable and comparable |
 | 🧪 Deterministic scenario lab | 12 reproducible failure and intervention scenarios | Produces independently verifiable evidence |
 | 🏟️ Intervention tournament | FAST, SAFE, and OPTIMAL compared on the same Twin | Prevents recommendation by intuition alone |
 | 🛡️ Mandatory safety gates | Unsafe candidates are disqualified regardless of score | Makes safety a rule, not a suggestion |
 | 💰 Explainable business impact | Visible equations, assumptions, and exposure estimates | Connects engineering risk to business decisions |
 | 👤 Human-governed approval | Named decision, rationale, and audit record | Preserves accountability and control |
-| 📦 Evidence export | Verifiable ZIP with hashes, scenarios, decisions, and audit events | Supports review, compliance, and reproducibility |
+| 📦 Evidence export | Verifiable ZIP with hashes, scenarios, decisions, and audit events | Supports review, governance, and reproducibility |
 
 ---
 
-## 🎯 Canonical Evaluation Story
+## 🎯 Canonical Product Workflow
 
 The seeded **Payment Service** begins healthy while traffic and Redis memory pressure rise. Nexus:
 
@@ -94,7 +94,7 @@ The seeded **Payment Service** begins healthy while traffic and Redis memory pre
 | What bottleneck is emerging? | Redis saturation on the Payment Service critical path |
 | When is safe capacity crossed? | **+30 minutes** in the canonical deterministic seed |
 | When may customers be affected? | **+45 minutes**, subject to displayed assumptions |
-| How many scenarios are replayed? | **12**, using the same Twin manifest and random seed |
+| How many scenarios are replayed? | **12**, using the same Twin manifest and fixed seed |
 | Which false fix is detected? | **FAST**, rejected by the mandatory failover safety gate |
 | Which strategy is recommended? | Highest-scoring eligible candidate; currently **OPTIMAL** |
 | Is confidence a probability? | No—it is a heuristic evidence score |
@@ -399,17 +399,16 @@ Render free services may cold-start. SQLite storage is ephemeral in that environ
 |---|---|
 | [Product Requirements](docs/PRD.md) | Complete requirements, acceptance criteria, and product boundaries |
 | [Architecture](docs/architecture.md) | Components, boundaries, and data flow |
-| [API](docs/api.md) | Versioned endpoints and contracts |
+| [API Reference](docs/api.md) | Versioned endpoints and contracts |
 | [Demo Guide](docs/demo-script.md) | Reproducible five-minute product walkthrough |
-| [Evaluation](docs/evaluation.md) | Claims, metrics, and supporting evidence |
+| [Validation Evidence](docs/evaluation.md) | Claims, metrics, and supporting evidence |
 | [Safety](docs/safety.md) | Mandatory gates and human-control boundary |
 | [Limitations](docs/limitations.md) | Explicit scope and non-claims |
 | [Technical Q&A](docs/technical-qa.md) | Technical design decisions and common questions |
 | [Implementation Plan](docs/implementation-plan.md) | Delivery and production-evolution plan |
-
 ---
 
-## ❓ Key Technical Q&A
+## ❓ Technical Q&A
 
 <details>
 <summary><strong>How are forecasts produced?</strong></summary>
@@ -420,7 +419,7 @@ A transparent bounded linear saturation model exposes its equation, threshold, r
 <details>
 <summary><strong>How are scenarios compared fairly?</strong></summary>
 
-All 12 scenarios use the same immutable Twin manifest and random seed, making results reproducible and comparable.
+All 12 scenarios use the same version-locked Twin manifest and fixed seed, making results reproducible and comparable.
 </details>
 
 <details>
