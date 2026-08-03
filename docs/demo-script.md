@@ -1,4 +1,4 @@
-# Five-minute judge demo
+# Five-Minute Product Demo
 
 ## 0:00–0:35 — The question
 
