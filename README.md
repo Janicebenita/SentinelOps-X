@@ -12,6 +12,7 @@
 </p>
 
 <p align="center">
+  <a href="https://janicebenita-sentinelops-nexus.onrender.com"><strong>Open live demo</strong></a> |
   <a href="#quick-start">Quick start</a> | <a href="#architecture">Architecture</a> |
   <a href="docs/demo-script.md">Judge demo</a> | <a href="docs/safety.md">Safety</a> |
   <a href="docs/judge-qa.md">Judge Q&A</a>
@@ -192,6 +193,13 @@ pnpm run build
 ```
 
 ## Render deployment
+
+| Live resource | URL |
+|---|---|
+| Command centre | [Open SentinelOps Nexus](https://janicebenita-sentinelops-nexus.onrender.com) |
+| Versioned API | [API health](https://janicebenita-sentinelops-nexus-api.onrender.com/api/v1/health) |
+| Simulator | [Simulator health](https://janicebenita-sentinelops-nexus-simulator.onrender.com/health) |
+| Render Blueprint | [Deployment dashboard](https://dashboard.render.com/blueprint/exs-d9o1ridaeets73csphlg) |
 
 `render.yaml` defines independent Nexus services and does not modify the earlier SentinelOps deployment:
 
