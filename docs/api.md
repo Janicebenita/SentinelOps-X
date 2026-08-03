@@ -44,6 +44,7 @@ Each endpoint requires a matching typed decision, named actor and rationale. App
 ## Evidence and audit
 
 - `GET /api/v1/workflows/{id}/evidence`
+- `POST /api/v1/workflows/{id}/evidence/upload`
 - `GET /api/v1/workflows/{id}/agents`
 - `GET /api/v1/workflows/{id}/timeline`
 - `GET /api/v1/workflows/{id}/events` (SSE snapshot)
@@ -51,3 +52,5 @@ Each endpoint requires a matching typed decision, named actor and rationale. App
 - `GET /api/v1/audit/verify?run_id={id}`
 
 Interactive OpenAPI documentation is available at `/docs` while the API is running.
+
+The upload endpoint accepts bounded JSON evidence with `filename`, `category` and `content`. The backend validates the JSON, persists its SHA-256 hash and appends an `evidence.uploaded` event to the workflow audit chain.

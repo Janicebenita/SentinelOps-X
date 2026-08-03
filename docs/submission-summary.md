@@ -1,5 +1,7 @@
 # Submission summary
 
+The complete product requirements are documented in the [SentinelOps Nexus PRD](product-requirements.md).
+
 ## SentinelOps Nexus — The Enterprise Operational Digital Twin
 
 Operational bottlenecks are usually identified after customers experience latency or failure. SentinelOps Nexus continuously converts telemetry, dependencies, capacity, configuration, and business assumptions into an operational Digital Twin. A specialised agent workforce predicts threshold crossings, explores future and chaos conditions, compares interventions under identical conditions, and prepares an evidence-backed decision for human approval.

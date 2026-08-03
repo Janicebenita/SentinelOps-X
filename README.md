@@ -271,6 +271,7 @@ Render free services may cold-start. SQLite storage is ephemeral there; reset an
 
 ## Documentation
 
+- [Product Requirements Document](docs/product-requirements.md)
 - [Architecture](docs/architecture.md)
 - [API](docs/api.md)
 - [Guided Product Demo](docs/demo-script.md)
