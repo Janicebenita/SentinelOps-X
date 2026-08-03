@@ -63,7 +63,7 @@ This is not another alert dashboard. It is a bounded, reproducible operational d
 |---|---|---|
 | 🔭 Early bottleneck forecast | Safe-capacity crossing and likely customer-impact window | Moves response from reactive to preventive |
 | 🧬 Bounded Digital Twin | Immutable, content-hashed operational model | Makes every replay traceable and comparable |
-| 🧪 Deterministic scenario lab | 12 reproducible failure and intervention scenarios | Produces judge-verifiable evidence |
+| 🧪 Deterministic scenario lab | 12 reproducible failure and intervention scenarios | Produces independently verifiable evidence |
 | 🏟️ Intervention tournament | FAST, SAFE, and OPTIMAL compared on the same Twin | Prevents recommendation by intuition alone |
 | 🛡️ Mandatory safety gates | Unsafe candidates are disqualified regardless of score | Makes safety a rule, not a suggestion |
 | 💰 Explainable business impact | Visible equations, assumptions, and exposure estimates | Connects engineering risk to business decisions |
@@ -389,7 +389,7 @@ Render free services may cold-start. SQLite storage is ephemeral in that environ
 - Enterprise connectors and Google-scale services in the research architecture are not active integrations in this build.
 - The frontend bundle currently produces a non-blocking Vite chunk-size warning.
 
-Transparent limitations strengthen the evidence: judges can distinguish what is **working now**, what is **bounded by design**, and what belongs to the production roadmap.
+- Transparent limitations distinguish what is **working now**, what is **bounded by design**, and what belongs to the production roadmap.
 
 ---
 
@@ -400,11 +400,11 @@ Transparent limitations strengthen the evidence: judges can distinguish what is 
 | [Product Requirements](docs/PRD.md) | Complete requirements, acceptance criteria, and product boundaries |
 | [Architecture](docs/architecture.md) | Components, boundaries, and data flow |
 | [API](docs/api.md) | Versioned endpoints and contracts |
-| [Guided Product Demo](docs/demo-script.md) | Reproducible judge walkthrough |
+| [Demo Guide](docs/demo-script.md) | Reproducible five-minute product walkthrough |
 | [Evaluation](docs/evaluation.md) | Claims, metrics, and supporting evidence |
 | [Safety](docs/safety.md) | Mandatory gates and human-control boundary |
 | [Limitations](docs/limitations.md) | Explicit scope and non-claims |
-| [Evaluation Q&A](docs/judge-qa.md) | Concise responses for judges |
+| [Technical Q&A](docs/technical-qa.md) | Technical design decisions and common questions |
 | [Implementation Plan](docs/implementation-plan.md) | Delivery and production-evolution plan |
 
 ---
@@ -438,7 +438,7 @@ It records a named human decision and rationale, adds it to the audit chain, and
 <details>
 <summary><strong>Why use deterministic data?</strong></summary>
 
-It lets judges and developers reproduce the complete workflow without paid credentials, unstable external services, or unverifiable outputs.
+It lets reviewers and developers reproduce the complete workflow without paid credentials, unstable external services, or unverifiable outputs.
 </details>
 
 ---
