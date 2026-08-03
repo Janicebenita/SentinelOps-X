@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib.util
+import os
 import shutil
 import socket
 import subprocess
@@ -22,7 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "storytelling-output"
 WIDTH, HEIGHT, FPS = 1920, 1080, 30
 VOICE = "en-IN-NeerjaNeural"
-RATE = "-5%"  # 0.95x
+RATE = "-5%"  # natural, measured delivery before final editorial retiming
+FINAL_SPEED = 1.43
 SCENE_SECONDS = 20
 SECTION_TARGETS = (
     "command", "timeline", "evidence", "hypotheses", "twin", "replay",
@@ -63,23 +65,18 @@ class Scene:
 
 
 SCENES = (
-    Scene("healthy", "Healthy baseline", "Welcome to SentinelOps, an evidence-first autonomous reliability engineer. The command center begins with a healthy Sentinel Shop baseline. Service health, request volume, latency, and deployment status are visible before any incident is introduced."),
-    Scene("incident", "Customer-visible incident", "We now trigger the seeded Tennessee checkout with the SAVE10 discount. The request returns HTTP five hundred and the error-rate signal rises. SentinelOps records the customer impact whilst preserving the exact request needed for deterministic replay."),
-    Scene("evidence", "Evidence collection", "The investigation collects structured JSON logs, metrics, trace spans, configuration, Git history, and audit events. Each claim is linked to evidence rather than accepted from model confidence alone. The live timeline makes every transition reviewable."),
-    Scene("hypothesis", "Falsifiable hypotheses", "SentinelOps ranks multiple root-cause hypotheses. The nullable Tennessee tax-rate explanation leads, with supporting evidence, contradicting evidence, missing evidence, and a falsification test. Confidence is presented as a reasoned label, not guaranteed causality."),
-    Scene("twin", "Reliability Digital Twin", "A Reliability Digital Twin is created from the source commit, configuration, captured inputs, dependency fixtures, runtime fingerprint, random seed, and network policy. Its manifest hash proves every candidate is evaluated against the same conditions."),
-    Scene("reproduced", "Network-disabled replay", "The original checkout is replayed three times in a network-disabled sandbox. Request, response, logs, traces, metrics, duration, and resource use are captured. Identical deterministic hashes produce a one-hundred-percent reproducibility score for this seeded incident."),
-    Scene("tournament", "Three candidate repairs", "The Repair Tournament compares three plausible bounded patches. Candidate A adds a local fallback. Candidate B validates the domain boundary. Candidate C applies explicit null-safe behaviour. All candidates remain isolated from the original source tree."),
-    Scene("tournament", "Deterministic gate matrix", "Each candidate runs regression, unit, integration, Ruff, MyPy, and Bandit gates, followed by contract, performance, policy, dependency, resilience, and replay checks. A mandatory failure makes a candidate ineligible regardless of its numerical score."),
-    Scene("counterfactual", "Counterfactual Lab", "The Counterfactual Lab varies region, discount, missing tax rate, dependency latency, database availability, retries, traffic, and concurrency. Nearby scenarios reveal whether a patch repairs the incident or merely masks the original symptom."),
-    Scene("counterfactual", "False-fix rejection", "Candidate A looks convincing because it fixes Tennessee plus SAVE10. However, it introduces a failure when Tennessee checkout has no discount. SentinelOps rejects this false fix using observed counterfactual evidence rather than optimistic model judgement."),
-    Scene("blast-radius", "Blast-radius estimate", "Candidate B passes functionality but touches a wider domain boundary. The impact graph links endpoints, functions, modules, configuration, workflows, and tests. Its normalised blast-radius score is explicitly labelled as an evidence-supported estimate, not certainty."),
-    Scene("evidence", "Causal evidence graph", "The evidence graph connects symptoms, telemetry, source lines, hypotheses, reproduction, candidate diffs, verification results, and the approval decision. Every major judge-facing claim provides a direct route back to its supporting artifact."),
-    Scene("tournament", "Adversarial review", "A red-team review challenges symptom masking, silent business-logic changes, insecure defaults, protected paths, weakened assertions, performance regressions, and nearby inputs. Candidate C satisfies both the advocate case and deterministic adversarial checks."),
-    Scene("approval", "Human-controlled approval", "Candidate C passes mandatory gates, preserves nearby behavior, and has the smallest estimated blast radius. The original source changed zero times. Automatic deployments remain zero. SentinelOps stops and requires an accountable human decision."),
-    Scene("completed", "Tamper-evident package", "After approval, SentinelOps creates a pull-request report and exports the incident evidence package. Artifact SHA two-fifty-six hashes and a chained audit hash support tamper detection. This is an audit chain, not blockchain or legal non-repudiation."),
-    Scene("completed", "Reliability scorecard", "The final scorecard reports time to evidence, reproduction, candidate generation, verification, linked-claim coverage, false-fix detection, policy blocks, source mutations, and deployments from recorded events. SentinelOps turns AI repair into evidence-proven, human-controlled reliability engineering."),
-    Scene("completed", "Conclusion", "In conclusion, SentinelOps converts AI-generated repair into evidence-proven, human-controlled reliability engineering. Nothing was automatically deployed. Thank you for watching this SentinelOps demonstration."),
+    Scene("top", "Meet SentinelOps Nexus", "Welcome to SentinelOps Nexus, the Enterprise Operational Digital Twin. This demonstration begins before a customer-visible incident. The Payment Service is healthy now, whilst traffic and Redis memory pressure are rising. Nexus asks which constraint will become the next bottleneck, when customers could feel it, and which intervention remains safe under nearby failure conditions. Every figure in this command centre comes from a persisted deterministic workflow."),
+    Scene("time-travel", "Yesterday, now and tomorrow", "The time-travel view connects yesterday's baseline, the present state, and the next forty-five minutes. Redis safe capacity is forecast to cross in thirty minutes. The customer-impact estimate follows at forty-five minutes, before the conventional reactive alert becomes active. Operators can inspect memory, checkout latency, queue depth and alert state at each point, making the early-warning claim visible rather than hidden inside a model."),
+    Scene("forecast", "A transparent forecast", "This forecast is deliberately bounded and inspectable. Nexus displays the linear saturation equation, the ninety per cent safe-capacity threshold, residual mean absolute error, and a plus-or-minus time bound. Its confidence label is a heuristic evidence score, not a calibrated probability. The assumptions remain beside the result, so a reviewer can challenge capacity, workload shape, or telemetry quality before accepting the recommendation."),
+    Scene("evidence", "Evidence before confidence", "Material claims cite persisted, content-hashed evidence. Configuration establishes capacity and replicas; metrics establish the memory slope and queue growth; trace-like events link Redis to the Payment Service critical path. The agent activity trace shows structured outputs and evidence references, never hidden chain of thought. This creates a reviewable path from raw observation, through forecast, to the executive finding."),
+    Scene("twin", "Explore the Digital Twin", "Explore Mode turns the demonstration into a working lab. Change traffic from half to ten times baseline, Redis capacity, application replicas, and dependency latency. Presets provide baseline, ten-times traffic, constrained, and resilient conditions. Rerunning creates a new persisted bounded Twin with the same documented method. It is simulation only: no infrastructure command, deployment, or production mutation is available from this control."),
+    Scene("scenarios", "Twelve deterministic futures", "Each Twin is replayed through twelve deterministic scenarios: baseline growth, Redis crash and latency, replica failover, ten-times traffic, million-user stress, reduced capacity, increased replicas, rollback, rate limiting, cache-policy correction, and configuration drift. Select any row to inspect its inputs, recovery time, result hash and whether the bottleneck was avoided. The common seed and manifest make comparisons repeatable."),
+    Scene("tournament", "The Intervention Tournament", "Nexus compares three intervention strategies. FAST scales application replicas immediately. SAFE adds Redis capacity with controlled failover and traffic shaping. OPTIMAL combines Redis capacity, cache-policy correction, and gradual scaling. Every candidate is scored for safety, recovery, risk and estimated cost, but the decisive rule is simple: eligibility overrides score. A failed mandatory gate can never be outweighed by apparent confidence."),
+    Scene("tournament", "Rejecting the plausible false fix", "FAST is attractive because it is quick and inexpensive. Yet the bottleneck sits in Redis, and the mandatory failover test fails. Nexus therefore disqualifies FAST regardless of its numerical score. SAFE remains an eligible lower-cost alternative, whilst OPTIMAL wins under the transparent weighting. This is the core value of the Twin: test a plausible intervention against adverse conditions before customers become the experiment."),
+    Scene("impact", "Business impact with visible assumptions", "The operational forecast is translated into an estimated business exposure using displayed inputs: request rate, conversion rate, average order value, the risk window, projected failure rate and an SLA penalty. The result is not an accounting fact or guaranteed loss. It is an operational estimate designed to help a human compare urgency, intervention cost and uncertainty with the arithmetic in plain sight."),
+    Scene("approval", "Human approval remains mandatory", "Nexus now stops at the Human Approval Gateway. The recommended action, evidence and contradictory evidence are ready for an accountable reviewer. Guided Demo never presses approve. Even an explicit approval only records the named decision, appends the tamper-evident audit timeline, and enables evidence export. It does not deploy, change Redis, scale replicas, or call a production control plane. Production action is not executed."),
+    Scene("audit", "A tamper-evident decision record", "The audit timeline chains each persisted event with SHA two-fifty-six. The export package contains the incident, Twin manifest, forecast, scenarios, tournament, verification, business impact, executive brief, evidence and human decision, with a checksum manifest. This supports tamper detection and repeatable review. It is not blockchain, legal non-repudiation, or a claim that the bounded Twin perfectly reproduces production."),
+    Scene("top", "Predict, test, and decide safely", "SentinelOps Nexus turns late reactive alerting into an earlier, evidence-backed decision. It predicts the emerging Redis bottleneck, tests interventions across deterministic futures, rejects a convincing false fix, quantifies estimated exposure, and preserves human authority at the final boundary. Explore every input, rerun every scenario, and inspect every hash. Throughout this demonstration, and by design, production action remains not executed."),
 )
 
 
@@ -124,15 +121,20 @@ def wait_for(url: str, timeout: int = 45) -> None:
 
 
 def start_services() -> tuple[list[subprocess.Popen[bytes]], str]:
+    api_port = free_port()
     ui_port = free_port()
-    dist = ROOT / "frontend" / "dist"
-    if not (dist / "index.html").exists():
-        pnpm = shutil.which("pnpm.cmd") or shutil.which("pnpm")
-        if not pnpm:
-            raise RuntimeError("pnpm is required to build the frontend")
-        run([pnpm, "run", "build"], cwd=ROOT / "frontend")
-    command = [sys.executable, "-m", "http.server", str(ui_port), "--bind", "127.0.0.1", "--directory", str(dist)]
-    processes = [subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)]
+    pnpm = shutil.which("pnpm.cmd") or shutil.which("pnpm")
+    if not pnpm:
+        raise RuntimeError("pnpm is required to run the frontend")
+    api = [sys.executable, "-m", "uvicorn", "backend.app.main:app", "--host", "127.0.0.1", "--port", str(api_port)]
+    ui = [pnpm, "dev", "--port", str(ui_port)]
+    api_env = dict(os.environ, CORS_ORIGINS=f"http://127.0.0.1:{ui_port}")
+    ui_env = dict(os.environ, VITE_API_BASE_URL=f"http://127.0.0.1:{api_port}")
+    processes = [
+        subprocess.Popen(api, cwd=ROOT, env=api_env, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT),
+        subprocess.Popen(ui, cwd=ROOT / "frontend", env=ui_env, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT),
+    ]
+    wait_for(f"http://127.0.0.1:{api_port}/health")
     wait_for(f"http://127.0.0.1:{ui_port}")
     return processes, f"http://127.0.0.1:{ui_port}"
 
@@ -171,21 +173,19 @@ async def capture(url: str, durations: list[float]) -> Path:
           })();
         """)
         page = await context.new_page()
-        await page.set_content(STORY_SHELL, wait_until="load")
-        for index, _scene in enumerate(SCENES):
+        await page.goto(url, wait_until="networkidle", timeout=90000)
+        await page.get_by_role("heading", name="Predict tomorrow's bottleneck before customers experience it.").wait_for()
+        for index, scene in enumerate(SCENES):
             scene_started = time.monotonic()
-            await page.locator("#stage").evaluate("(node, html) => { node.style.animation='none'; node.innerHTML=html; void node.offsetWidth; node.style.animation='enter .65s ease'; }", VISUALS[index])
+            if index == 0:
+                await page.get_by_role("button", name="One-click Guided Demo").click()
+            scroll_target = page.locator("body") if scene.state == "top" else page.locator(f"#{scene.state}")
+            await scroll_target.evaluate("node => node.scrollIntoView({behavior:'smooth', block:'center'})")
             await page.mouse.move(250 + (index % 3) * 180, 190, steps=30)
             await page.wait_for_timeout(3000)
             for x, y in ((620, 430), (1240, 620), (1570, 300)):
                 await page.mouse.move(x, y, steps=55)
                 await page.wait_for_timeout(2300)
-            if index == 13:
-                approve = page.locator("button.approve")
-                if await approve.count():
-                    await approve.hover()
-                    await page.wait_for_timeout(1300)
-                    await approve.click()
             remaining_ms = int((durations[index] - (time.monotonic() - scene_started)) * 1000)
             await page.wait_for_timeout(max(100, remaining_ms))
         video = page.video
@@ -195,9 +195,9 @@ async def capture(url: str, durations: list[float]) -> Path:
         raw_path = Path(await video.path())
         await context.close()
         await browser.close()
-    target = OUT / "browser-session.webm"
-    shutil.copy2(raw_path, target)
-    return target
+    recording_target = OUT / "browser-session.webm"
+    shutil.copy2(raw_path, recording_target)
+    return recording_target
 
 
 async def narrate() -> None:
@@ -205,8 +205,11 @@ async def narrate() -> None:
     audio = OUT / "segments"
     audio.mkdir(parents=True, exist_ok=True)
     for index, scene in enumerate(SCENES):
+        target = audio / f"{index:02d}.mp3"
+        if target.exists() and target.stat().st_size > 1024:
+            continue
         communicate = edge_tts.Communicate(scene.narration, VOICE, rate=RATE)
-        await communicate.save(str(audio / f"{index:02d}.mp3"))
+        await communicate.save(str(target))
 
 
 def audio_durations() -> list[float]:
@@ -236,9 +239,9 @@ def write_srt(durations: list[float]) -> Path:
     blocks = []
     elapsed = 0.0
     for index, scene in enumerate(SCENES):
-        start, end = elapsed, elapsed + durations[index]
+        start, end = elapsed / FINAL_SPEED, (elapsed + durations[index]) / FINAL_SPEED
         blocks.append(f"{index + 1}\n{stamp(round(start))} --> {stamp(round(end))}\n{scene.title}\n{scene.narration}\n")
-        elapsed = end
+        elapsed += durations[index]
     target.write_text("\n".join(blocks), encoding="utf-8")
     return target
 
@@ -256,6 +259,7 @@ def encode(durations: list[float], recording: Path | None = None) -> tuple[Path,
         elapsed += durations[index]
     joined = "".join(f"[a{index}]" for index in range(len(SCENES)))
     total = elapsed
+    final_total = total / FINAL_SPEED
     fade_start = max(0.0, total - 2.0)
     filters.append(f"{joined}amix=inputs={len(SCENES)}:duration=longest:dropout_transition=0,alimiter=limit=0.9,apad=whole_dur={total},afade=t=out:st={fade_start}:d=2[voice]")
     voice = ROOT / "voice.wav"
@@ -264,7 +268,7 @@ def encode(durations: list[float], recording: Path | None = None) -> tuple[Path,
     recording = recording or OUT / "browser-session.webm"
     if not recording.exists():
         raise RuntimeError("Dynamic browser recording is missing; run the complete generator.")
-    run([ffmpeg, "-y", "-loglevel", "error", "-i", str(recording), "-i", str(voice), "-t", str(total), "-vf", f"scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=decrease,pad={WIDTH}:{HEIGHT}:(ow-iw)/2:(oh-ih)/2,format=yuv420p,fade=t=out:st={fade_start}:d=2", "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(video)])
+    run([ffmpeg, "-y", "-loglevel", "error", "-i", str(recording), "-i", str(voice), "-t", str(final_total), "-filter_complex", f"[0:v]scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=decrease,pad={WIDTH}:{HEIGHT}:(ow-iw)/2:(oh-ih)/2,format=yuv420p,setpts=PTS/{FINAL_SPEED},fade=t=out:st={max(0, final_total-2)}:d=2[v];[1:a]atempo={FINAL_SPEED}[a]", "-map", "[v]", "-map", "[a]", "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(video)])
     return video, voice
 
 

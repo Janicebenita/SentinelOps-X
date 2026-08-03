@@ -52,6 +52,34 @@ The seeded Payment Service begins healthy while traffic and Redis pressure rise.
 
 Eligibility overrides score. A failed mandatory gate can never be outweighed by model confidence.
 
+## Guided Demo and Explore Mode
+
+The command centre now supports two complementary paths from the mode switcher at the top of the live UI:
+
+- **One-click Guided Demo** starts a six-stop auto-playing tour of the early signal, transparent forecast, bounded Twin, deterministic scenarios, false-fix rejection, and human decision boundary. The tour can be paused, moved forwards or backwards, or exited at any point. It never presses the approval button.
+- **Explore Mode** exposes four bounded controls and four presets. Change traffic, Redis capacity, application replicas, and dependency latency; persist a new workflow; replay all twelve scenarios; then select any scenario to inspect its inputs, recovery, outcome, and deterministic hash.
+
+Both modes use the real versioned API. Rerun means simulation only, approval means decision recording only, and **PRODUCTION ACTION: NOT EXECUTED** remains visible throughout.
+
+## Narrated walkthrough
+
+The reproducible video generator records the live Nexus UI as a 1080p H.264/AAC walkthrough with synchronized SRT captions and professional female Indian-English narration. Its twelve scenes are designed for a four-to-five-minute submission and never automate the approval control.
+
+```powershell
+& ".\.venv\Scripts\python.exe" scripts\generate_storytelling_video.py --install
+```
+
+Generated artifacts:
+
+- [Narrated demo video](demo_storytelling_video.mp4) — committed submission-ready MP4, validated at 4:54
+- [Captions](demo_storytelling_video.srt) — committed synchronized subtitles
+- `voice.wav`
+- `storytelling-output/` intermediate recordings and narration segments
+
+The lossless voice track and intermediate browser recordings remain gitignored build outputs.
+
+The default voice is Microsoft `en-IN-NeerjaNeural` at a measured pace. Narration text is sent to Microsoft Edge TTS when the generator runs, so use it only where that external processing is acceptable.
+
 ## Architecture
 
 ```mermaid
