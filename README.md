@@ -127,6 +127,8 @@ flowchart TD
 
 ---
 
+<a name="product-demo"></a>
+
 ## 🎬 Guided Product Demo
 
 The command centre provides two complementary experiences from the mode switcher.
@@ -175,6 +177,8 @@ Use `docs/sample-explore-controls.json` to exercise the upload workflow. Uploade
 
 ---
 
+<a name="architecture"></a>
+
 ## 🏗️ Architecture
 
 ```mermaid
@@ -222,6 +226,8 @@ Every result includes inputs, status, p95 latency, error rate, recovery estimate
 
 ---
 
+<a name="safety"></a>
+
 ## 🔐 Safety by Design
 
 Only backend policy can change workflow state. The provider/model cannot approve a recommendation.
@@ -251,6 +257,8 @@ The evidence ZIP contains the incident, Twin manifest, source evidence, forecast
 | Optional AI | Gemini/OpenAI narrative adapter boundary |
 
 ---
+
+<a name="quick-start"></a>
 
 ## 🚀 Quick Start
 
