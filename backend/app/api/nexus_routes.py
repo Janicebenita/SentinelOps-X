@@ -54,6 +54,15 @@ def seed_demo(db: Db) -> dict[str, Any]:
     return workflow.serialize(workflow.create_run(db, RunCreate(name="Payment Service capacity forecast")))
 
 
+@router.post("/demo/bootstrap")
+def bootstrap_demo(db: Db) -> dict[str, Any]:
+    """Return a ready workflow in one request, minimizing free-tier wake-up round trips."""
+    run = db.scalar(select(NexusRun).order_by(NexusRun.id.desc()))
+    if run is None:
+        run = workflow.create_run(db, RunCreate(name="Payment Service capacity forecast"))
+    return workflow.serialize(workflow.run_all(db, run))
+
+
 @router.get("/demo/status")
 def demo_status(db: Db) -> dict[str, Any]:
     latest = db.scalar(select(NexusRun).order_by(NexusRun.id.desc()))

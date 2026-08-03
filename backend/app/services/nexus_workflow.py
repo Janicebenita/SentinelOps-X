@@ -265,7 +265,10 @@ def package_payload(db: Session, run: NexusRun) -> dict[str, Any]:
 
 
 def export_zip(db: Session, run: NexusRun) -> bytes:
-    require_state(run,"DECIDED"); payload=package_payload(db,run); artifacts={}
+    require_state(run,"DECIDED")
+    if run.human_decision_json.get("exported_at"):
+        raise ValueError("Evidence export has already been downloaded and is now revoked")
+    payload=package_payload(db,run); artifacts={}
     files={"incident.json":payload["incident"],"twin-manifest.json":payload["twin-manifest"],"evidence.json":payload["evidence"],"forecast.json":payload["forecast"],"scenarios.json":payload["scenarios"],"tournament.json":payload["tournament"],"verification.json":payload["verification"],"business-impact.json":payload["business-impact"],"audit.json":payload["audit"]}
     report=f"# SentinelOps Nexus executive brief\n\n{run.recommendation_json.get('summary','')}\n\n## Recommendation\n{run.recommendation_json.get('recommendation','')}\n\n**PRODUCTION ACTION: NOT EXECUTED**\n"
     stream=io.BytesIO()
@@ -273,7 +276,12 @@ def export_zip(db: Session, run: NexusRun) -> bytes:
         for name,value in files.items(): data=json.dumps(value,indent=2,default=str).encode(); artifacts[name]=sha256(data).hexdigest(); archive.writestr(name,data)
         report_data=report.encode(); artifacts["executive-brief.md"]=sha256(report_data).hexdigest(); archive.writestr("executive-brief.md",report_data)
         manifest="\n".join(f"{value}  {name}" for name,value in sorted(artifacts.items()))+"\n"; archive.writestr("manifest.sha256",manifest)
-    return stream.getvalue()
+    content=stream.getvalue()
+    decision=dict(run.human_decision_json)
+    decision.update({"exported_at":datetime.now(timezone.utc).isoformat(),"export_status":"consumed"})
+    run.human_decision_json=decision; db.commit()
+    append_event(db,run,"evidence.exported","human-approval-gateway",{"export_status":"consumed","production_action":"NOT EXECUTED"})
+    return content
 
 
 def reset(db: Session) -> None:

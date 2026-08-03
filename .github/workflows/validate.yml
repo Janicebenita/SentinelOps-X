@@ -28,7 +28,7 @@ jobs:
       - run: make typecheck
       - run: make security
       - name: Start complete demo
-        run: make demo > /tmp/sentinelops-demo.log 2>&1 &
+        run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
       - run: python scripts/health_check.py
       - run: python scripts/validate_e2e.py
       - name: Demo log

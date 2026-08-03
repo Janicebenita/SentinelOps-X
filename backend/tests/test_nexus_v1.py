@@ -97,6 +97,16 @@ def test_audit_chain_and_export_hashes(db):
             expected, name = line.split("  ", 1)
             assert hashlib.sha256(archive.read(name)).hexdigest() == expected
 
+    assert run.human_decision_json["export_status"] == "consumed"
+    assert run.human_decision_json["exported_at"]
+    try:
+        nexus.export_zip(db, run)
+    except ValueError as exc:
+        assert "already been downloaded" in str(exc)
+    else:
+        raise AssertionError("A consumed evidence export was downloaded twice")
+    assert nexus.verify_audit(db, run.id)["valid"] is True
+
     event = db.scalar(select(NexusAuditEvent).where(NexusAuditEvent.run_id == run.id).order_by(NexusAuditEvent.sequence))
     assert event is not None
     event.payload_json = {"tampered": True}
@@ -133,3 +143,10 @@ def test_versioned_api_end_to_end(client):
     assert exported.status_code == 200
     assert exported.headers["content-type"] == "application/zip"
     assert client.get("/api/v1/audit/verify", params={"run_id": run_id}).json()["valid"] is True
+
+
+def test_bootstrap_returns_a_ready_workflow_in_one_request(client):
+    response = client.post("/api/v1/demo/bootstrap")
+    assert response.status_code == 200
+    assert response.json()["state"] == "RECOMMENDED"
+    assert len(response.json()["scenarios_json"]) == 12
