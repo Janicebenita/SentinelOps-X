@@ -1,59 +1,44 @@
 1
-00:00:00,000 --> 00:00:25,175
+00:00:00,000 --> 00:00:30,000
 Meet SentinelOps Nexus
-Welcome to SentinelOps Nexus, the Enterprise Operational Digital Twin. This demonstration begins before a customer-visible incident. The Payment Service is healthy now, whilst traffic and Redis memory pressure are rising. Nexus asks which constraint will become the next bottleneck, when customers could feel it, and which intervention remains safe under nearby failure conditions. Every figure in this command centre comes from a persisted deterministic workflow.
+Welcome to SentinelOps Nexus, the Enterprise Operational Digital Twin. The Payment Service is healthy now, but traffic and Redis memory pressure are rising. Nexus predicts the next operational bottleneck before customers experience it, tests possible interventions in a bounded simulation, and stops at a human decision. Throughout this demonstration, production action is not executed.
 
 2
-00:00:25,175 --> 00:00:48,252
+00:00:30,000 --> 00:01:00,000
 Yesterday, now and tomorrow
-The time-travel view connects yesterday's baseline, the present state, and the next forty-five minutes. Redis safe capacity is forecast to cross in thirty minutes. The customer-impact estimate follows at forty-five minutes, before the conventional reactive alert becomes active. Operators can inspect memory, checkout latency, queue depth and alert state at each point, making the early-warning claim visible rather than hidden inside a model.
+The simulated run begins with a healthy baseline. Moving from yesterday to now and then forty-five minutes ahead reveals a steady Redis memory trend. Safe capacity crosses ninety per cent at plus thirty minutes. Customer impact is estimated at plus forty-five, whilst the conventional reactive alert remains quiet. Nexus makes this early-warning window visible and reviewable.
 
 3
-00:00:48,252 --> 00:01:12,727
-A transparent forecast
-This forecast is deliberately bounded and inspectable. Nexus displays the linear saturation equation, the ninety per cent safe-capacity threshold, residual mean absolute error, and a plus-or-minus time bound. Its confidence label is a heuristic evidence score, not a calibrated probability. The assumptions remain beside the result, so a reviewer can challenge capacity, workload shape, or telemetry quality before accepting the recommendation.
+00:01:00,000 --> 00:01:33,000
+Evidence before confidence
+The prediction is transparent. Nexus shows the saturation equation, threshold, residual error and assumptions beside content-hashed evidence. Metrics establish the rising memory slope. Configuration establishes current capacity and replicas. Trace-like events place Redis on the Payment Service critical path. Confidence is a heuristic evidence score, not a probability or a claim of certainty.
 
 4
-00:01:12,727 --> 00:01:36,503
-Evidence before confidence
-Material claims cite persisted, content-hashed evidence. Configuration establishes capacity and replicas; metrics establish the memory slope and queue growth; trace-like events link Redis to the Payment Service critical path. The agent activity trace shows structured outputs and evidence references, never hidden chain of thought. This creates a reviewable path from raw observation, through forecast, to the executive finding.
+00:01:33,000 --> 00:02:06,000
+Explore the bounded Twin
+Explore Mode changes the future without touching production. In this simulated run, traffic increases to ten times baseline, Redis capacity remains twelve thousand, replicas remain four, and dependency latency rises to eighty milliseconds. Rerun bounded Twin creates a persisted model with a fixed seed and disabled network, then replays the same documented scenarios. No infrastructure command is available here.
 
 5
-00:01:36,503 --> 00:02:02,378
-Explore the Digital Twin
-Explore Mode turns the demonstration into a working lab. Change traffic from half to ten times baseline, Redis capacity, application replicas, and dependency latency. Presets provide baseline, ten-times traffic, constrained, and resilient conditions. Rerunning creates a new persisted bounded Twin with the same documented method. It is simulation only: no infrastructure command, deployment, or production mutation is available from this control.
+00:02:06,000 --> 00:02:40,000
+Twelve deterministic futures
+The Scenario Lab now runs twelve futures against the same hashed Twin. It covers baseline growth, Redis crash and latency, replica failover, ten-times traffic, million-user stress, reduced capacity, increased replicas, rollback, rate limiting, cache-policy correction and configuration drift. Selecting a scenario reveals its inputs, recovery time, outcome and deterministic result hash for repeatable comparison.
 
 6
-00:02:02,378 --> 00:02:26,154
-Twelve deterministic futures
-Each Twin is replayed through twelve deterministic scenarios: baseline growth, Redis crash and latency, replica failover, ten-times traffic, million-user stress, reduced capacity, increased replicas, rollback, rate limiting, cache-policy correction, and configuration drift. Select any row to inspect its inputs, recovery time, result hash and whether the bottleneck was avoided. The common seed and manifest make comparisons repeatable.
+00:02:40,000 --> 00:03:13,000
+Reject the plausible false fix
+The Intervention Tournament compares FAST, SAFE and OPTIMAL. FAST scales application replicas immediately and appears quick, but the bottleneck is Redis. Its mandatory failover gate fails, so FAST is disqualified regardless of score. SAFE remains eligible. OPTIMAL combines Redis capacity, cache-policy correction and gradual scaling, passes every mandatory gate, and becomes the evidence-backed recommendation.
 
 7
-00:02:26,154 --> 00:02:52,727
-The Intervention Tournament
-Nexus compares three intervention strategies. FAST scales application replicas immediately. SAFE adds Redis capacity with controlled failover and traffic shaping. OPTIMAL combines Redis capacity, cache-policy correction, and gradual scaling. Every candidate is scored for safety, recovery, risk and estimated cost, but the decisive rule is simple: eligibility overrides score. A failed mandatory gate can never be outweighed by apparent confidence.
+00:03:13,000 --> 00:03:44,000
+Business impact, visibly estimated
+Nexus translates operational risk into an estimated business exposure using visible assumptions: request rate, conversion rate, average order value, the risk window, projected failure rate and an SLA penalty. The arithmetic helps a reviewer compare urgency and intervention cost. It is explicitly an operational estimate, not an accounting result, guaranteed loss, or calibrated financial forecast.
 
 8
-00:02:52,727 --> 00:03:16,503
-Rejecting the plausible false fix
-FAST is attractive because it is quick and inexpensive. Yet the bottleneck sits in Redis, and the mandatory failover test fails. Nexus therefore disqualifies FAST regardless of its numerical score. SAFE remains an eligible lower-cost alternative, whilst OPTIMAL wins under the transparent weighting. This is the core value of the Twin: test a plausible intervention against adverse conditions before customers become the experiment.
+00:03:44,000 --> 00:04:16,000
+Human authority is preserved
+Nexus stops at the Human Approval Gateway. The recommendation, contradictory evidence and audit trail are ready for an accountable reviewer. This simulated run does not press approve. Even a real approval would only record a named decision and enable evidence export. It would not deploy, scale replicas, change Redis or call a production control plane. Production action is not executed.
 
 9
-00:03:16,503 --> 00:03:38,881
-Business impact with visible assumptions
-The operational forecast is translated into an estimated business exposure using displayed inputs: request rate, conversion rate, average order value, the risk window, projected failure rate and an SLA penalty. The result is not an accounting fact or guaranteed loss. It is an operational estimate designed to help a human compare urgency, intervention cost and uncertainty with the arithmetic in plain sight.
-
-10
-00:03:38,881 --> 00:04:04,056
-Human approval remains mandatory
-Nexus now stops at the Human Approval Gateway. The recommended action, evidence and contradictory evidence are ready for an accountable reviewer. Guided Demo never presses approve. Even an explicit approval only records the named decision, appends the tamper-evident audit timeline, and enables evidence export. It does not deploy, change Redis, scale replicas, or call a production control plane. Production action is not executed.
-
-11
-00:04:04,056 --> 00:04:28,531
-A tamper-evident decision record
-The audit timeline chains each persisted event with SHA two-fifty-six. The export package contains the incident, Twin manifest, forecast, scenarios, tournament, verification, business impact, executive brief, evidence and human decision, with a checksum manifest. This supports tamper detection and repeatable review. It is not blockchain, legal non-repudiation, or a claim that the bounded Twin perfectly reproduces production.
-
-12
-00:04:28,531 --> 00:04:54,406
-Predict, test, and decide safely
-SentinelOps Nexus turns late reactive alerting into an earlier, evidence-backed decision. It predicts the emerging Redis bottleneck, tests interventions across deterministic futures, rejects a convincing false fix, quantifies estimated exposure, and preserves human authority at the final boundary. Explore every input, rerun every scenario, and inspect every hash. Throughout this demonstration, and by design, production action remains not executed.
+00:04:16,000 --> 00:04:50,000
+Predict, test, decide safely
+SentinelOps Nexus turns late reactive alerting into an earlier, evidence-backed decision. It predicts the emerging bottleneck, tests interventions across deterministic futures, rejects a convincing false fix, quantifies estimated exposure and preserves human control. Every important claim remains traceable to evidence. Nothing was automatically deployed. Production action was not executed. Thank you for watching.

@@ -63,7 +63,7 @@ Both modes use the real versioned API. Rerun means simulation only, approval mea
 
 ## Narrated walkthrough
 
-The reproducible video generator records the live Nexus UI as a 1080p H.264/AAC walkthrough with synchronized SRT captions and professional female Indian-English narration. Its twelve scenes are designed for a four-to-five-minute submission and never automate the approval control.
+The reproducible video generator renders a synchronized nine-scene Nexus simulation as a 1080p H.264/AAC walkthrough with SRT captions and professional female Indian-English narration. Every visual is purpose-built for its narration scene; the final approval control is never activated.
 
 ```powershell
 & ".\.venv\Scripts\python.exe" scripts\generate_storytelling_video.py --install
@@ -71,14 +71,14 @@ The reproducible video generator records the live Nexus UI as a 1080p H.264/AAC 
 
 Generated artifacts:
 
-- [Narrated demo video](demo_storytelling_video.mp4) — committed submission-ready MP4, validated at 4:54
+- [Narrated demo video](demo_storytelling_video.mp4) — committed submission-ready MP4, validated at 4:50
 - [Captions](demo_storytelling_video.srt) — committed synchronized subtitles
 - `voice.wav`
 - `storytelling-output/` intermediate recordings and narration segments
 
 The lossless voice track and intermediate browser recordings remain gitignored build outputs.
 
-The default voice is Microsoft `en-IN-NeerjaNeural` at a measured pace. Narration text is sent to Microsoft Edge TTS when the generator runs, so use it only where that external processing is acceptable.
+The default voice is Microsoft `en-IN-NeerjaNeural` at a measured pace. Narration is normalized globally to a consistent broadcast-style level. Narration text is sent to Microsoft Edge TTS when the generator runs, so use it only where that external processing is acceptable.
 
 ## Architecture
 
