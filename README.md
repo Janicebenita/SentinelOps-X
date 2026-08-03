@@ -1,143 +1,228 @@
-<h1 align="center">🛡️ SentinelOps Nexus</h1>
+<h1 align="center">SentinelOps Nexus</h1>
 <h3 align="center">The Enterprise Operational Digital Twin</h3>
 
 <p align="center"><strong>Predict tomorrow's operational bottleneck before customers experience it.</strong></p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="docs/demo-script.md">Judge Demo</a> ·
-  <a href="docs/safety.md">Safety</a>
+  <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Pydantic_v2-009688?logo=fastapi&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React-TypeScript-149ECA?logo=react&logoColor=white">
+  <img alt="Provider" src="https://img.shields.io/badge/default_provider-deterministic-22c55e">
+  <img alt="Production action" src="https://img.shields.io/badge/production_action-NOT_EXECUTED-ef4444">
 </p>
 
-## Why SentinelOps Nexus
+<p align="center">
+  <a href="#quick-start">Quick start</a> | <a href="#architecture">Architecture</a> |
+  <a href="docs/demo-script.md">Judge demo</a> | <a href="docs/safety.md">Safety</a> |
+  <a href="docs/judge-qa.md">Judge Q&A</a>
+</p>
 
-Most reliability tools explain an outage after customers are affected. SentinelOps Nexus builds a deterministic operational Digital Twin from telemetry, service dependencies, configuration, and business assumptions. A specialised AI workforce forecasts bottlenecks, simulates future and chaos conditions, compares interventions, and presents an evidence-backed recommendation for human approval.
+> **Challenge:** B2B Services - Late Bottleneck Detection<br>
+> **Working-build status:** deterministic local workflow validated without paid credentials<br>
+> **Safety boundary:** **PRODUCTION ACTION: NOT EXECUTED**
 
-It does **not** automatically execute production changes.
+## The problem
 
-## Finale experience
+Traditional operational tooling often alerts after a customer-facing threshold has already been crossed. SentinelOps Nexus asks a more useful question: **which constraint is likely to become the next bottleneck, when will it affect customers, and which intervention is safest under nearby failure conditions?**
 
-1. Begin with a healthy Payment Service.
-2. Watch traffic and Redis saturation trend upward.
-3. Predict the safe-capacity threshold crossing before the existing alert fires.
-4. Move the Time Travel control from history to `+30 minutes`.
-5. Inspect the evidence and agent-to-agent reasoning trace.
-6. Change traffic and Redis capacity in the Digital Twin.
-7. Run Redis crash, latency, failover, and million-user scenarios.
-8. Compare Fast, Safe, and Optimal interventions.
-9. See the plausible Fast strategy disqualified by the failover gate.
-10. Review estimated customer and revenue exposure with visible assumptions.
-11. Stop at the human decision boundary with `PRODUCTION ACTION: NOT EXECUTED`.
+## What the working build demonstrates
 
-## Measurable demonstration
+The seeded Payment Service begins healthy while traffic and Redis pressure rise. Nexus forecasts the Redis safe-capacity crossing before the reactive error alert, creates a hashed bounded Digital Twin, runs 12 deterministic scenarios, evaluates three interventions, rejects a plausible false fix, estimates business exposure using visible equations, and stops at a human decision.
 
-All displayed forecast values are calculated from the seeded telemetry window and explicit configuration. Confidence is a labelled heuristic evidence score, not a calibrated probability. Revenue exposure is an estimate based on the displayed conversion rate, order value, request forecast, and risk window.
+| Judge question | Evidence-backed answer |
+|---|---|
+| What is emerging? | Redis saturation on the Payment Service critical path |
+| When is safe capacity crossed? | +30 minutes in the canonical seed |
+| When could customers be affected? | +45 minutes under stated assumptions |
+| How many scenarios are replayed? | 12 with the same manifest and seed |
+| Which false fix is caught? | FAST fails the mandatory failover gate |
+| Which strategy is recommended? | Highest-scoring eligible candidate; currently OPTIMAL |
+| Is confidence a probability? | No - it is a heuristic evidence score |
+| Is revenue exposure guaranteed? | No - it is an operational estimate with visible inputs |
+| Does approval deploy anything? | No - it records a decision and enables evidence export |
+
+## The memorable comparison
+
+| Intervention | Intent | Mandatory gates | Eligible | Decision |
+|---|---|---:|---:|---|
+| **FAST** | Scale application replicas immediately | Failover safety fails | No | Disqualified regardless of score |
+| **SAFE** | Redis capacity + controlled failover + traffic shaping | Pass | Yes | Lower-cost eligible alternative |
+| **OPTIMAL** | Redis capacity + cache-policy correction + gradual scaling | Pass | Yes | Recommended by transparent score |
+
+Eligibility overrides score. A failed mandatory gate can never be outweighed by model confidence.
 
 ## Architecture
 
 ```mermaid
-flowchart TB
-    subgraph SOURCES["Enterprise operational signals"]
-      O["Metrics · Logs · Traces"]
-      P["Processes · Queues · Dependencies"]
-      C["Configuration · Capacity · SLOs"]
+flowchart LR
+    subgraph INPUTS["Operational evidence"]
+      M["Seeded metrics"]
+      L["Logs and trace-like events"]
+      C["Capacity, topology and SLOs"]
       B["Business assumptions"]
     end
-    subgraph WORKFORCE["Specialised agent workforce"]
-      OA["Observation Agent"] --> EA["Evidence Agent"] --> PDA["Process Discovery Agent"]
-      PDA --> PA["Prediction Agent"] --> DTA["Digital Twin Agent"] --> SA["Simulation Agent"]
-      SA --> OPT["Optimisation Agent"] --> BIA["Business Impact Agent"] --> EX["Executive Agent"]
+
+    subgraph API["FastAPI policy plane"]
+      O["Nexus Orchestrator"]
+      E["Evidence Agent"]
+      P["Prediction Agent"]
+      T["Digital Twin Agent"]
+      S["Simulation Agent"]
+      X["Optimisation Agent"]
+      V["Verification Agent"]
+      I["Business Impact Agent"]
+      Q["Executive Agent"]
     end
-    subgraph TWIN["Network-disabled Operational Digital Twin"]
-      M["Hashed manifest · fixed seed"] --> TT["Yesterday · Now · Tomorrow"]
-      TT --> CHAOS["Crash · Latency · Traffic · Failover"]
-      CHAOS --> FAST["Fast"]
-      CHAOS --> SAFE["Safe"]
-      CHAOS --> IDEAL["Optimal"]
+
+    subgraph TWIN["Bounded Operational Digital Twin"]
+      H["Immutable hashed manifest"]
+      R["12 same-seed scenarios"]
+      A["FAST / SAFE / OPTIMAL"]
+      G{"All mandatory gates pass?"}
     end
-    subgraph CONTROL["Deterministic policy and human control"]
-      G{"Mandatory gates pass?"}
-      NO["Disqualify"]
-      SCORE["Transparent scoring"]
-      HUMAN{"Human decision"}
-      REPORT["Evidence package"]
-      STOP["NOT EXECUTED"]
+
+    subgraph CONTROL["Human and audit boundary"]
+      D{"Human decision"}
+      Z["Chained SHA-256 audit"]
+      K["Evidence ZIP"]
+      N["PRODUCTION ACTION: NOT EXECUTED"]
     end
-    O --> OA
-    P --> OA
-    C --> OA
-    B --> BIA
-    DTA --> M
-    FAST --> G
-    SAFE --> G
-    IDEAL --> G
-    G -->|"No"| NO
-    G -->|"Yes"| SCORE --> EX --> HUMAN
-    HUMAN -->|"Approve proposal"| REPORT --> STOP
-    HUMAN -->|"Reject"| STOP
+
+    M --> O
+    L --> E --> O
+    C --> O
+    B --> I
+    O --> P --> T --> H --> R --> S --> A --> X --> G
+    G -->|Fail| V
+    G -->|Pass| I --> Q --> D
+    D --> Z --> K --> N
 ```
 
-## Core capabilities
+The Digital Twin is a **bounded operational model under documented assumptions**, not a perfect production replica.
 
-- Predictive bottleneck detection and time-to-impact forecast
-- Interactive Yesterday–Now–Tomorrow Time Travel
-- Network-disabled deterministic Digital Twin
-- Chaos and nearby-condition simulation
-- Fast/Safe/Optimal intervention tournament
-- Mandatory-gate disqualification independent of model confidence
-- Evidence-linked business-impact estimation
-- Executive Copilot decision brief
-- Human approval and no automatic production execution
-- Existing reactive investigation path retained as a secondary capability
+## Yesterday - Now - Tomorrow
 
-## Quick Start
+The command centre exposes five canonical points: Yesterday, Now, +15, +30 and +45 minutes. Judges can change traffic, Redis capacity, application replicas and dependency latency, then create and run a new persisted workflow. Forecast calculations remain deterministic and visible:
+
+```text
+memory_pct(t) = current_memory_pct + saturation_slope * minutes
+threshold crossing = (safe_threshold - current_memory_pct) / saturation_slope
+```
+
+The UI shows the forecast method, threshold, residual MAE, error bound, assumptions and linked evidence IDs.
+
+## Twelve deterministic scenarios
+
+Baseline growth, Redis crash, Redis latency, replica failover, 10x traffic, one-million-user stress, reduced Redis capacity, increased application replicas, rollback, rate limiting, cache-policy correction and configuration drift.
+
+Every result includes inputs, status, p95 latency, error rate, recovery estimate, evidence references and a deterministic SHA-256 hash.
+
+## Human control and audit export
+
+Only backend policy changes workflow state. The model/provider cannot approve a recommendation. Human approval means:
+
+1. Record the named human decision and rationale.
+2. Append it to the chained audit timeline.
+3. Permit export of the evidence package.
+
+It never means deployment or production execution. The ZIP contains incident, Twin manifest, evidence, forecast, scenarios, tournament, verification, business impact, executive brief, audit events and `manifest.sha256`.
+
+## Implementation status
+
+| Layer | Status |
+|---|---|
+| Deterministic local provider and seeded workflow | **Implemented and tested** |
+| FastAPI `/api/v1`, SQLite persistence and SSE audit events | **Implemented and tested** |
+| React command centre backed by persisted API data | **Implemented and tested** |
+| Digital Twin, scenarios, tournament, impact and export | **Implemented and tested** |
+| Optional Gemini/OpenAI narrative adapters | Adapter boundary exists; not required for the demo |
+| Google ADK, A2A and MCP enterprise connectors | Continued research / production evolution |
+| Vertex AI, Pub/Sub, Spanner Graph, BigQuery ML and Looker | Continued research; not active in this build |
+
+## Technology stack
+
+- FastAPI, Pydantic v2, SQLAlchemy and SQLite
+- React 18, TypeScript, Vite, TanStack Query and Recharts
+- Pytest, Ruff, MyPy, Bandit and Vitest
+- Docker Compose and Render Blueprint configuration
+- Deterministic mock provider by default; no paid key required
+
+## Quick start
+
+### Windows PowerShell
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+& ".\.venv\Scripts\python.exe" -m pip install -e ".[dev]"
 Set-Location frontend
 pnpm install
 Set-Location ..
-.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --port 8000
+& ".\.venv\Scripts\python.exe" -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
-In another terminal:
+In a second terminal:
 
 ```powershell
 Set-Location frontend
 pnpm dev
 ```
 
-Open `http://localhost:5173`.
+### Linux or macOS
+
+```bash
+python3 -m venv .venv
+./.venv/bin/python -m pip install -e '.[dev]'
+cd frontend && pnpm install && cd ..
+./.venv/bin/python -m uvicorn backend.app.main:app --reload --port 8000
+```
+
+Open `http://localhost:5173`. API documentation is at `http://localhost:8000/docs`.
 
 ## Validation
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest backend\tests demo_app\tests -q
-.\.venv\Scripts\python.exe -m ruff check backend demo_app scripts
-.\.venv\Scripts\python.exe -m mypy backend demo_app scripts
-.\.venv\Scripts\python.exe -m bandit -q -lll -r backend demo_app scripts
+& ".\.venv\Scripts\python.exe" -m pytest backend\tests demo_app\tests -q
+& ".\.venv\Scripts\python.exe" -m ruff check backend demo_app scripts
+& ".\.venv\Scripts\python.exe" -m mypy backend demo_app scripts
+& ".\.venv\Scripts\python.exe" -m bandit -q -lll -r backend demo_app scripts
+& ".\.venv\Scripts\python.exe" scripts\nexus_e2e.py
 Set-Location frontend
 pnpm test
 pnpm run build
 ```
 
-## Safety and honesty
+## Render deployment
 
-- Predictions are estimates under documented assumptions.
-- Confidence labels are not guaranteed probabilities.
-- Business impact is not an accounting result.
-- No formal verification or guaranteed causality is claimed.
-- The model cannot approve its own recommendation.
-- No production deployment or intervention path is configured.
-
-## Independent deployment
-
-`render.yaml` defines three services exclusively for this repository:
+`render.yaml` defines independent Nexus services and does not modify the earlier SentinelOps deployment:
 
 - `janicebenita-sentinelops-nexus`
 - `janicebenita-sentinelops-nexus-api`
 - `janicebenita-sentinelops-nexus-simulator`
 
-The original finalist SentinelOps repository and Render services are not modified.
+Render free services may cold-start. SQLite storage is ephemeral there; reset and replay are intentionally deterministic. PostgreSQL is recommended for durable production operation.
+
+## Honest limitations
+
+- The included telemetry is deterministic seeded demonstration data, not a live enterprise feed.
+- The forecast is a transparent bounded linear model, not calibrated predictive probability.
+- Simulation covers documented variables and is not a complete replica of production.
+- Business-impact results are estimates, not accounting results or guaranteed savings.
+- Enterprise connectors and Google-scale services shown in the research architecture are not active integrations in this working build.
+- The frontend bundle currently produces a non-blocking Vite chunk-size warning.
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [API](docs/api.md)
+- [Demo script](docs/demo-script.md)
+- [Evaluation](docs/evaluation.md)
+- [Safety](docs/safety.md)
+- [Limitations](docs/limitations.md)
+- [Judge Q&A](docs/judge-qa.md)
+- [Implementation plan](docs/implementation-plan.md)
+
+## Author
+
+Built by [Janicebenita](https://github.com/Janicebenita) for the National AI Agent Builder Finale.
+
+Contributions are welcome through focused issues and pull requests. Changes must preserve deterministic gates, evidence traceability, the human approval boundary and the absence of automatic production execution.
