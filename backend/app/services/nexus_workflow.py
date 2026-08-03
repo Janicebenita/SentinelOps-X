@@ -234,7 +234,7 @@ def tournament(db: Session, run: NexusRun) -> TournamentResult:
         benefit=max(.05,min(1.0,.35+.45*avoided+.20*min(1.0,max(0.0,(baseline.p95_ms-mean_p95)/max(1,baseline.p95_ms)))))
         stability=max(.05,min(1.0,1-mean_error/30-mean_p95/6000))
         performance=max(.05,min(1.0,1-mean_p95/5000))
-        if cid=="safe": stability=min(1.0,stability+.12*latency_pressure+.08*(controls.traffic_multiplier>=5))
+        if cid=="safe": stability=min(1.0,stability+.12*latency_pressure+.08*(controls.traffic_multiplier>=5)+.06*(pressure<65))
         if cid=="optimal": benefit=min(1.0,benefit+.12*load_pressure+.06*(controls.redis_capacity<12000))
         components={"benefit":benefit,"stability":stability,"safety":1-risk/100,"performance":performance,"cost":max(0,1-cost/250000),"recovery":1-recovery/30,"reversibility":1.0 if reversible else .35,"evidence":1.0}
         score=round(100*sum(WEIGHTS[k]*v for k,v in components.items()),1); eligible=all(g.passed for g in gates)
@@ -262,7 +262,7 @@ def recommend(db: Session, run: NexusRun) -> ExecutiveBrief:
     require_state(run,"IMPACT_READY"); forecast=ForecastResult.model_validate(run.forecast_json); tournament_result=TournamentResult.model_validate(run.tournament_json); impact_result=BusinessImpactResult.model_validate(run.impact_json); winner=next(x for x in tournament_result.candidates if x.candidate_id==tournament_result.recommended_candidate_id)
     result=ExecutiveBrief(summary=f"Redis safe capacity is forecast to be crossed in {forecast.predicted_crossing_minutes} minutes, before the reactive customer-impact alert.",recommendation=f"Recommend {winner.name}: {winner.action}. Approval prepares an evidence package only.",uncertainty=[f"Forecast error bound is ±{forecast.error_bound_minutes} minutes","Commercial exposure depends on displayed conversion and order-value assumptions"],contradictory_evidence=["Current error rate remains below the reactive alert threshold","Increased application replicas alone reduce latency but do not remove the Redis constraint"],evidence_ids=list(dict.fromkeys(forecast.evidence_ids+impact_result.evidence_ids)))
     controls=TwinControls.model_validate(run.inputs_json)
-    crossing=("already above the safe threshold" if forecast.predicted_crossing_minutes==0 else f"forecast to cross safe capacity in {forecast.predicted_crossing_minutes} minutes")
+    crossing=("already above the safe threshold" if forecast.predicted_crossing_minutes==0 else (f"below the safe threshold throughout the {forecast.forecast_horizon_minutes}-minute forecast horizon" if forecast.predicted_crossing_minutes>forecast.forecast_horizon_minutes else f"forecast to cross safe capacity in {forecast.predicted_crossing_minutes} minutes"))
     result=result.model_copy(update={
         "summary":f"With {controls.traffic_multiplier:g}x traffic, Redis capacity {controls.redis_capacity:,}, {controls.application_replicas} replicas, and {controls.dependency_latency_ms} ms dependency latency, Redis is {crossing}; projected customer impact is +{forecast.predicted_customer_impact_minutes} minutes.",
         "recommendation":f"Recommend {winner.name} ({winner.score:.1f}/100): {winner.action}. Estimated recovery is {winner.recovery_minutes} minutes and run-specific intervention cost is INR {winner.cost_estimate_inr:,}. Approval prepares an evidence package only.",
