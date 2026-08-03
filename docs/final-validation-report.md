@@ -19,7 +19,7 @@ Branch: `codex/add-render-live-links`
 - React command centre backed by persisted API data
 - One-click six-stop Guided Demo with pause and manual navigation
 - Explore Mode presets, bounded reruns and selectable scenario inspection
-- 4:54 narrated 1080p H.264/AAC walkthrough with synchronized captions
+- 4:50 narrated 1080p H.264/AAC synchronized simulation with captions
 - No production execution route
 
 ## Commands and exact results
@@ -74,7 +74,7 @@ Result: **passed**, 2,428 modules transformed. Vite reported a non-blocking 607.
 
 ### Narrated demo media
 
-Result: **passed** — duration 4:54.10; 1920×1080 H.264 High profile; AAC-LC 48 kHz stereo; synchronized SRT captions. A representative mid-video frame was visually inspected and shows Explore Mode, scenario selection, Guided Demo, and **PRODUCTION ACTION: NOT EXECUTED**.
+Result: **passed** — duration 4:50.03; 1920×1080 H.264 High profile at 30 fps; one AAC-LC 48 kHz stereo narration stream; synchronized SRT captions. All nine scene midpoints and the final seconds were visually inspected. Measured integrated loudness is -14.7 LUFS, loudness range is 3.0 LU, and true peak is -3.4 dBFS. The closing card holds through “Thank you” and displays **PRODUCTION ACTION: NOT EXECUTED**.
 
 ### Seeded end-to-end workflow
 
