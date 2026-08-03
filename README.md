@@ -191,6 +191,16 @@ It never means deployment or production execution. The ZIP contains incident, Tw
 
 ## Quick Start
 
+### Run on Windows with one command
+
+Double-click `start-sentinelops.cmd`, or run:
+
+```powershell
+.\start-sentinelops.cmd
+```
+
+The launcher prepares missing dependencies, starts the frontend, API and simulator, verifies their health, and opens `http://localhost:5173`. Keep its terminal window open while using the software; press `Ctrl+C` to stop it.
+
 ### Windows PowerShell
 
 ```powershell

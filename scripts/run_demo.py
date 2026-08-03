@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import time
+import webbrowser
 from pathlib import Path
 
 from health_check import main as health_check
@@ -30,6 +31,8 @@ def main() -> int:
         if health_check() != 0:
             return 1
         print("SentinelOps is ready: dashboard 5173, API 8000, demo app 8001")
+        if os.environ.get("SENTINELOPS_OPEN_BROWSER") == "1":
+            webbrowser.open("http://localhost:5173")
         while all(process.poll() is None for process in processes):
             time.sleep(1)
         return next((process.returncode or 1 for process in processes if process.poll() is not None), 1)

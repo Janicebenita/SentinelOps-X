@@ -9,6 +9,7 @@ __pycache__/
 .runtime-tmp-*/
 .video_tools/
 storytelling-output/
+.local-demo.*.log
 demo-video/
 voice.wav
 debug.log
