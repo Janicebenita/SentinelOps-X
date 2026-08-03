@@ -1,0 +1,8 @@
+{
+  "controls": {
+    "traffic_multiplier": 1,
+    "redis_capacity": 12000,
+    "application_replicas": 4,
+    "dependency_latency_ms": 20
+  }
+}
