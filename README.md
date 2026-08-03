@@ -240,7 +240,7 @@ pnpm run build
 | Command centre | [Open SentinelOps Nexus](https://janicebenita-sentinelops-nexus.onrender.com) |
 | Versioned API | [API health](https://janicebenita-sentinelops-nexus-api.onrender.com/api/v1/health) |
 | Simulator | [Simulator health](https://janicebenita-sentinelops-nexus-simulator.onrender.com/health) |
-| Render Blueprint | [Deployment dashboard](https://dashboard.render.com/blueprint/exs-d9o1ridaeets73csphlg) |
+| Render Blueprint | [Deployment dashboard]((https://janicebenita-sentinelops-nexus.onrender.com/)) |
 
 `render.yaml` defines independent Nexus services and does not modify the earlier SentinelOps deployment:
 
