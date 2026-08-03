@@ -23,9 +23,9 @@
   <a href="https://janicebenita-sentinelops-nexus.onrender.com"><strong>Open Live Demo</strong></a> ·
   <a href="#-quick-start"><strong>Quick Start</strong></a> ·
   <a href="#-architecture"><strong>Architecture</strong></a> ·
-  <a href="#-guided-judge-demo"><strong>Judge Demo</strong></a> ·
+  <a href="#-guided-product-demo"><strong>Product Demo</strong></a> ·
   <a href="#-safety-by-design"><strong>Safety</strong></a> ·
-  <a href="#-evaluation-evidence"><strong>Evidence</strong></a>
+  <a href="#-validation-evidence"><strong>Evidence</strong></a>
 </p>
 
 > [!IMPORTANT]
@@ -87,9 +87,9 @@ The seeded **Payment Service** begins healthy while traffic and Redis memory pre
 9. estimates business exposure using visible inputs and equations; and
 10. stops for a named human decision—without executing any production action.
 
-### Evaluation evidence
+## 📊 Validation Evidence
 
-| Judge question | Evidence-backed answer |
+| Technical question | Evidence-backed answer |
 |---|---|
 | What bottleneck is emerging? | Redis saturation on the Payment Service critical path |
 | When is safe capacity crossed? | **+30 minutes** in the canonical deterministic seed |
@@ -125,7 +125,7 @@ flowchart TD
 
 ---
 
-## 🎬 Guided Judge Demo
+## 🎬 Guided Product Demo
 
 The command centre provides two complementary experiences from the mode switcher.
 
@@ -160,7 +160,7 @@ Use `docs/sample-explore-controls.json` to exercise the upload workflow. Uploade
 > [!NOTE]
 > **Rerun = simulation only. Approval = decision recording only.** The interface keeps `PRODUCTION ACTION: NOT EXECUTED` visible throughout.
 
-### Recommended five-minute judging route
+### Recommended Five-Minute Demo Route
 
 | Time | Demonstrate | Proof point |
 |---:|---|---|
