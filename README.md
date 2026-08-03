@@ -87,6 +87,8 @@ The seeded **Payment Service** begins healthy while traffic and Redis memory pre
 9. estimates business exposure using visible inputs and equations; and
 10. stops for a named human decision—without executing any production action.
 
+<a name="validation-evidence"></a>
+
 ## 📊 Validation Evidence
 
 | Technical question | Evidence-backed answer |
