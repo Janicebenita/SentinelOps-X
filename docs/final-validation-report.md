@@ -1,7 +1,7 @@
 # Final validation report
 
 Date: 3 August 2026  
-Branch: `codex/nexus-p0-foundation`
+Branch: `codex/add-render-live-links`
 
 ## Validated working scope
 
@@ -17,6 +17,9 @@ Branch: `codex/nexus-p0-foundation`
 - Explicit human decision before evidence export
 - Chained SHA-256 audit verification and ZIP artifact hashes
 - React command centre backed by persisted API data
+- One-click six-stop Guided Demo with pause and manual navigation
+- Explore Mode presets, bounded reruns and selectable scenario inspection
+- 4:54 narrated 1080p H.264/AAC walkthrough with synchronized captions
 - No production execution route
 
 ## Commands and exact results
@@ -59,7 +62,7 @@ Result: exit code 0; no high-severity findings reported.
 pnpm test
 ```
 
-Result: **2 test files passed, 3 tests passed**.
+Result: **2 test files passed, 5 tests passed**. Guided Demo is explicitly tested not to call approval.
 
 ### Frontend production build
 
@@ -67,7 +70,11 @@ Result: **2 test files passed, 3 tests passed**.
 pnpm run build
 ```
 
-Result: **passed**, 2,428 modules transformed. Vite reported a non-blocking 601.10 KB chunk-size warning.
+Result: **passed**, 2,428 modules transformed. Vite reported a non-blocking 607.41 KB chunk-size warning.
+
+### Narrated demo media
+
+Result: **passed** — duration 4:54.10; 1920×1080 H.264 High profile; AAC-LC 48 kHz stereo; synchronized SRT captions. A representative mid-video frame was visually inspected and shows Explore Mode, scenario selection, Guided Demo, and **PRODUCTION ACTION: NOT EXECUTED**.
 
 ### Seeded end-to-end workflow
 
