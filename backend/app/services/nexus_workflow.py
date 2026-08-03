@@ -213,14 +213,32 @@ WEIGHTS={"benefit":.22,"stability":.16,"safety":.16,"performance":.12,"cost":.10
 
 
 def tournament(db: Session, run: NexusRun) -> TournamentResult:
-    require_state(run,"SIMULATED"); twin=TwinManifestContract.model_validate(run.twin_json)
-    specs: list[tuple[Literal["fast", "safe", "optimal"], str, str, int, int, int, bool, str]] = [("fast","FAST","Immediately scale application replicas",42000,32,4,False,"failover_test"),("safe","SAFE","Scale Redis capacity, enable controlled failover, and apply bounded traffic shaping",118000,14,9,True,""),("optimal","OPTIMAL","Increase Redis capacity, correct cache policy, and scale applications gradually",154000,9,6,True,"")]
+    require_state(run,"SIMULATED"); twin=TwinManifestContract.model_validate(run.twin_json); controls=TwinControls.model_validate(run.inputs_json)
+    scenarios={x.scenario_id:x for x in (ScenarioResultContract.model_validate(item) for item in run.scenarios_json)}
+    baseline=scenarios["baseline-growth"]
+    pressure=float(baseline.inputs["calculated_saturation_pct"])
+    latency_pressure=min(1.0,controls.dependency_latency_ms/250)
+    load_pressure=min(1.0,max(0.0,(pressure-65)/115))
+    specs: list[tuple[Literal["fast", "safe", "optimal"], str, str, int, int, int, bool, str]] = [
+        ("fast","FAST","Immediately scale application replicas",round(26000+controls.application_replicas*4000),round(24+34*load_pressure),max(3,round(4+latency_pressure*3)),False,"failover_test"),
+        ("safe","SAFE","Scale Redis capacity, enable controlled failover, and apply bounded traffic shaping",round(72000+controls.traffic_multiplier*18000),round(10+10*latency_pressure+8*load_pressure),max(5,round(7+latency_pressure*5)),True,""),
+        ("optimal","OPTIMAL","Increase Redis capacity, correct cache policy, and scale applications gradually",round(94000+max(0,18000-controls.redis_capacity)*4+controls.traffic_multiplier*16000),round(7+7*latency_pressure+6*load_pressure),max(4,round(5+latency_pressure*4)),True,"")]
     candidates=[]
     for cid,name,action,cost,risk,recovery,reversible,failed_gate in specs:
         gates=[GateResult(gate=g,passed=g!=failed_gate,details=("Replica oscillation exceeded the bounded failover policy." if g==failed_gate else "Deterministic check passed under the shared Twin manifest."),evidence_ids=["ev-config","ev-topology"]) for g in GATE_NAMES]
-        components={"benefit":.92 if cid!="fast" else .78,"stability":.96 if cid=="optimal" else .84,"safety":1-risk/100,"performance":.94 if cid=="optimal" else .86,"cost":max(0,1-cost/250000),"recovery":1-recovery/30,"reversibility":1.0 if reversible else .35,"evidence":1.0}
+        scenario_ids={"fast":["increased-app-replicas"],"safe":["replica-failover","rate-limiting-intervention"],"optimal":["cache-policy-correction","rollback-intervention"]}[cid]
+        evidence_scenarios=[scenarios[x] for x in scenario_ids]
+        mean_p95=sum(x.p95_ms for x in evidence_scenarios)/len(evidence_scenarios)
+        mean_error=sum(x.error_rate_pct for x in evidence_scenarios)/len(evidence_scenarios)
+        avoided=sum(1 for x in evidence_scenarios if x.bottleneck_avoided)/len(evidence_scenarios)
+        benefit=max(.05,min(1.0,.35+.45*avoided+.20*min(1.0,max(0.0,(baseline.p95_ms-mean_p95)/max(1,baseline.p95_ms)))))
+        stability=max(.05,min(1.0,1-mean_error/30-mean_p95/6000))
+        performance=max(.05,min(1.0,1-mean_p95/5000))
+        if cid=="safe": stability=min(1.0,stability+.12*latency_pressure+.08*(controls.traffic_multiplier>=5))
+        if cid=="optimal": benefit=min(1.0,benefit+.12*load_pressure+.06*(controls.redis_capacity<12000))
+        components={"benefit":benefit,"stability":stability,"safety":1-risk/100,"performance":performance,"cost":max(0,1-cost/250000),"recovery":1-recovery/30,"reversibility":1.0 if reversible else .35,"evidence":1.0}
         score=round(100*sum(WEIGHTS[k]*v for k,v in components.items()),1); eligible=all(g.passed for g in gates)
-        candidates.append(InterventionCandidate(candidate_id=cid,name=name,action=action,expected_benefit="Avoid the projected Redis safe-capacity crossing while preserving checkout SLO.",cost_estimate_inr=cost,risk_score=risk,recovery_minutes=recovery,reversible=reversible,assumptions=["Capacity can be provisioned within the stated recovery window","Traffic-shaping policy is available"],gates=gates,score_components=components,score=score,eligible=eligible,verdict=("Eligible: all mandatory gates passed." if eligible else f"Disqualified: mandatory gate {failed_gate} failed.")))
+        candidates.append(InterventionCandidate(candidate_id=cid,name=name,action=action,expected_benefit=f"Run-specific estimate from {', '.join(scenario_ids)} at {pressure:.1f}% projected saturation.",cost_estimate_inr=cost,risk_score=risk,recovery_minutes=recovery,reversible=reversible,assumptions=["Capacity can be provisioned within the stated recovery window","Traffic-shaping policy is available"],gates=gates,score_components={k:round(v,4) for k,v in components.items()},score=score,eligible=eligible,verdict=(f"Eligible at {pressure:.1f}% projected saturation; all mandatory gates passed." if eligible else f"Disqualified at {pressure:.1f}% projected saturation: mandatory gate {failed_gate} failed.")))
     eligible_candidates=[x for x in candidates if x.eligible]; winner=max(eligible_candidates,key=lambda x:x.score)
     result=TournamentResult(candidates=candidates,recommended_candidate_id=winner.candidate_id,weights=WEIGHTS,rule="Eligibility overrides score; an ineligible candidate can never be recommended.",twin_id=twin.twin_id)
     run.tournament_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"TOURNAMENT_READY","optimisation-agent",{"recommended":winner.candidate_id,"fast_eligible":candidates[0].eligible}); return result
@@ -243,6 +261,13 @@ def impact(db: Session, run: NexusRun) -> BusinessImpactResult:
 def recommend(db: Session, run: NexusRun) -> ExecutiveBrief:
     require_state(run,"IMPACT_READY"); forecast=ForecastResult.model_validate(run.forecast_json); tournament_result=TournamentResult.model_validate(run.tournament_json); impact_result=BusinessImpactResult.model_validate(run.impact_json); winner=next(x for x in tournament_result.candidates if x.candidate_id==tournament_result.recommended_candidate_id)
     result=ExecutiveBrief(summary=f"Redis safe capacity is forecast to be crossed in {forecast.predicted_crossing_minutes} minutes, before the reactive customer-impact alert.",recommendation=f"Recommend {winner.name}: {winner.action}. Approval prepares an evidence package only.",uncertainty=[f"Forecast error bound is ±{forecast.error_bound_minutes} minutes","Commercial exposure depends on displayed conversion and order-value assumptions"],contradictory_evidence=["Current error rate remains below the reactive alert threshold","Increased application replicas alone reduce latency but do not remove the Redis constraint"],evidence_ids=list(dict.fromkeys(forecast.evidence_ids+impact_result.evidence_ids)))
+    controls=TwinControls.model_validate(run.inputs_json)
+    crossing=("already above the safe threshold" if forecast.predicted_crossing_minutes==0 else f"forecast to cross safe capacity in {forecast.predicted_crossing_minutes} minutes")
+    result=result.model_copy(update={
+        "summary":f"With {controls.traffic_multiplier:g}x traffic, Redis capacity {controls.redis_capacity:,}, {controls.application_replicas} replicas, and {controls.dependency_latency_ms} ms dependency latency, Redis is {crossing}; projected customer impact is +{forecast.predicted_customer_impact_minutes} minutes.",
+        "recommendation":f"Recommend {winner.name} ({winner.score:.1f}/100): {winner.action}. Estimated recovery is {winner.recovery_minutes} minutes and run-specific intervention cost is INR {winner.cost_estimate_inr:,}. Approval prepares an evidence package only.",
+        "contradictory_evidence":[f"Current run begins with {controls.application_replicas} application replicas; replica-only FAST still fails the mandatory failover gate",f"The selected strategy is based on this run's 12 counterfactuals; revenue exposure is an estimate of INR {impact_result.revenue_exposure_inr:,.0f}"],
+    })
     run.recommendation_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"RECOMMENDED","executive-agent",result.model_dump(mode="json")); return result
 
 

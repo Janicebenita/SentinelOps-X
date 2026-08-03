@@ -64,6 +64,32 @@ def test_scenarios_are_calculated_from_explore_controls(db):
     assert resilient_growth["inputs"]["base_controls"]["redis_capacity"] == 50000
 
 
+def test_four_explore_presets_recalculate_all_downstream_decisions(db):
+    presets = {
+        "Baseline": TwinControls(traffic_multiplier=1, redis_capacity=12000, application_replicas=4, dependency_latency_ms=20),
+        "10x traffic": TwinControls(traffic_multiplier=10, redis_capacity=12000, application_replicas=4, dependency_latency_ms=80),
+        "Constrained": TwinControls(traffic_multiplier=1.5, redis_capacity=6000, application_replicas=2, dependency_latency_ms=250),
+        "Resilient": TwinControls(traffic_multiplier=2, redis_capacity=50000, application_replicas=12, dependency_latency_ms=10),
+    }
+    runs = []
+    for name, controls in presets.items():
+        run = nexus.create_run(db, RunCreate(name=name, controls=controls))
+        nexus.run_all(db, run)
+        runs.append(run)
+
+    tournament_signatures = {
+        tuple((candidate["score"], candidate["risk_score"], candidate["recovery_minutes"], candidate["cost_estimate_inr"]) for candidate in run.tournament_json["candidates"])
+        for run in runs
+    }
+    assert len(tournament_signatures) == 4
+    assert len({run.recommendation_json["summary"] for run in runs}) == 4
+    assert len({run.recommendation_json["recommendation"] for run in runs}) == 4
+    assert len({run.impact_json["revenue_exposure_inr"] for run in runs}) == 4
+    for run in runs:
+        assert str(run.inputs_json["redis_capacity"]) in run.recommendation_json["summary"].replace(",", "")
+        assert run.tournament_json["recommended_candidate_id"] in {"safe", "optimal"}
+
+
 def test_invalid_transition_and_approval_bypass_are_blocked(db):
     run = nexus.create_run(db, RunCreate(name="Payment Service capacity forecast"))
     try:
