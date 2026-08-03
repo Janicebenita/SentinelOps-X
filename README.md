@@ -13,12 +13,12 @@
 
 <p align="center">
   <a href="https://janicebenita-sentinelops-nexus.onrender.com"><strong>Open live demo</strong></a> |
-  <a href="#quick-start">Quick start</a> | <a href="#architecture">Architecture</a> |
-  <a href="docs/demo-script.md">Judge demo</a> | <a href="docs/safety.md">Safety</a> |
-  <a href="docs/judge-qa.md">Judge Q&A</a>
+  <a href="#quick-start">Quick Start</a> | <a href="#architecture">Architecture</a> |
+  <a href="#guided-product-demo">Guided Demo</a> | <a href="docs/safety.md">Safety</a> |
+  <a href="#evaluation-evidence">Evaluation Evidence</a>
 </p>
 
-> **Challenge:** B2B Services - Late Bottleneck Detection<br>
+> **National AI Agent Builder Finale submission for the B2B Services challenge: Late Bottleneck Detection.**<br>
 > **Working-build status:** deterministic local workflow validated without paid credentials<br>
 > **Safety boundary:** **PRODUCTION ACTION: NOT EXECUTED**
 
@@ -26,23 +26,25 @@
 
 Traditional operational tooling often alerts after a customer-facing threshold has already been crossed. SentinelOps Nexus asks a more useful question: **which constraint is likely to become the next bottleneck, when will it affect customers, and which intervention is safest under nearby failure conditions?**
 
-## What the working build demonstrates
+## Evaluation Evidence
 
 The seeded Payment Service begins healthy while traffic and Redis pressure rise. Nexus forecasts the Redis safe-capacity crossing before the reactive error alert, creates a hashed bounded Digital Twin, runs 12 deterministic scenarios, evaluates three interventions, rejects a plausible false fix, estimates business exposure using visible equations, and stops at a human decision.
 
-| Judge question | Evidence-backed answer |
-|---|---|
-| What is emerging? | Redis saturation on the Payment Service critical path |
-| When is safe capacity crossed? | +30 minutes in the canonical seed |
-| When could customers be affected? | +45 minutes under stated assumptions |
-| How many scenarios are replayed? | 12 with the same manifest and seed |
-| Which false fix is caught? | FAST fails the mandatory failover gate |
-| Which strategy is recommended? | Highest-scoring eligible candidate; currently OPTIMAL |
-| Is confidence a probability? | No - it is a heuristic evidence score |
-| Is revenue exposure guaranteed? | No - it is an operational estimate with visible inputs |
-| Does approval deploy anything? | No - it records a decision and enables evidence export |
+### Key Evaluation Questions
 
-## The memorable comparison
+| Question | Evidence-Backed Answer |
+|---|---|
+| What bottleneck is emerging? | Redis saturation on the Payment Service critical path |
+| When is safe capacity crossed? | At +30 minutes in the canonical deterministic seed |
+| When may customers be affected? | At +45 minutes under the documented assumptions |
+| How many scenarios are replayed? | 12 scenarios using the same Twin manifest and random seed |
+| Which false fix is detected? | FAST fails the mandatory failover safety gate |
+| Which strategy is recommended? | The highest-scoring eligible candidate; currently OPTIMAL |
+| Is confidence a probability? | No. It is a heuristic evidence score |
+| Is revenue exposure guaranteed? | No. It is an operational estimate based on visible inputs |
+| Does approval deploy anything? | No. Approval records a human decision and enables evidence export |
+
+### Intervention Decision Matrix
 
 | Intervention | Intent | Mandatory gates | Eligible | Decision |
 |---|---|---:|---:|---|
@@ -52,7 +54,9 @@ The seeded Payment Service begins healthy while traffic and Redis pressure rise.
 
 Eligibility overrides score. A failed mandatory gate can never be outweighed by model confidence.
 
-## Guided Demo and Explore Mode
+## Guided Product Demo
+
+The canonical demonstration shows how SentinelOps Nexus predicts a Redis bottleneck before a reactive alert, builds a bounded Digital Twin, replays 12 deterministic scenarios, rejects a plausible but unsafe intervention, estimates business exposure, and stops at a human decision boundary.
 
 The command centre now supports two complementary paths from the mode switcher at the top of the live UI:
 
@@ -133,7 +137,7 @@ The Digital Twin is a **bounded operational model under documented assumptions**
 
 ## Yesterday - Now - Tomorrow
 
-The command centre exposes five canonical points: Yesterday, Now, +15, +30 and +45 minutes. Judges can change traffic, Redis capacity, application replicas and dependency latency, then create and run a new persisted workflow. Forecast calculations remain deterministic and visible:
+The command centre exposes five canonical points: Yesterday, Now, +15, +30 and +45 minutes. Operators can change traffic, Redis capacity, application replicas and dependency latency, then create and run a new persisted workflow. Forecast calculations remain deterministic and visible:
 
 ```text
 memory_pct(t) = current_memory_pct + saturation_slope * minutes
@@ -158,7 +162,14 @@ Only backend policy changes workflow state. The model/provider cannot approve a 
 
 It never means deployment or production execution. The ZIP contains incident, Twin manifest, evidence, forecast, scenarios, tournament, verification, business impact, executive brief, audit events and `manifest.sha256`.
 
-## Implementation status
+## Key Technical Questions
+
+- How are forecasts produced? A transparent bounded linear saturation model exposes its equation, threshold, residual error and assumptions.
+- How are scenarios compared? All 12 scenarios use the same immutable Twin manifest and random seed.
+- How are unsafe recommendations blocked? Mandatory eligibility gates override candidate scores.
+- What does approval do? It records a human decision and enables evidence export; it never performs a production action.
+
+## Implementation Status
 
 | Layer | Status |
 |---|---|
@@ -178,7 +189,7 @@ It never means deployment or production execution. The ZIP contains incident, Tw
 - Docker Compose and Render Blueprint configuration
 - Deterministic mock provider by default; no paid key required
 
-## Quick start
+## Quick Start
 
 ### Windows PowerShell
 
@@ -209,7 +220,7 @@ cd frontend && pnpm install && cd ..
 
 Open `http://localhost:5173`. API documentation is at `http://localhost:8000/docs`.
 
-## Validation
+## Validation and Reproducibility
 
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest backend\tests demo_app\tests -q
@@ -252,15 +263,15 @@ Render free services may cold-start. SQLite storage is ephemeral there; reset an
 
 - [Architecture](docs/architecture.md)
 - [API](docs/api.md)
-- [Demo script](docs/demo-script.md)
+- [Guided Product Demo](docs/demo-script.md)
 - [Evaluation](docs/evaluation.md)
 - [Safety](docs/safety.md)
 - [Limitations](docs/limitations.md)
-- [Judge Q&A](docs/judge-qa.md)
+- [Evaluation Q&A](docs/judge-qa.md)
 - [Implementation plan](docs/implementation-plan.md)
 
 ## Author
 
-Built by [Janicebenita](https://github.com/Janicebenita) for the National AI Agent Builder Finale.
+Built by [Janice Benita F](https://github.com/Janicebenita) for the National AI Agent Builder Finale.
 
 Contributions are welcome through focused issues and pull requests. Changes must preserve deterministic gates, evidence traceability, the human approval boundary and the absence of automatic production execution.
