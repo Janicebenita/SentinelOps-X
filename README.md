@@ -397,6 +397,7 @@ Transparent limitations strengthen the evidence: judges can distinguish what is 
 
 | Guide | Purpose |
 |---|---|
+| [Product Requirements](docs/PRD.md) | Complete requirements, acceptance criteria, and product boundaries |
 | [Architecture](docs/architecture.md) | Components, boundaries, and data flow |
 | [API](docs/api.md) | Versioned endpoints and contracts |
 | [Guided Product Demo](docs/demo-script.md) | Reproducible judge walkthrough |
