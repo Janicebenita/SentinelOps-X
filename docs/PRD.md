@@ -1,5 +1,9 @@
 # SentinelOps Nexus: Product Requirements Document
 
+> Status: **Finale Working Build**. SentinelOps Nexus is a bounded operational model with a tamper-evident SHA-256-linked audit chain. Cloud-dependent capabilities are classified in `integration-status-matrix.md`; configuration and diagrams are not deployment evidence.
+
+Google-native extensions provide Gemini evidence reasoning, Gemma advisory policy review, ADK/A2A orchestration boundaries, an MCP gateway, Vertex supplemental forecasting, BigQuery schemas, Pub/Sub event contracts, Cloud Run packaging, trace metadata and OAuth2/JWT-ready service identity. Deterministic calculations and safety gates remain authoritative, with visible fallback state.
+
 ## 1. Document Control
 
 | Field | Details |

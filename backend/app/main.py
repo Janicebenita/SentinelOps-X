@@ -4,20 +4,25 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, text
 from .api import nexus_router, router
+from .enterprise import router as enterprise_router
 from .config import settings
 from .database import Base,SessionLocal,engine
 from .models import Incident
 from . import llm
 from .tools.sandbox import get_sandbox
+from .security import reset_rate_limits, security_middleware
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    reset_rate_limits()
     Base.metadata.create_all(engine)
     yield
 
 app=FastAPI(title="SentinelOps Nexus API",version="3.0.0",description="The Enterprise Operational Digital Twin: predictive, evidence-driven, and human-controlled",lifespan=lifespan)
+app.middleware("http")(security_middleware)
 app.add_middleware(CORSMiddleware,allow_origins=[x.strip() for x in settings.cors_origins.split(",") if x.strip()],allow_methods=["GET","POST"],allow_headers=["Content-Type"])
 app.include_router(router)
 app.include_router(nexus_router)
+app.include_router(enterprise_router)
 @app.get("/health")
 def health():
     return {"status":"ok","backend":True,"provider":settings.llm_provider,"production_action":"NOT_EXECUTED"}

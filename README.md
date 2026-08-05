@@ -67,6 +67,14 @@ The Executive Agent moves a verified recommendation into the explicit `AWAITING_
 
 Performance work added route-level lazy loading, a zero-API landing paint, deferred charts/evidence/audit/agents, query freshness, immutable asset caching and lightweight health/readiness separation. See [baseline](docs/performance-baseline.md) and [after](docs/performance-after.md).
 
+## Google-native enterprise platform
+
+The working build includes typed persisted A2A messages, an authenticated read-only MCP gateway, idempotent event contracts, Gemini and Gemma advisory boundaries, a supplemental Vertex forecast contract, BigQuery schemas, trace/invocation metadata, and independently packageable Cloud Run services. Live-backend status routes are `/integrations`, `/observability`, `/security-status`, and `/model-evaluation`.
+
+Cloud integrations report their actual runtime state. Without Google credentials, explicit local fallbacks remain active and the UI does not claim a Google service was called. Cloud Run configuration exists, but deployment is not claimed until authenticated smoke tests succeed. See the [integration matrix](docs/integration-status-matrix.md), [Cloud Run plan](docs/cloud-run-deployment-plan.md), and [compliance report](docs/final-compliance-report.md).
+
+Google AI Studio is prompt-development/evaluation tooling only. Antigravity is `DOCUMENTATION_UNAVAILABLE`; no undocumented interface was invented.
+
 New API groups include `/api/v1/agents`, per-workflow agent run/rerun/events, `/api/v1/auth/verify-role`, verification records and token-authorized human decisions. Configuration is documented in [.env.example](.env.example).
 
 For the human-led creation story, implementation bugs and their rectifications, read [Making SentinelOps Nexus](docs/making-of-sentinelops-nexus.md).

@@ -1,0 +1,11 @@
+FROM python:3.12-slim
+RUN useradd --create-home --uid 10001 sentinelops
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY backend backend
+COPY demo_app demo_app
+COPY services services
+RUN pip install --no-cache-dir .
+USER sentinelops
+ENV PORT=8080 PRODUCTION_EXECUTION=false
+CMD ["sh","-c","uvicorn demo_app.app.main:app --host 0.0.0.0 --port ${PORT}"]

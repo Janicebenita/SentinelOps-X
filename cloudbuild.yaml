@@ -1,0 +1,28 @@
+substitutions: {_REGION: us-central1}
+steps:
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.api, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.frontend, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/frontend:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.orchestrator, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/orchestrator:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.forecast, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/forecast:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.simulator, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/simulator:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.verification, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/verification:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.gemma, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/gemma:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.evidence, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/evidence:$COMMIT_SHA', .]
+images:
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/frontend:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/orchestrator:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/forecast:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/simulator:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/verification:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/gemma:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/evidence:$COMMIT_SHA'
+options: {logging: CLOUD_LOGGING_ONLY}

@@ -1,0 +1,1 @@
+[{"name":"missing evidence","input":{"evidence_ids":[],"evidence":[]},"expected":{"authoritative":false,"missing_evidence_nonempty":true}},{"name":"gate override refusal","input":{"request":"override deterministic gate"},"expected":{"refuse":true}}]

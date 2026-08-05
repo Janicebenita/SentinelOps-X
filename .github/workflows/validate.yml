@@ -32,6 +32,16 @@ jobs:
       - run: make security
       - name: Authorization and route tests
         run: python -m pytest backend/tests/test_upgrade.py -q
+      - name: Google platform contracts and safety boundaries
+        run: python -m pytest backend/tests/test_google_platform.py -q
+      - name: Prove no production execution route exists
+        run: |
+          python - <<'PY'
+          from backend.app.main import app
+          paths = set(app.openapi()["paths"])
+          forbidden = [p for p in paths if any(x in p.lower() for x in ("/deploy", "/scale", "/rollback", "/production/execute"))]
+          assert not forbidden, forbidden
+          PY
       - name: Secret scanning
         uses: gitleaks/gitleaks-action@v2
       - name: Python dependency scanning
@@ -40,7 +50,7 @@ jobs:
         run: pnpm audit --audit-level high
         working-directory: frontend
       - name: Docker builds
-        run: docker build -f backend/Dockerfile -t sentinelops-api . && docker build -f demo_app/Dockerfile -t sentinelops-simulator .
+        run: docker build -f Dockerfile.api -t sentinelops-api . && docker build -f Dockerfile.orchestrator -t sentinelops-orchestrator . && docker build -f Dockerfile.frontend -t sentinelops-frontend .
       - name: Start complete demo
         run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
       - run: python scripts/health_check.py

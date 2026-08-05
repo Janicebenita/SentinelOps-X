@@ -1,0 +1,10 @@
+FROM python:3.12-slim
+RUN useradd --create-home --uid 10001 sentinelops
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY backend backend
+COPY services services
+RUN pip install --no-cache-dir .
+USER sentinelops
+ENV PORT=8080 PRODUCTION_EXECUTION=false
+CMD ["sh","-c","uvicorn services.gemma.main:app --host 0.0.0.0 --port ${PORT}"]
