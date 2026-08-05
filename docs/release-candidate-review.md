@@ -1,6 +1,6 @@
 # SentinelOps Nexus Release-Candidate Review
 
-Review date: 5 August 2026  
+Review date: 6 August 2026
 Candidate baseline: `main` after the secure operational-workforce upgrade  
 Reviewer role: Principal full-stack, AI systems, security, DevOps, performance and QA review  
 
@@ -22,7 +22,7 @@ Reviewer role: Principal full-stack, AI systems, security, DevOps, performance a
 | Trial code `0000` maps to Intern | PASS | API and live deployment checks return `INTERN`. |
 | Intern cannot approve | PASS | Current and legacy approval APIs return HTTP 403 `APPROVER_NOT_QUALIFIED`. |
 | Trial code `1111` maps to Senior Developer | PASS | API and live deployment checks return `SENIOR_DEVELOPER`. |
-| Senior approval requires rationale | PASS | Strict request schema returns HTTP 422 when rationale is missing; UI remains disabled without it. |
+| Senior approval requires rationale | PASS | Strict request schema returns HTTP 422 when rationale is missing; Verification Agent reports `MORE_INFORMATION_REQUIRED` until supplied; UI remains disabled without it. |
 | Expired role tokens are rejected | PASS | Backend test returns HTTP 401 `ROLE_TOKEN_EXPIRED`. |
 | Raw codes absent from application logs | PASS | Release scan of repository `.log` files and captured authentication logs found no raw codes. |
 | Raw codes absent from database | PASS | Persisted `RoleVerification` field inspection confirms only a keyed fingerprint is stored. |
@@ -39,7 +39,9 @@ Reviewer role: Principal full-stack, AI systems, security, DevOps, performance a
 | No production execution endpoint exists | PASS | OpenAPI path scan found no execute/apply/deploy-production endpoint. |
 | README matches implementation | PASS | Routes, 11 agents, roles, trial credentials, safety, deployment and performance claims correspond to code and tests. |
 | `render.yaml` matches final structure | PASS | Existing API, simulator and static service names are preserved; SPA rewrite, health, caching and server-only role settings are present. |
-| Full test and analysis suite passes | PASS | Exact evidence below. |
+| Explicit `AWAITING_HUMAN` boundary | PASS | Recommendation transitions into this state; all human decisions require it exactly. |
+| Required audit actions are chained | PASS | Open, run, rerun, failure, role, enablement, submission, verification and export events are persisted. |
+| Full test and analysis suite passes | PASS | Exact evidence below and in `final-validation-report.md`. |
 
 ## Issue found and corrected during RC review
 

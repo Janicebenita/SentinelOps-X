@@ -61,6 +61,8 @@ The AI Workforce now contains eleven backend-connected agents: Nexus Orchestrato
 
 Approval records a human decision. The Verification Agent and AI models never approve. No production execution endpoint exists.
 
+The Executive Agent moves a verified recommendation into the explicit `AWAITING_HUMAN` state. Only then can a signed, role-qualified human decision be submitted; evidence, audit and verification routes load their persisted backend artifacts rather than frontend placeholders.
+
 **PRODUCTION ACTION: NOT EXECUTED**
 
 Performance work added route-level lazy loading, a zero-API landing paint, deferred charts/evidence/audit/agents, query freshness, immutable asset caching and lightweight health/readiness separation. See [baseline](docs/performance-baseline.md) and [after](docs/performance-after.md).

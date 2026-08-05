@@ -13,6 +13,7 @@ export const nexusApi={
  evidence:(id:number)=>req<NexusEvidenceV1[]>(`/api/v1/workflows/${id}/evidence`),
  uploadEvidence:(id:number,payload:{filename:string;category:string;content:string})=>req<NexusEvidenceV1>(`/api/v1/workflows/${id}/evidence/upload`,{method:'POST',body:JSON.stringify(payload)}),
  timeline:(id:number)=>req<NexusAuditV1[]>(`/api/v1/workflows/${id}/timeline`),
+ verificationResults:(id:number)=>req<Record<string,unknown>[]>(`/api/v1/workflows/${id}/verification`),
  agents:(id:number)=>req<NexusAgent[]>(`/api/v1/workflows/${id}/agents`),
  agent:(id:number,name:string)=>req<NexusAgent>(`/api/v1/workflows/${id}/agents/${name}`),
  agentEvents:(id:number,name:string)=>req<NexusAuditV1[]>(`/api/v1/workflows/${id}/agents/${name}/events`),

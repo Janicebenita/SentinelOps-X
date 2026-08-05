@@ -152,12 +152,19 @@ def _decide(run_id: int, payload: AuthorizedDecision, expected: str, db: Session
     if expected=="approve" and token["role"]!="SENIOR_DEVELOPER":
         workflow.append_event(db,run,"approval.blocked",payload.actor_name,{"role":token["role"],"reason":"APPROVER_NOT_QUALIFIED"})
         return JSONResponse(status_code=403,content={"code":"APPROVER_NOT_QUALIFIED","message":"Approval requires the Senior Developer role.","production_action":"NOT_EXECUTED"})
-    if run.state not in {"RECOMMENDED","AWAITING_HUMAN"}: raise HTTPException(status_code=409,detail="Workflow is not awaiting human review")
+    if run.state != "AWAITING_HUMAN": raise HTTPException(status_code=409,detail="Workflow is not awaiting human review")
     tournament=run.tournament_json; candidate=next((x for x in tournament.get("candidates",[]) if x.get("candidate_id")==tournament.get("recommended_candidate_id")),None)
     if not candidate or not candidate.get("eligible") or not all(g.get("passed") for g in candidate.get("gates",[]) if g.get("mandatory",True)): raise HTTPException(status_code=409,detail="Recommended candidate is not eligible or mandatory gates failed")
     if run.production_action_executed: raise HTTPException(status_code=409,detail="Production execution safety boundary is not ready")
     technical=workforce.technical_verification(db,run)
     if technical.result!="VERIFIED": raise HTTPException(status_code=409,detail="Verification Agent rejected approval readiness")
+    qualification_checks={"access_code_valid":True,"role_mapped":token["role"] in {"INTERN","SENIOR_DEVELOPER"},"approval_permission":expected!="approve" or token["role"]=="SENIOR_DEVELOPER","workflow_state":run.state=="AWAITING_HUMAN","candidate_eligible":bool(candidate and candidate.get("eligible")),"mandatory_rationale":len(payload.rationale.strip())>=3,"audit_ready":workflow.verify_audit(db,run.id)["valid"],"production_execution_disabled":not run.production_action_executed}
+    qualification_failed=[name for name,passed in qualification_checks.items() if not passed]
+    qualification=VerificationRecord(workflow_id=run.id,subject_type="approver",subject_id=payload.actor_name,result="VERIFIED" if not qualification_failed else "REJECTED",checks=qualification_checks,failed_checks=qualification_failed,evidence_ids=technical.evidence_ids,reason="Approver and decision qualification verified." if not qualification_failed else "Decision qualification failed: "+", ".join(qualification_failed),audit_event_id=technical.audit_event_id); db.add(qualification); db.commit()
+    if qualification_failed: raise HTTPException(status_code=409,detail=qualification.reason)
+    if expected=="approve": workflow.append_event(db,run,"approval.enabled",payload.actor_name,{"role":token["role"],"action":"approve","object_type":"workflow","object_id":run.id,"result":"enabled","evidence_references":technical.evidence_ids})
+    action={"approve":"approval.submitted","reject":"rejection.submitted","request_more_evidence":"more_evidence.requested"}[expected]
+    workflow.append_event(db,run,action,payload.actor_name,{"role":token["role"],"action":expected,"object_type":"workflow","object_id":run.id,"result":"submitted","evidence_references":technical.evidence_ids,"production_action":"NOT_EXECUTED"})
     decision_input=HumanDecisionInput(actor=payload.actor_name,decision=payload.decision,rationale=payload.rationale)
     result=_action(lambda: workflow.decide(db,run,decision_input))
     decision_event=db.scalar(select(NexusAuditEvent).where(NexusAuditEvent.run_id==run.id).order_by(NexusAuditEvent.sequence.desc()))
@@ -228,7 +235,10 @@ def agent_status(agent_name: str) -> Any: return agent_definition(agent_name)
 
 @router.get("/workflows/{run_id}/agents/{agent_name}")
 def workflow_agent(run_id: int,agent_name: str,db: Db) -> Any:
-    try: return workforce.workspace(db,agent_name,_run(db,run_id))
+    try:
+        run=_run(db,run_id); result=workforce.workspace(db,agent_name,run)
+        workflow.append_event(db,run,"agent.opened","human-operator",{"agent_name":agent_name,"object_type":"agent","object_id":agent_name,"result":"opened","evidence_references":result.evidence_references})
+        return result
     except LookupError as exc: raise HTTPException(status_code=404,detail=str(exc)) from exc
 
 
@@ -269,8 +279,8 @@ def verify_role(payload: RoleVerifyRequest,db: Db) -> Any:
     if latest:
         event=workflow.append_event(db,latest,"role.verification_succeeded",payload.actor_name,{"role":row.role,"token_id":row.token_id,"expires_at":row.expires_at.isoformat()}); row.audit_event_id=event.id; db.commit()
         approval_allowed=row.role=="SENIOR_DEVELOPER"; candidate=latest.tournament_json.get("recommended_candidate_id")
-        checks={"access_code_valid":True,"role_mapped":True,"approval_permission":approval_allowed,"workflow_state":latest.state in {"RECOMMENDED","AWAITING_HUMAN"},"candidate_eligible":bool(candidate),"audit_ready":workflow.verify_audit(db,latest.id)["valid"]}
-        failed=[name for name,passed in checks.items() if not passed]; qualification=VerificationRecord(workflow_id=latest.id,subject_type="approver",subject_id=payload.actor_name,result="VERIFIED" if not failed else "REJECTED",checks=checks,failed_checks=failed,evidence_ids=[],reason="Approver qualification verified." if not failed else "Role verified; approval qualification failed: "+", ".join(failed),audit_event_id=event.id); db.add(qualification); db.commit()
+        checks={"access_code_valid":True,"role_mapped":True,"approval_permission":approval_allowed,"workflow_state":latest.state=="AWAITING_HUMAN","candidate_eligible":bool(candidate),"mandatory_rationale":False,"audit_ready":workflow.verify_audit(db,latest.id)["valid"]}
+        failed=[name for name,passed in checks.items() if not passed]; denied=not approval_allowed or any(name not in {"mandatory_rationale"} for name in failed); result="REJECTED" if denied else "MORE_INFORMATION_REQUIRED"; qualification=VerificationRecord(workflow_id=latest.id,subject_type="approver",subject_id=payload.actor_name,result=result,checks=checks,failed_checks=failed,evidence_ids=[],reason="Role verified; mandatory rationale is required to complete qualification." if result=="MORE_INFORMATION_REQUIRED" else "Role verified; approval qualification failed: "+", ".join(failed),audit_event_id=event.id); db.add(qualification); db.commit()
     return {"verified":True,"role":row.role,"permissions":permissions,"expires_at":row.expires_at,"verification_token":token}
 
 

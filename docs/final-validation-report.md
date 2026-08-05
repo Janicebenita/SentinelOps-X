@@ -1,5 +1,11 @@
 # Final validation report
 
+## 6 August 2026 exact-specification validation
+
+The final conformance pass introduced the explicit `AWAITING_HUMAN` workflow state, backend-populated evidence/audit/verification routes, calculated approver qualification including mandatory rationale, and the required `agent.opened`, `approval.enabled`, `approval.submitted`, `rejection.submitted` and `more_evidence.requested` audit events. The Verification Agent persists `MORE_INFORMATION_REQUIRED` after role verification when rationale is still absent and persists `VERIFIED` only when the submitted decision passes every qualification check.
+
+Final exact results: **52 backend/demo tests passed**, **13 frontend tests passed**, Ruff passed, MyPy passed across 61 files, Bandit passed, production build passed, compiled credential scan passed, audit chain passed, and all evidence manifest hashes passed.
+
 ## 5 August 2026 secure workforce upgrade
 
 Implemented route-split landing and command-centre experiences; eleven clickable operational Agent Workspaces; persisted AgentExecution, RoleVerification, HumanDecision and VerificationRecord models; a technical and qualification Verification Agent; signed short-lived role tokens; Intern blocking; Senior Developer approval with rationale; lightweight health/readiness separation; deferred non-critical frontend work; expanded CI, Docker and Render configuration.
@@ -12,11 +18,11 @@ New API routes: global agent catalogue/detail/status; workflow agent detail/run/
 
 Validation results:
 
-- Python: 49 tests passed (backend plus demo app).
+- Python: 52 tests passed (backend plus demo app).
 - Ruff: passed.
 - MyPy: passed across 61 source files.
 - Bandit high-severity scan: passed.
-- Frontend: 10 tests passed.
+- Frontend: 13 tests passed.
 - TypeScript/Vite production build: passed.
 - E2E: Intern 403, Senior Developer approval, audit valid, ZIP hashes valid, production action not executed.
 - Workforce: all 11 agents listed, opened, run and rerun; 22 executions persisted in test.
@@ -154,7 +160,7 @@ The API was started locally with Uvicorn on port 8020 and queried directly.
 - The Digital Twin is bounded by documented variables and assumptions.
 - Business-impact outputs are operational estimates, not accounting results.
 - Google ADK, A2A, MCP, Vertex AI and other enterprise-scale components belong to the continued-research architecture unless separately implemented and tested.
-- The React bundle should be code-split in a later performance iteration.
+- The React bundle is route-split; the heavy telemetry chart and non-critical resource views load after the initial shell.
 - The TestClient dependency emits a deprecation warning that does not affect runtime behaviour.
 
 ## Safety conclusion

@@ -30,7 +30,7 @@ def test_seeded_forecast_and_controls_are_deterministic(db):
 def test_full_workflow_is_reproducible_and_human_gated(db):
     run = nexus.create_run(db, RunCreate(name="Payment Service capacity forecast"))
     nexus.run_all(db, run)
-    assert run.state == "RECOMMENDED"
+    assert run.state == "AWAITING_HUMAN"
     assert len(run.scenarios_json) == 12
     assert run.tournament_json["recommended_candidate_id"] in {"safe", "optimal"}
     fast = next(item for item in run.tournament_json["candidates"] if item["candidate_id"] == "fast")
@@ -103,7 +103,7 @@ def test_invalid_transition_and_approval_bypass_are_blocked(db):
     try:
         nexus.decide(db, run, response)
     except ValueError as exc:
-        assert "RECOMMENDED" in str(exc)
+        assert "AWAITING_HUMAN" in str(exc)
     else:
         raise AssertionError("Approval bypassed the state policy")
 
@@ -146,7 +146,7 @@ def test_versioned_api_end_to_end(client):
     run_id = seeded["id"]
     completed = client.post(f"/api/v1/workflows/{run_id}/run-all")
     assert completed.status_code == 200
-    assert completed.json()["state"] == "RECOMMENDED"
+    assert completed.json()["state"] == "AWAITING_HUMAN"
     assert len(client.get(f"/api/v1/workflows/{run_id}/evidence").json()) == 4
     assert len(client.get(f"/api/v1/workflows/{run_id}/timeline").json()) >= 9
     assert len(client.get(f"/api/v1/workflows/{run_id}/agents").json()) >= 9
@@ -175,5 +175,5 @@ def test_versioned_api_end_to_end(client):
 def test_bootstrap_returns_a_ready_workflow_in_one_request(client):
     response = client.post("/api/v1/demo/bootstrap")
     assert response.status_code == 200
-    assert response.json()["state"] == "RECOMMENDED"
+    assert response.json()["state"] == "AWAITING_HUMAN"
     assert len(response.json()["scenarios_json"]) == 12

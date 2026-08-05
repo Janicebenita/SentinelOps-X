@@ -71,7 +71,9 @@ def _perform(db: Session, run: NexusRun, name: str) -> Any:
         return technical_verification(db,run).model_dump(mode="json")
     expected,call=stages.get(name,("",lambda *_:{}))
     if run.state==expected: return call(db,run)
-    return workspace(db,name,run).output_artifact
+    output=workspace(db,name,run).output_artifact
+    if expected and output in ({},[],None): raise ValueError(f"{name} requires workflow state {expected} or a persisted prior output")
+    return output
 
 
 def execute(db: Session, run: NexusRun, name: str, actor: str, rerun: bool=False) -> AgentWorkspace:

@@ -24,6 +24,18 @@ def test_all_agents_are_listed_clickable_and_operational(client,db):
         assert client.post(f"/api/v1/workflows/{run['id']}/agents/{name}/rerun",json={"actor_name":"qa-lead"}).status_code==200
         assert client.get(f"/api/v1/workflows/{run['id']}/agents/{name}/events").status_code==200
     assert len(db.scalars(select(AgentExecution).where(AgentExecution.workflow_id==run["id"])).all())==22
+    event_types={event["event_type"] for event in client.get(f"/api/v1/workflows/{run['id']}/timeline").json()}
+    assert {"agent.opened","agent.run_requested","agent.run_completed","agent.rerun_requested"}.issubset(event_types)
+
+
+def test_agent_execution_rejects_invalid_workflow_state_and_audits_failure(client,db):
+    run=client.post("/api/v1/demo/seed").json()
+    response=client.post(f"/api/v1/workflows/{run['id']}/agents/prediction-agent/run",json={"actor_name":"qa-lead"})
+    assert response.status_code==409
+    execution=db.scalar(select(AgentExecution).where(AgentExecution.workflow_id==run["id"],AgentExecution.agent_name=="prediction-agent"))
+    assert execution is not None and execution.status=="FAILED" and "OBSERVED" in execution.error
+    events=client.get(f"/api/v1/workflows/{run['id']}/agents/prediction-agent/events").json()
+    assert any(event["event_type"]=="agent.run_failed" for event in events)
 
 
 def test_role_mapping_intern_block_and_senior_approval(client,db):
@@ -37,6 +49,11 @@ def test_role_mapping_intern_block_and_senior_approval(client,db):
     approved=client.post(f"/api/v1/workflows/{run['id']}/approve",json={"actor_name":"Senior User","decision":"approve","rationale":"All mandatory gates and evidence references were reviewed.","verification_token":senior.json()["verification_token"]})
     assert approved.status_code==200 and approved.json()["production_action"]=="NOT EXECUTED"
     assert db.scalar(select(HumanDecision).where(HumanDecision.workflow_id==run["id"])).actor_role=="SENIOR_DEVELOPER"
+    events={event["event_type"] for event in client.get(f"/api/v1/workflows/{run['id']}/timeline").json()}
+    assert {"approval.enabled","approval.submitted","state.decided"}.issubset(events)
+    qualifications=db.scalars(select(VerificationRecord).where(VerificationRecord.workflow_id==run["id"],VerificationRecord.subject_type=="approver")).all()
+    assert any(row.result=="MORE_INFORMATION_REQUIRED" and "mandatory_rationale" in row.failed_checks for row in qualifications)
+    assert any(row.result=="VERIFIED" and row.checks.get("mandatory_rationale") for row in qualifications)
 
 
 def test_invalid_and_expired_tokens_fail_safely(client,monkeypatch):

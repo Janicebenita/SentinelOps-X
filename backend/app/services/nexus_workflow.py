@@ -39,7 +39,7 @@ SCENARIOS = [
     "increased-app-replicas", "rollback-intervention", "rate-limiting-intervention",
     "cache-policy-correction", "configuration-drift",
 ]
-STATE_ORDER = ["CREATED", "OBSERVED", "PREDICTED", "TWIN_READY", "SIMULATED", "TOURNAMENT_READY", "VERIFIED", "IMPACT_READY", "RECOMMENDED", "DECIDED"]
+STATE_ORDER = ["CREATED", "OBSERVED", "PREDICTED", "TWIN_READY", "SIMULATED", "TOURNAMENT_READY", "VERIFIED", "IMPACT_READY", "AWAITING_HUMAN", "DECIDED"]
 
 
 def canonical(value: Any) -> str:
@@ -144,7 +144,7 @@ def observe(db: Session, run: NexusRun) -> list[EvidenceRecord]:
 
 
 def topology(db: Session, run: NexusRun) -> TopologyResult:
-    require_state(run,"OBSERVED","PREDICTED","TWIN_READY","SIMULATED","TOURNAMENT_READY","VERIFIED","IMPACT_READY","RECOMMENDED","DECIDED")
+    require_state(run,"OBSERVED","PREDICTED","TWIN_READY","SIMULATED","TOURNAMENT_READY","VERIFIED","IMPACT_READY","AWAITING_HUMAN","DECIDED")
     return TopologyResult(nodes=[{"id":"checkout-api","type":"service"},{"id":"payment-service","type":"service"},{"id":"redis-primary","type":"cache"},{"id":"order-db","type":"database"}],edges=[{"from":"checkout-api","to":"payment-service","relation":"calls"},{"from":"payment-service","to":"redis-primary","relation":"reads/writes"},{"from":"payment-service","to":"order-db","relation":"writes"}],critical_path=["checkout-api","payment-service","redis-primary"],constraint="Redis safe-capacity margin",evidence_ids=["ev-topology","ev-config"])
 
 
@@ -268,11 +268,11 @@ def recommend(db: Session, run: NexusRun) -> ExecutiveBrief:
         "recommendation":f"Recommend {winner.name} ({winner.score:.1f}/100): {winner.action}. Estimated recovery is {winner.recovery_minutes} minutes and run-specific intervention cost is INR {winner.cost_estimate_inr:,}. Approval prepares an evidence package only.",
         "contradictory_evidence":[f"Current run begins with {controls.application_replicas} application replicas; replica-only FAST still fails the mandatory failover gate",f"The selected strategy is based on this run's 12 counterfactuals; revenue exposure is an estimate of INR {impact_result.revenue_exposure_inr:,.0f}"],
     })
-    run.recommendation_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"RECOMMENDED","executive-agent",result.model_dump(mode="json")); return result
+    run.recommendation_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"AWAITING_HUMAN","executive-agent",result.model_dump(mode="json")); return result
 
 
 def decide(db: Session, run: NexusRun, decision: HumanDecisionInput) -> dict[str, Any]:
-    require_state(run,"RECOMMENDED"); payload={**decision.model_dump(mode="json"),"decided_at":datetime.now(timezone.utc).isoformat(),"meaning":"Approve recommendation and export evidence package only.","production_action":"NOT EXECUTED"}; run.human_decision_json=payload; run.production_action_executed=False; db.commit(); transition(db,run,"DECIDED","human-approval-gateway",payload); return payload
+    require_state(run,"AWAITING_HUMAN"); payload={**decision.model_dump(mode="json"),"decided_at":datetime.now(timezone.utc).isoformat(),"meaning":"Record a human decision and export evidence only.","production_action":"NOT EXECUTED"}; run.human_decision_json=payload; run.production_action_executed=False; db.commit(); transition(db,run,"DECIDED","human-approval-gateway",payload); return payload
 
 
 def verify_audit(db: Session, run_id: int) -> dict[str, Any]:
