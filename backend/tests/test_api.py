@@ -8,7 +8,7 @@ def test_provider_health_is_safe(client):
     assert response.status_code==200
     body=response.json()
     assert body["provider"]=="mock" and "api_key" not in str(body).lower()
-    assert body["sandbox_mode"] in {"docker","local"}
+    assert body["production_action"]=="NOT_EXECUTED"
 
 def test_full_mock_workflow(client, monkeypatch):
     from backend.app.agent import workflow

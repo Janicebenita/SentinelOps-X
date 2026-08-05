@@ -1,5 +1,13 @@
 # Safety model
 
+## Approver qualification
+
+Trial Intern users cannot approve. Trial Senior Developer users require a valid signed role token and mandatory rationale. The backend—not the UI—checks role, expiry, actor, workflow state, candidate eligibility, mandatory gates, audit readiness and disabled production execution. Demonstration codes must be replaced with enterprise SSO/RBAC in production.
+
+The Verification Agent verifies but never approves. AI models never approve. No production execution endpoint exists.
+
+**PRODUCTION ACTION: NOT EXECUTED**
+
 SentinelOps Nexus separates predictive reasoning from deterministic authority.
 
 - Models and agents may propose forecasts, explanations, and interventions.

@@ -23,10 +23,24 @@ jobs:
       - name: Frontend production build
         run: pnpm run build
         working-directory: frontend
+      - name: Prove trial codes are server-side only
+        run: |
+          ! grep -R --binary-files=without-match -E 'INTERN_ACCESS_CODE|SENIOR_ACCESS_CODE|access_code.{0,30}(0000|1111)' frontend/dist
       - run: make test
       - run: make lint
       - run: make typecheck
       - run: make security
+      - name: Authorization and route tests
+        run: python -m pytest backend/tests/test_upgrade.py -q
+      - name: Secret scanning
+        uses: gitleaks/gitleaks-action@v2
+      - name: Python dependency scanning
+        run: python -m pip install pip-audit && pip-audit
+      - name: Frontend dependency scanning
+        run: pnpm audit --audit-level high
+        working-directory: frontend
+      - name: Docker builds
+        run: docker build -f backend/Dockerfile -t sentinelops-api . && docker build -f demo_app/Dockerfile -t sentinelops-simulator .
       - name: Start complete demo
         run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
       - run: python scripts/health_check.py

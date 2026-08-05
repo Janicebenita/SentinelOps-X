@@ -1,5 +1,25 @@
 # SentinelOps Nexus Architecture
 
+## Secure workforce upgrade
+
+The landing route loads independently. Lazy frontend routes call strict FastAPI v1 endpoints. Workforce executions, verification results, role checks and human decisions are persisted and linked to the chained audit log. No layer contains a production execution adapter.
+
+```mermaid
+flowchart LR
+  L["Landing page"] --> C["Lazy Command Centre"]
+  C --> A["Agent Workspaces"]
+  A --> API["FastAPI workforce APIs"]
+  API --> W["Deterministic workflow services"]
+  W --> V["Verification Agent"]
+  H["Human actor + server-side access code"] --> R["Role verification + short-lived token"]
+  R --> P["Backend approval policy"]
+  V --> P
+  P --> D["Persisted human decision"]
+  D --> E["One-time evidence export"]
+  API --> Q["SHA-256 audit chain"]
+  P --> Q
+```
+
 SentinelOps Nexus is an evidence-driven Enterprise Operational Digital Twin. Its primary path is predictive: observe, correlate, forecast, simulate, compare, explain, and stop for human approval.
 
 ## Components

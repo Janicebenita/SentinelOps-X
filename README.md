@@ -34,6 +34,42 @@
 
 ---
 
+## Product routes and secure workforce upgrade
+
+| Product area | Route |
+|---|---|
+| Premium landing page | [`/`](https://janicebenita-sentinelops-nexus.onrender.com/) |
+| Command Centre | [`/command-centre`](https://janicebenita-sentinelops-nexus.onrender.com/command-centre) |
+| Clickable AI Workforce | `/agents` |
+| Agent Workspace | `/agents/:agentName` |
+| Workflow detail | `/workflows/:workflowId` |
+| Verification | `/workflows/:workflowId/verification` |
+| Human decision | `/workflows/:workflowId/approval` |
+| Evidence / audit / export | `/workflows/:workflowId/evidence`, `/audit`, `/export` |
+| Architecture / safety / docs | `/architecture`, `/safety`, `/docs` |
+
+The AI Workforce now contains eleven backend-connected agents: Nexus Orchestrator, Observer, Evidence, Process Discovery, Prediction, Digital Twin, Simulation, Optimization, Verification, Business Impact and Executive. Every card is clickable. Run and rerun actions persist execution status, duration, retry count, evidence and result hashes and append chained audit events. See [AI Workforce](docs/agent-workforce.md) and [Verification Agent](docs/verification-agent.md).
+
+### Demo role verification
+
+| Role | Trial code | Approval behavior |
+|---|---:|---|
+| Intern | `0000` | May inspect and simulate; cannot approve |
+| Senior Developer | `1111` | May approve with a verified short-lived token and mandatory rationale |
+
+> **Demonstration only:** Replace trial access codes with enterprise SSO and managed RBAC in production. Codes are compared and tokenized only by the backend; they are not compiled into frontend assets, persisted in plaintext, logged, returned or exported.
+
+Approval records a human decision. The Verification Agent and AI models never approve. No production execution endpoint exists.
+
+**PRODUCTION ACTION: NOT EXECUTED**
+
+Performance work added route-level lazy loading, a zero-API landing paint, deferred charts/evidence/audit/agents, query freshness, immutable asset caching and lightweight health/readiness separation. See [baseline](docs/performance-baseline.md) and [after](docs/performance-after.md).
+
+New API groups include `/api/v1/agents`, per-workflow agent run/rerun/events, `/api/v1/auth/verify-role`, verification records and token-authorized human decisions. Configuration is documented in [.env.example](.env.example).
+
+For the human-led creation story, implementation bugs and their rectifications, read [Making SentinelOps Nexus](docs/making-of-sentinelops-nexus.md).
+
+
 ## 🏆 Competition Mission
 
 **National AI Agent Builder Finale · B2B Services · Late Bottleneck Detection**

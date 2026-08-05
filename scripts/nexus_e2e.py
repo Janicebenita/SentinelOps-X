@@ -34,9 +34,17 @@ def main() -> int:
         assert not fast["eligible"] and winner["eligible"]
         assert len(result["scenarios_json"]) == 12
         assert result["production_action_executed"] is False
+        for agent in client.get(f"/api/v1/workflows/{run_id}/agents").json():
+            client.get(f"/api/v1/workflows/{run_id}/agents/{agent['agent_name']}").raise_for_status()
+        intern = client.post("/api/v1/auth/verify-role", json={"actor_name": "e2e-intern", "access_code": "0000"})
+        intern.raise_for_status()
+        blocked = client.post(f"/api/v1/workflows/{run_id}/approve", json={"actor_name": "e2e-intern", "decision": "approve", "rationale": "Reviewed evidence", "verification_token": intern.json()["verification_token"]})
+        assert blocked.status_code == 403 and blocked.json()["code"] == "APPROVER_NOT_QUALIFIED"
+        senior = client.post("/api/v1/auth/verify-role", json={"actor_name": "e2e-human", "access_code": "1111"})
+        senior.raise_for_status()
         decision = client.post(
             f"/api/v1/workflows/{run_id}/approve",
-            json={"actor": "e2e-human", "decision": "approve", "rationale": "All mandatory gates reviewed"},
+            json={"actor_name": "e2e-human", "decision": "approve", "rationale": "All mandatory gates reviewed", "verification_token": senior.json()["verification_token"]},
         )
         decision.raise_for_status()
         assert decision.json()["production_action"] == "NOT EXECUTED"

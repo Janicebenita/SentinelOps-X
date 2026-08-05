@@ -1,5 +1,46 @@
 # Final validation report
 
+## 5 August 2026 secure workforce upgrade
+
+Implemented route-split landing and command-centre experiences; eleven clickable operational Agent Workspaces; persisted AgentExecution, RoleVerification, HumanDecision and VerificationRecord models; a technical and qualification Verification Agent; signed short-lived role tokens; Intern blocking; Senior Developer approval with rationale; lightweight health/readiness separation; deferred non-critical frontend work; expanded CI, Docker and Render configuration.
+
+Files created include `backend/app/auth/roles.py`, `backend/app/services/workforce.py`, `backend/app/schemas/upgrade_contracts.py`, `backend/Dockerfile`, routed frontend pages/components, upgrade tests and the audit/performance/RBAC/workforce/making-of documents. Existing workflow, audit, evidence and one-time export services were modified without adding any production execution adapter.
+
+Database migration status: four additive tables are created by SQLAlchemy metadata on application lifespan. Existing SQLite Nexus tables remain compatible; no destructive migration or data rewrite occurs. Render SQLite remains ephemeral.
+
+New API routes: global agent catalogue/detail/status; workflow agent detail/run/rerun/events; role verification; workflow verification run/results; token-authorized approve/reject/request-evidence. New frontend routes are documented in README.
+
+Validation results:
+
+- Python: 49 tests passed (backend plus demo app).
+- Ruff: passed.
+- MyPy: passed across 61 source files.
+- Bandit high-severity scan: passed.
+- Frontend: 10 tests passed.
+- TypeScript/Vite production build: passed.
+- E2E: Intern 403, Senior Developer approval, audit valid, ZIP hashes valid, production action not executed.
+- Workforce: all 11 agents listed, opened, run and rerun; 22 executions persisted in test.
+- Security: invalid and expired credentials rejected; plaintext codes absent from responses/persistence; no production execution endpoint.
+
+Performance: startup 6,082.84 → 2,567.94 ms; health 1,506.39 → 123.23 ms; agent list 10.09 ms; initial landing assets approximately 193 KB raw instead of a 610,943-byte eager application asset; command-centre critical API requests 5 → 2. See `performance-after.md` for measurement boundaries.
+
+Exact commands:
+
+```powershell
+python -m pytest backend/tests demo_app/tests -q
+ruff check backend demo_app scripts
+mypy backend demo_app scripts
+bandit -q -lll -r backend demo_app scripts
+python scripts/nexus_e2e.py
+cd frontend
+pnpm test
+pnpm run build
+```
+
+Known limitations: demo access codes are not enterprise identity; Render free-tier cold starts remain; Render SQLite is ephemeral; FCP/LCP were not fabricated without a controlled Lighthouse environment; deterministic calculations are bounded operational estimates.
+
+---
+
 Date: 3 August 2026  
 Branch: `codex/add-render-live-links`
 

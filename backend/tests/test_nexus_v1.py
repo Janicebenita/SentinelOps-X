@@ -160,9 +160,10 @@ def test_versioned_api_end_to_end(client):
     assert uploaded.json()["source"] == "manual-upload/capacity.json"
     assert client.get(f"/api/v1/workflows/{run_id}/timeline").json()[-1]["event_type"] == "evidence.uploaded"
 
-    wrong = client.post(f"/api/v1/workflows/{run_id}/approve", json={"actor": "judge", "decision": "reject", "rationale": "No"})
+    wrong = client.post(f"/api/v1/workflows/{run_id}/approve", json={"actor_name": "judge", "decision": "reject", "rationale": "No", "verification_token": "invalid-token-value-000"})
     assert wrong.status_code == 422
-    approved = client.post(f"/api/v1/workflows/{run_id}/approve", json={"actor": "judge", "decision": "approve", "rationale": "Evidence reviewed"})
+    role = client.post("/api/v1/auth/verify-role", json={"actor_name": "judge", "access_code": "1111"}).json()
+    approved = client.post(f"/api/v1/workflows/{run_id}/approve", json={"actor_name": "judge", "decision": "approve", "rationale": "Evidence reviewed", "verification_token": role["verification_token"]})
     assert approved.status_code == 200
     assert approved.json()["production_action"] == "NOT EXECUTED"
     exported = client.get(f"/api/v1/workflows/{run_id}/export")

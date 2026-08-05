@@ -4,15 +4,29 @@ services:
     runtime: python
     plan: free
     branch: main
-    buildCommand: pip install -e ".[dev]"
+    buildCommand: pip install -e .
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    healthCheckPath: /api/v1/health
     autoDeployTrigger: checksPass
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
       - key: LLM_PROVIDER
         value: mock
+      - key: AI_PROVIDER
+        value: mock
+      - key: PRODUCTION_EXECUTION
+        value: false
+      - key: ENVIRONMENT
+        value: production
+      - key: INTERN_ACCESS_CODE
+        value: "0000"
+      - key: SENIOR_ACCESS_CODE
+        value: "1111"
+      - key: ROLE_TOKEN_SECRET
+        generateValue: true
+      - key: ROLE_TOKEN_EXPIRY_MINUTES
+        value: "10"
       - key: DATABASE_URL
         value: sqlite:////tmp/sentinelops-nexus.db
       - key: DEMO_REPO_PATH
@@ -52,9 +66,15 @@ services:
         source: /*
         destination: /index.html
     headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
       - path: /*
         name: X-Content-Type-Options
         value: nosniff
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      - path: /*
+        name: Content-Security-Policy
+        value: default-src 'self'; connect-src 'self' https://janicebenita-sentinelops-nexus-api.onrender.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'

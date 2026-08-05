@@ -5,14 +5,17 @@ from collections.abc import Callable
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import NexusAuditEvent, NexusEvidence, NexusRun
+from ..auth.roles import AuthError, verify_access_code, verify_token
+from ..models import HumanDecision, NexusAuditEvent, NexusEvidence, NexusRun, VerificationRecord
 from ..schemas.nexus_contracts import EvidenceUpload, HumanDecisionInput, RunCreate, TwinControls
+from ..schemas.upgrade_contracts import AgentActionRequest, AuthorizedDecision, RoleVerifyRequest
 from ..services import nexus_workflow as workflow
+from ..services import workforce
 
 router = APIRouter(prefix="/api/v1", tags=["SentinelOps Nexus"])
 Db = Annotated[Session, Depends(get_db)]
@@ -30,6 +33,10 @@ def _action(call: Callable[[], Any]) -> Any:
         return call()
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+def _auth_error(exc: AuthError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code,content={"code":exc.code,"message":exc.message,"production_action":"NOT_EXECUTED"})
 
 
 @router.get("/health")
@@ -135,31 +142,49 @@ def run_all(run_id: int, db: Db) -> dict[str, Any]:
     return _action(lambda: workflow.serialize(workflow.run_all(db, _run(db, run_id))))
 
 
-def _decide(run_id: int, payload: HumanDecisionInput, expected: str, db: Session) -> dict[str, Any]:
+def _decide(run_id: int, payload: AuthorizedDecision, expected: str, db: Session) -> dict[str, Any] | JSONResponse:
     if payload.decision != expected:
         raise HTTPException(status_code=422, detail="Decision does not match endpoint")
-    return _action(lambda: workflow.decide(db, _run(db, run_id), payload))
+    try: token,verification=verify_token(db,payload.verification_token)
+    except AuthError as exc: return _auth_error(exc)
+    run=_run(db,run_id)
+    if token["sub"] != payload.actor_name: return JSONResponse(status_code=403,content={"code":"ACTOR_TOKEN_MISMATCH","message":"Verified actor does not match decision actor.","production_action":"NOT_EXECUTED"})
+    if expected=="approve" and token["role"]!="SENIOR_DEVELOPER":
+        workflow.append_event(db,run,"approval.blocked",payload.actor_name,{"role":token["role"],"reason":"APPROVER_NOT_QUALIFIED"})
+        return JSONResponse(status_code=403,content={"code":"APPROVER_NOT_QUALIFIED","message":"Approval requires the Senior Developer role.","production_action":"NOT_EXECUTED"})
+    if run.state not in {"RECOMMENDED","AWAITING_HUMAN"}: raise HTTPException(status_code=409,detail="Workflow is not awaiting human review")
+    tournament=run.tournament_json; candidate=next((x for x in tournament.get("candidates",[]) if x.get("candidate_id")==tournament.get("recommended_candidate_id")),None)
+    if not candidate or not candidate.get("eligible") or not all(g.get("passed") for g in candidate.get("gates",[]) if g.get("mandatory",True)): raise HTTPException(status_code=409,detail="Recommended candidate is not eligible or mandatory gates failed")
+    if run.production_action_executed: raise HTTPException(status_code=409,detail="Production execution safety boundary is not ready")
+    technical=workforce.technical_verification(db,run)
+    if technical.result!="VERIFIED": raise HTTPException(status_code=409,detail="Verification Agent rejected approval readiness")
+    decision_input=HumanDecisionInput(actor=payload.actor_name,decision=payload.decision,rationale=payload.rationale)
+    result=_action(lambda: workflow.decide(db,run,decision_input))
+    decision_event=db.scalar(select(NexusAuditEvent).where(NexusAuditEvent.run_id==run.id).order_by(NexusAuditEvent.sequence.desc()))
+    record=HumanDecision(workflow_id=run.id,actor_name=payload.actor_name,actor_role=token["role"],decision=payload.decision,rationale=payload.rationale,role_verification_id=verification.id,audit_event_id=decision_event.id if decision_event else None,production_action="NOT_EXECUTED"); db.add(record); db.commit(); db.refresh(record)
+    return {**result,"actor_role":token["role"],"decision_id":record.id}
 
 
 @router.post("/workflows/{run_id}/approve")
-def approve(run_id: int, payload: HumanDecisionInput, db: Db) -> dict[str, Any]:
+def approve(run_id: int, payload: AuthorizedDecision, db: Db) -> Any:
     return _decide(run_id, payload, "approve", db)
 
 
 @router.post("/workflows/{run_id}/reject")
-def reject(run_id: int, payload: HumanDecisionInput, db: Db) -> dict[str, Any]:
+def reject(run_id: int, payload: AuthorizedDecision, db: Db) -> Any:
     return _decide(run_id, payload, "reject", db)
 
 
 @router.post("/workflows/{run_id}/request-evidence")
-def request_evidence(run_id: int, payload: HumanDecisionInput, db: Db) -> dict[str, Any]:
+def request_evidence(run_id: int, payload: AuthorizedDecision, db: Db) -> Any:
     return _decide(run_id, payload, "request_more_evidence", db)
 
 
 @router.get("/workflows/{run_id}/timeline")
-def timeline(run_id: int, db: Db) -> list[dict[str, Any]]:
+def timeline(run_id: int, db: Db, limit: int = 200, offset: int = 0) -> list[dict[str, Any]]:
     _run(db, run_id)
-    rows = db.scalars(select(NexusAuditEvent).where(NexusAuditEvent.run_id == run_id).order_by(NexusAuditEvent.sequence)).all()
+    limit=max(1,min(limit,500)); offset=max(0,offset)
+    rows = db.scalars(select(NexusAuditEvent).where(NexusAuditEvent.run_id == run_id).order_by(NexusAuditEvent.sequence).offset(offset).limit(limit)).all()
     return [workflow.serialize(row) for row in rows]
 
 
@@ -184,7 +209,69 @@ def upload_evidence(run_id: int, payload: EvidenceUpload, db: Db) -> dict[str, A
 
 @router.get("/workflows/{run_id}/agents")
 def agents(run_id: int, db: Db) -> Any:
-    return workflow.agent_envelopes(db, _run(db, run_id))
+    run=_run(db,run_id); return [workforce.workspace(db,name,run) for name in workforce.AGENTS]
+
+
+@router.get("/agents")
+def agent_catalogue() -> Any: return workforce.catalogue()
+
+
+@router.get("/agents/{agent_name}")
+def agent_definition(agent_name: str) -> Any:
+    try: return workforce.workspace(None,agent_name)  # type: ignore[arg-type]
+    except LookupError as exc: raise HTTPException(status_code=404,detail=str(exc)) from exc
+
+
+@router.get("/agents/{agent_name}/status")
+def agent_status(agent_name: str) -> Any: return agent_definition(agent_name)
+
+
+@router.get("/workflows/{run_id}/agents/{agent_name}")
+def workflow_agent(run_id: int,agent_name: str,db: Db) -> Any:
+    try: return workforce.workspace(db,agent_name,_run(db,run_id))
+    except LookupError as exc: raise HTTPException(status_code=404,detail=str(exc)) from exc
+
+
+@router.post("/workflows/{run_id}/agents/{agent_name}/run")
+def run_agent(run_id: int,agent_name: str,payload: AgentActionRequest,db: Db) -> Any:
+    return _action(lambda: workforce.execute(db,_run(db,run_id),agent_name,payload.actor_name))
+
+
+@router.post("/workflows/{run_id}/agents/{agent_name}/rerun")
+def rerun_agent(run_id: int,agent_name: str,payload: AgentActionRequest,db: Db) -> Any:
+    return _action(lambda: workforce.execute(db,_run(db,run_id),agent_name,payload.actor_name,True))
+
+
+@router.get("/workflows/{run_id}/agents/{agent_name}/events")
+def agent_events(run_id: int,agent_name: str,db: Db) -> Any:
+    _run(db,run_id); return workforce.events(db,run_id,agent_name)
+
+
+@router.get("/workflows/{run_id}/verification")
+def verification_results(run_id: int,db: Db) -> Any:
+    _run(db,run_id); return [workflow.serialize(x) for x in db.scalars(select(VerificationRecord).where(VerificationRecord.workflow_id==run_id).order_by(VerificationRecord.id.desc()))]
+
+
+@router.post("/workflows/{run_id}/verification/run")
+def run_verification(run_id: int,db: Db) -> Any: return workforce.technical_verification(db,_run(db,run_id))
+
+
+@router.post("/auth/verify-role")
+def verify_role(payload: RoleVerifyRequest,db: Db) -> Any:
+    latest=db.scalar(select(NexusRun).order_by(NexusRun.id.desc()))
+    if latest: workflow.append_event(db,latest,"role.verification_attempted",payload.actor_name,{"code_fingerprint":"redacted"})
+    try: row,token,permissions=verify_access_code(db,payload.actor_name,payload.access_code)
+    except AuthError as exc:
+        if latest:
+            event=workflow.append_event(db,latest,"role.verification_failed",payload.actor_name,{"reason":exc.code})
+            record=VerificationRecord(workflow_id=latest.id,subject_type="approver",subject_id=payload.actor_name,result="REJECTED",checks={"access_code_valid":False,"role_mapped":False,"approval_permission":False},failed_checks=["access_code_valid","role_mapped","approval_permission"],evidence_ids=[],reason="Access code verification failed.",audit_event_id=event.id); db.add(record); db.commit()
+        return _auth_error(exc)
+    if latest:
+        event=workflow.append_event(db,latest,"role.verification_succeeded",payload.actor_name,{"role":row.role,"token_id":row.token_id,"expires_at":row.expires_at.isoformat()}); row.audit_event_id=event.id; db.commit()
+        approval_allowed=row.role=="SENIOR_DEVELOPER"; candidate=latest.tournament_json.get("recommended_candidate_id")
+        checks={"access_code_valid":True,"role_mapped":True,"approval_permission":approval_allowed,"workflow_state":latest.state in {"RECOMMENDED","AWAITING_HUMAN"},"candidate_eligible":bool(candidate),"audit_ready":workflow.verify_audit(db,latest.id)["valid"]}
+        failed=[name for name,passed in checks.items() if not passed]; qualification=VerificationRecord(workflow_id=latest.id,subject_type="approver",subject_id=payload.actor_name,result="VERIFIED" if not failed else "REJECTED",checks=checks,failed_checks=failed,evidence_ids=[],reason="Approver qualification verified." if not failed else "Role verified; approval qualification failed: "+", ".join(failed),audit_event_id=event.id); db.add(qualification); db.commit()
+    return {"verified":True,"role":row.role,"permissions":permissions,"expires_at":row.expires_at,"verification_token":token}
 
 
 @router.get("/workflows/{run_id}/export")

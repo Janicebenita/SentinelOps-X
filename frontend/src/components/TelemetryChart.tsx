@@ -1,0 +1,3 @@
+import {Area,AreaChart,CartesianGrid,Legend,Line,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
+import type {NexusTelemetry} from '../types';
+export default function TelemetryChart({data}:{data:NexusTelemetry[]}){return <ResponsiveContainer width="100%" height={260}><AreaChart data={data}><CartesianGrid stroke="#163047"/><XAxis dataKey="label" stroke="#6f8ca4"/><YAxis stroke="#6f8ca4"/><Tooltip/><Legend/><Area type="monotone" dataKey="redis_memory_pct" stroke="#22d3ee" fill="#22d3ee33"/><Line type="monotone" dataKey="queue_depth" stroke="#fb7185"/></AreaChart></ResponsiveContainer>}

@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,16 +9,21 @@ from .database import Base,SessionLocal,engine
 from .models import Incident
 from . import llm
 from .tools.sandbox import get_sandbox
-from .services.demo_seed import ensure_seeded
-Base.metadata.create_all(engine)
-with SessionLocal() as startup_db:
-    ensure_seeded(startup_db)
-app=FastAPI(title="SentinelOps Nexus API",version="2.0.0",description="The Enterprise Operational Digital Twin: predictive, evidence-driven, and human-controlled")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    Base.metadata.create_all(engine)
+    yield
+
+app=FastAPI(title="SentinelOps Nexus API",version="3.0.0",description="The Enterprise Operational Digital Twin: predictive, evidence-driven, and human-controlled",lifespan=lifespan)
 app.add_middleware(CORSMiddleware,allow_origins=[x.strip() for x in settings.cors_origins.split(",") if x.strip()],allow_methods=["GET","POST"],allow_headers=["Content-Type"])
 app.include_router(router)
 app.include_router(nexus_router)
 @app.get("/health")
 def health():
+    return {"status":"ok","backend":True,"provider":settings.llm_provider,"production_action":"NOT_EXECUTED"}
+
+@app.get("/readiness")
+def readiness():
     database=False; seeded=False
     try:
         with SessionLocal() as db:
