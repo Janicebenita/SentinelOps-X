@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ..agent import workflow
@@ -6,6 +7,7 @@ from ..agent.state import AgentState
 from ..database import get_db
 from ..models import *
 from ..schemas import ApprovalInput, CounterfactualInput, IncidentCreate, IncidentRead, ReplayInput
+from ..auth.roles import AuthError, verify_token
 from ..services.audit import transition
 from ..services.demo_seed import ensure_seeded
 from ..services import finale, nexus
@@ -35,9 +37,27 @@ def patch(iid:int,db:Session=Depends(get_db)): return serialize(workflow.generat
 @router.post("/incidents/{iid}/verify")
 def verify(iid:int,db:Session=Depends(get_db)): return [serialize(x) for x in workflow.verify(db,workflow.require(db,iid))]
 @router.post("/incidents/{iid}/approve")
-def approve(iid:int,payload:ApprovalInput,db:Session=Depends(get_db)): workflow.approve(db,workflow.require(db,iid),payload.approved_by,True); return {"approved":True}
+def approve(iid:int,payload:ApprovalInput,db:Session=Depends(get_db)):
+    try:
+        token, _ = verify_token(db, payload.verification_token)
+    except AuthError as exc:
+        return JSONResponse(status_code=exc.status_code, content={"code":exc.code,"message":exc.message,"production_action":"NOT_EXECUTED"})
+    if token["sub"] != payload.approved_by:
+        return JSONResponse(status_code=403, content={"code":"ACTOR_TOKEN_MISMATCH","message":"Verified actor does not match approval actor.","production_action":"NOT_EXECUTED"})
+    if token["role"] != "SENIOR_DEVELOPER":
+        return JSONResponse(status_code=403, content={"code":"APPROVER_NOT_QUALIFIED","message":"Approval requires the Senior Developer role.","production_action":"NOT_EXECUTED"})
+    workflow.approve(db,workflow.require(db,iid),payload.approved_by,True)
+    return {"approved":True,"actor_role":token["role"],"rationale":payload.rationale,"production_action":"NOT_EXECUTED"}
 @router.post("/incidents/{iid}/reject")
-def reject(iid:int,payload:ApprovalInput,db:Session=Depends(get_db)): workflow.approve(db,workflow.require(db,iid),payload.approved_by,False); return {"approved":False}
+def reject(iid:int,payload:ApprovalInput,db:Session=Depends(get_db)):
+    try:
+        token, _ = verify_token(db, payload.verification_token)
+    except AuthError as exc:
+        return JSONResponse(status_code=exc.status_code, content={"code":exc.code,"message":exc.message,"production_action":"NOT_EXECUTED"})
+    if token["sub"] != payload.approved_by:
+        return JSONResponse(status_code=403, content={"code":"ACTOR_TOKEN_MISMATCH","message":"Verified actor does not match decision actor.","production_action":"NOT_EXECUTED"})
+    workflow.approve(db,workflow.require(db,iid),payload.approved_by,False)
+    return {"approved":False,"actor_role":token["role"],"rationale":payload.rationale,"production_action":"NOT_EXECUTED"}
 @router.post("/incidents/{iid}/create-pr")
 def pr(iid:int,db:Session=Depends(get_db)):
     try:return serialize(workflow.create_pr(db,workflow.require(db,iid)))

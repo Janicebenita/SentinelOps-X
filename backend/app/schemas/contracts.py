@@ -9,7 +9,10 @@ class HypothesisDecision(BaseModel):
 class HypothesisResponse(BaseModel): hypotheses:list[HypothesisDecision]=Field(min_length=2,max_length=3)
 class PatchProposal(BaseModel):
     summary:str; target_files:list[str]=Field(min_length=1,max_length=5); patch:str; expected_effect:str; risks:list[str]; verification_plan:list[str]
-class ApprovalInput(BaseModel): approved_by:str=Field(min_length=2,max_length=100)
+class ApprovalInput(BaseModel):
+    approved_by: str = Field(min_length=2, max_length=100)
+    rationale: str = Field(min_length=3, max_length=1000)
+    verification_token: str = Field(min_length=20)
 class ReplayInput(BaseModel):
     candidate_id:str|None=None; attempts:int=Field(default=3,ge=3,le=10)
 class CounterfactualInput(BaseModel):

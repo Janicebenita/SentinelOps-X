@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import io
+import zipfile
+
 from sqlalchemy import select
 
 from backend.app.config import settings
@@ -60,3 +63,34 @@ def test_verification_persists_and_plaintext_codes_never_persist_or_return(clien
 def test_no_production_execution_endpoint_exists(client):
     paths=client.get("/openapi.json").json()["paths"]
     assert not any("execute-production" in path or "production-action" in path for path in paths)
+
+
+def test_legacy_approval_is_also_role_protected(client):
+    seeded=client.post("/api/demo/seed").json(); iid=seeded["ids"][0]
+    client.post(f"/api/incidents/{iid}/start")
+    intern=client.post("/api/v1/auth/verify-role",json={"actor_name":"Legacy Intern","access_code":"0000"}).json()
+    blocked=client.post(f"/api/incidents/{iid}/approve",json={"approved_by":"Legacy Intern","rationale":"Evidence reviewed.","verification_token":intern["verification_token"]})
+    assert blocked.status_code==403 and blocked.json()["code"]=="APPROVER_NOT_QUALIFIED"
+    missing_rationale=client.post(f"/api/incidents/{iid}/approve",json={"approved_by":"Legacy Intern","verification_token":intern["verification_token"]})
+    assert missing_rationale.status_code==422
+
+
+def test_codes_never_reach_logs_database_audit_or_evidence_export(client,db,caplog):
+    run=ready_run(client)
+    senior=client.post("/api/v1/auth/verify-role",json={"actor_name":"Release Reviewer","access_code":"1111"}).json()
+    approval=client.post(f"/api/v1/workflows/{run['id']}/approve",json={"actor_name":"Release Reviewer","decision":"approve","rationale":"Release evidence and every mandatory gate were reviewed.","verification_token":senior["verification_token"]})
+    assert approval.status_code==200
+    exported=client.get(f"/api/v1/workflows/{run['id']}/export")
+    assert exported.status_code==200
+    assert b"0000" not in exported.content and b"1111" not in exported.content
+    with zipfile.ZipFile(io.BytesIO(exported.content)) as archive:
+        assert archive.testzip() is None
+        assert {"audit.json","verification.json","manifest.sha256"}.issubset(archive.namelist())
+        archive_payload=b"".join(archive.read(name) for name in archive.namelist())
+        assert b'"0000"' not in archive_payload and b'"1111"' not in archive_payload
+        assert b'"access_code"' not in archive_payload
+    rows=db.scalars(select(RoleVerification)).all()
+    persisted_values=[value for row in rows for key,value in row.__dict__.items() if not key.startswith("_sa_")]
+    assert "0000" not in persisted_values and "1111" not in persisted_values
+    assert "0000" not in caplog.text and "1111" not in caplog.text
+    assert client.get(f"/api/v1/audit/verify?run_id={run['id']}").json()["valid"] is True

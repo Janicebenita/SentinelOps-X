@@ -33,7 +33,10 @@ def test_full_mock_workflow(client, monkeypatch):
     checks = client.get(f"/api/incidents/{iid}/verification").json()
     assert len(checks) == 6 and all(x["passed"] for x in checks)
     assert client.get(f"/api/incidents/{iid}").json()["current_state"] == "AWAITING_APPROVAL"
-    assert client.post(f"/api/incidents/{iid}/approve", json={"approved_by": "operator"}).status_code == 200
+    role = client.post("/api/v1/auth/verify-role", json={"actor_name":"operator","access_code":"1111"}).json()
+    approval = client.post(f"/api/incidents/{iid}/approve", json={"approved_by":"operator","rationale":"Evidence and mandatory gates reviewed.","verification_token":role["verification_token"]})
+    assert approval.status_code == 200
+    assert approval.json()["production_action"] == "NOT_EXECUTED"
     assert client.post(f"/api/incidents/{iid}/create-pr").json()["status"] == "draft"
     assert len(client.get(f"/api/incidents/{iid}/audit-log").json()) >= 10
 
