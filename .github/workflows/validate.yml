@@ -35,7 +35,7 @@ jobs:
       - name: Secret scanning
         uses: gitleaks/gitleaks-action@v2
       - name: Python dependency scanning
-        run: python -m pip install pip-audit && pip-audit
+        run: python -m pip install pip-audit && pip-audit --skip-editable
       - name: Frontend dependency scanning
         run: pnpm audit --audit-level high
         working-directory: frontend

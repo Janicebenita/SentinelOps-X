@@ -21,6 +21,7 @@ Validation results:
 - E2E: Intern 403, Senior Developer approval, audit valid, ZIP hashes valid, production action not executed.
 - Workforce: all 11 agents listed, opened, run and rerun; 22 executions persisted in test.
 - Security: invalid and expired credentials rejected; plaintext codes absent from responses/persistence; no production execution endpoint.
+- Dependency scanning: Pytest was raised to `>=9.0.3` after CI identified `PYSEC-2026-1845` in the previous development-only 8.x line.
 
 Performance: startup 6,082.84 → 2,567.94 ms; health 1,506.39 → 123.23 ms; agent list 10.09 ms; initial landing assets approximately 193 KB raw instead of a 610,943-byte eager application asset; command-centre critical API requests 5 → 2. See `performance-after.md` for measurement boundaries.
 
