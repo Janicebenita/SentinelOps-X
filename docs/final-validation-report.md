@@ -22,6 +22,7 @@ Validation results:
 - Workforce: all 11 agents listed, opened, run and rerun; 22 executions persisted in test.
 - Security: invalid and expired credentials rejected; plaintext codes absent from responses/persistence; no production execution endpoint.
 - Dependency scanning: Pytest was raised to `>=9.0.3` after CI identified `PYSEC-2026-1845` in the previous development-only 8.x line.
+- Frontend dependency scanning: Vite was raised to 6.4.3 and Vitest to 3.2.6 after CI identified patched high/critical advisories in the previous toolchain. The high-severity audit now passes; one moderate development-tree advisory remains reported.
 
 Performance: startup 6,082.84 → 2,567.94 ms; health 1,506.39 → 123.23 ms; agent list 10.09 ms; initial landing assets approximately 193 KB raw instead of a 610,943-byte eager application asset; command-centre critical API requests 5 → 2. See `performance-after.md` for measurement boundaries.
 
