@@ -319,17 +319,17 @@ Frontend routes include:
 
 | Product area | Route |
 |---|---|
-| Landing page | `/` |
-| Five-minute Judge Demo | `/judge-demo` |
-| Command Centre | `/command-centre` |
-| AI Workforce | `/agents` |
-| Agent Workspace | `/agents/:agentName` |
-| Workflow detail | `/workflows/:workflowId` |
-| Verification | `/workflows/:workflowId/verification` |
-| Human decision | `/workflows/:workflowId/approval` |
-| Evidence, audit, and export | `/workflows/:workflowId/evidence`, `/audit`, `/export` |
-| Architecture, safety, and docs | `/architecture`, `/safety`, `/docs` |
-| Google-stack evidence | `/google-stack`, `/integrations`, `/observability`, `/security-status`, `/model-evaluation` |
+| Landing page | [Open `/`](https://sentinelops-frontend-398391487181.asia-south1.run.app/) |
+| Five-minute Judge Demo | [Open `/judge-demo`](https://sentinelops-frontend-398391487181.asia-south1.run.app/judge-demo) |
+| Command Centre | [Open `/command-centre`](https://sentinelops-frontend-398391487181.asia-south1.run.app/command-centre) |
+| AI Workforce | [Open `/agents`](https://sentinelops-frontend-398391487181.asia-south1.run.app/agents) |
+| Agent Workspace | [Open example `/agents/observer-agent`](https://sentinelops-frontend-398391487181.asia-south1.run.app/agents/observer-agent) — pattern: `/agents/:agentName` |
+| Workflow detail | [Open example `/workflows/1`](https://sentinelops-frontend-398391487181.asia-south1.run.app/workflows/1) — pattern: `/workflows/:workflowId` |
+| Verification | [Open `/workflows/1/verification`](https://sentinelops-frontend-398391487181.asia-south1.run.app/workflows/1/verification) |
+| Human decision | [Open `/workflows/1/approval`](https://sentinelops-frontend-398391487181.asia-south1.run.app/workflows/1/approval) |
+| Evidence, audit, and export | [Evidence](https://sentinelops-frontend-398391487181.asia-south1.run.app/workflows/1/evidence) · [Audit](https://sentinelops-frontend-398391487181.asia-south1.run.app/workflows/1/audit) · [Export](https://sentinelops-frontend-398391487181.asia-south1.run.app/workflows/1/export) |
+| Architecture, safety, and docs | [Architecture](https://sentinelops-frontend-398391487181.asia-south1.run.app/architecture) · [Safety](https://sentinelops-frontend-398391487181.asia-south1.run.app/safety) · [Docs](https://sentinelops-frontend-398391487181.asia-south1.run.app/docs) |
+| Google-stack evidence | [Google stack](https://sentinelops-frontend-398391487181.asia-south1.run.app/google-stack) · [Integrations](https://sentinelops-frontend-398391487181.asia-south1.run.app/integrations) · [Observability](https://sentinelops-frontend-398391487181.asia-south1.run.app/observability) · [Security](https://sentinelops-frontend-398391487181.asia-south1.run.app/security-status) · [Model evaluation](https://sentinelops-frontend-398391487181.asia-south1.run.app/model-evaluation) |
 
 ## 🗂️ Repository structure
 
