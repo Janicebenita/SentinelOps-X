@@ -269,7 +269,7 @@ Typed event envelopes include idempotency, retry, dead-letter, causation, correl
 
 ## 🎬 Guided product demo
 
-The command centre supports a deterministic guided walkthrough and manual Explore Mode. Operators can change traffic, Redis capacity, application replicas, and dependency latency; load presets; upload operational JSON; replay all 12 backend-calculated scenarios; and inspect the resulting evidence and hashes.
+The Judge Demo provides a 20-step interactive evidence tour with play, pause, previous, next, restart, clickable evidence cards, progressive spotlight motion, backend-availability states, and operator-focused explanations. The command centre also supports manual Explore Mode: operators can change traffic, Redis capacity, application replicas, and dependency latency; load presets; upload operational JSON; replay all 12 backend-calculated scenarios; and inspect the resulting evidence and hashes.
 
 The guided experience never activates approval. The narrated video remains a separate supporting artifact: [demo_storytelling_video.mp4](demo_storytelling_video.mp4).
 
