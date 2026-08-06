@@ -82,3 +82,13 @@ def test_cloud_workflow_uses_oidc_and_no_service_account_key():
     assert "workflow_dispatch" in workflow
     assert "service-account.json" not in workflow
     assert "GOOGLE_API_KEY" not in workflow
+
+
+def test_frontend_cloud_run_uses_runtime_api_url_and_cors_update():
+    dockerfile = (ROOT / "Dockerfile.frontend").read_text(encoding="utf-8")
+    client = (ROOT / "frontend" / "src" / "api" / "client.ts").read_text(encoding="utf-8")
+    deploy = (ROOT / "scripts" / "deploy_cloud_run.sh").read_text(encoding="utf-8")
+    assert "runtime-config.js" in dockerfile and "API_BASE_URL" in dockerfile
+    assert "__SENTINELOPS_CONFIG__" in client
+    assert "API_BASE_URL=${API_URL}" in deploy
+    assert "CORS_ORIGINS=${FRONTEND_URL}" in deploy

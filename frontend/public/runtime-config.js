@@ -1,0 +1,1 @@
+window.__SENTINELOPS_CONFIG__={API_BASE_URL:""};
