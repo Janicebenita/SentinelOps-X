@@ -41,7 +41,7 @@ SentinelOps Nexus is a verified deterministic, human-governed operational Digita
 
 ## Test and deployment record
 
-The prior exact code revision `00be49f` passed GitHub Actions run `31063722589`, including test, lint, typing, security, secret/dependency scanning, Docker builds, health and E2E. This increment must receive its own passing CI run before promotion. Cloud Run deployment is blocked because `gcloud`, project identity, billing, APIs and IAM evidence are unavailable. Render remains on an earlier revision and reports the mock model provider.
+Exact compliance code revision `d4a8f8d` passed [GitHub Actions run 31071715878](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31071715878), including frontend type/build/bundle scanning; the complete Python suite; Ruff, MyPy and Bandit; authorization/provider/prompt/protocol contracts; no-production-route proof; gitleaks and dependency scans; five service-image builds; health checks; and Nexus E2E. Cloud Run deployment remains blocked because `gcloud`, project identity, billing, APIs and IAM evidence are unavailable. Render remains on an earlier revision and reports the mock model provider.
 
 ## Final recommendation
 
