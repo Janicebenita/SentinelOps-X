@@ -107,3 +107,6 @@ def test_database_backed_images_create_non_root_sqlite_directory():
         assert dockerfile.index("chown -R sentinelops:sentinelops /app/data") < dockerfile.index("USER sentinelops")
     deploy = (ROOT / "scripts" / "deploy_cloud_run.sh").read_text(encoding="utf-8")
     assert 'deploy_private sentinelops-mcp-server mcp sentinelops-mcp-sa "INTEGRATION_TOKEN=' in deploy
+    assert '"${MCP_REVISION:-$REVISION}"' in deploy
+    mcp_build = yaml.safe_load((ROOT / "cloudbuild.mcp.yaml").read_text(encoding="utf-8"))
+    assert len(mcp_build["images"]) == 1 and "/mcp:$COMMIT_SHA" in mcp_build["images"][0]

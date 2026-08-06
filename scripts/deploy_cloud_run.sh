@@ -12,11 +12,11 @@ for secret in sentinelops-integration-token sentinelops-role-token-secret sentin
 done
 
 deploy_private() {
-  local service="$1" image="$2" account="$3" secret_args="${4:-}"
+  local service="$1" image="$2" account="$3" secret_args="${4:-}" image_revision="${5:-$REVISION}"
   local extra=()
   if [[ -n "$secret_args" ]]; then extra=(--set-secrets "$secret_args"); fi
   gcloud run deploy "$service" --project "$PROJECT_ID" --region "$REGION" --platform managed \
-    --image "${REGISTRY}/${image}:${REVISION}" --service-account "${account}@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --image "${REGISTRY}/${image}:${image_revision}" --service-account "${account}@${PROJECT_ID}.iam.gserviceaccount.com" \
     --no-allow-unauthenticated --port 8080 --cpu 1 --memory 512Mi --concurrency 20 --timeout 60 \
     --min-instances 0 --max-instances 5 --set-env-vars PRODUCTION_EXECUTION=false,ENVIRONMENT=production \
     "${extra[@]}"
@@ -28,7 +28,7 @@ deploy_private sentinelops-simulation-service simulator sentinelops-simulation-s
 deploy_private sentinelops-verification-service verification sentinelops-verification-sa
 deploy_private sentinelops-evidence-service evidence sentinelops-evidence-sa
 deploy_private sentinelops-gemma-service gemma sentinelops-gemma-sa
-deploy_private sentinelops-mcp-server mcp sentinelops-mcp-sa "INTEGRATION_TOKEN=sentinelops-integration-token:latest,ROLE_TOKEN_SECRET=sentinelops-role-token-secret:latest"
+deploy_private sentinelops-mcp-server mcp sentinelops-mcp-sa "INTEGRATION_TOKEN=sentinelops-integration-token:latest,ROLE_TOKEN_SECRET=sentinelops-role-token-secret:latest" "${MCP_REVISION:-$REVISION}"
 
 API_SA="sentinelops-api-gateway-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 ORCHESTRATOR_SA="sentinelops-orchestrator-sa@${PROJECT_ID}.iam.gserviceaccount.com"
