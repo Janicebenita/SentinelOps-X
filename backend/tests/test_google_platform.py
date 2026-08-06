@@ -1,6 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from backend.app.enterprise.contracts import A2AMessage, EventEnvelope, EvidenceReasoningOutput, utcnow
 from backend.app.models import A2AMessageRecord, IntegrationInvocation
@@ -28,8 +28,8 @@ def test_event_idempotency_and_auth(client):
     assert first["delivered"] and second["duplicate"]
 
 def test_a2a_is_typed_persisted_and_idempotent(client,db):
-    run=ready_run(client); message=A2AMessage(workflow_id=run["id"],correlation_id="a2a-contract",sender="nexus-orchestrator",
-        receiver="verification-agent",action="verify",expires_at=utcnow()+timedelta(minutes=5))
+    run=ready_run(client); message=A2AMessage(workflow_id=run["id"],correlation_id="a2a-contract",sender_agent="nexus-orchestrator",
+        receiver_agent="verification-agent",action="verify",expires_at=utcnow()+timedelta(minutes=5))
     for _ in range(2):
         assert client.post("/api/v1/platform/a2a/messages",headers=AUTH,json=message.model_dump(mode="json")).status_code==200
     assert db.query(A2AMessageRecord).filter_by(message_id=message.message_id).count()==1
