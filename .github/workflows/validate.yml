@@ -60,7 +60,7 @@ jobs:
         run: python -m pytest backend/tests/test_upgrade.py -q
 
       - name: Google platform, provider, prompt and protocol contracts
-        run: python -m pytest backend/tests/test_google_platform.py backend/tests/test_providers.py -q
+        run: python -m pytest backend/tests/test_google_platform.py backend/tests/test_providers.py backend/tests/test_prompt_catalog.py backend/tests/test_antigravity.py backend/tests/test_cloud_tooling.py -q
 
       - name: Prove no production execution route exists
         run: |
@@ -87,8 +87,12 @@ jobs:
         run: |
           docker build -f Dockerfile.api-gateway -t sentinelops-api .
           docker build -f Dockerfile.orchestrator -t sentinelops-orchestrator .
+          docker build -f Dockerfile.forecast -t sentinelops-forecast .
           docker build -f Dockerfile.simulation -t sentinelops-simulation .
+          docker build -f Dockerfile.verification -t sentinelops-verification .
           docker build -f Dockerfile.gemma -t sentinelops-gemma .
+          docker build -f Dockerfile.evidence -t sentinelops-evidence .
+          docker build -f Dockerfile.mcp -t sentinelops-mcp .
           docker build -f Dockerfile.frontend -t sentinelops-frontend .
 
       - name: Start complete demo

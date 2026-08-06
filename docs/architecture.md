@@ -1,5 +1,7 @@
 # SentinelOps Nexus Architecture
 
+The full human-authored architecture board is available as a [single-page PDF](assets/sentinelops-nexus-architecture.pdf). The Mermaid diagrams below remain the repository-native, reviewable source of truth; managed-service runtime claims are governed by the [runtime evidence index](runtime-evidence-index.md).
+
 ## Google-native target boundary
 
 ```mermaid
@@ -57,6 +59,6 @@ SentinelOps Nexus is an evidence-driven Enterprise Operational Digital Twin. Its
 - React presents Time Travel, evidence, agent trace, business impact, tournament, and approval views.
 - The inherited reactive investigation workflow remains available as a secondary compatibility path.
 
-No LLM controls state transitions, approval, or production execution. A2A persistence and the authenticated MCP gateway are locally verified. Gemini and Gemma have credentialed call paths with explicit fallbacks. ADK remains a local adapter; Vertex AI, BigQuery, Google Pub/Sub, exported OpenTelemetry traces, Cloud Run and service IAM are not verified in the current public deployment.
+No LLM controls state transitions, approval, or production execution. A2A persistence and the authenticated MCP gateway are locally verified. Gemini Enterprise Agent Platform (formerly Vertex AI) and Gemma have credentialed call paths with explicit fallbacks. ADK remains a local adapter. Physical BigQuery DDL and Pub/Sub provisioning/smoke tooling require authenticated execution; exported OpenTelemetry traces, Cloud Run and service IAM are not verified in the current public deployment. Antigravity has a typed read-only provider boundary and deterministic fallback, but official participant documentation, SDK, endpoint, and access are unavailable (`BLOCKED_BY_PARTICIPANT_ACCESS`).
 
 See the large Mermaid diagram in the repository README.

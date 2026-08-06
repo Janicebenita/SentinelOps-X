@@ -1,1 +1,1 @@
-"""Google Cloud and local deterministic integration boundaries."""
+"""External integration boundaries."""

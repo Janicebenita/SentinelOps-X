@@ -22,4 +22,6 @@ export const nexusApi={
  decide:(id:number,endpoint:'approve'|'reject'|'request-evidence',payload:{actor_name:string;decision:string;rationale:string;verification_token:string})=>req<Record<string,unknown>>(`/api/v1/workflows/${id}/${endpoint}`,{method:'POST',body:JSON.stringify(payload)}),
  downloadEvidence:async(id:number)=>{const response=await fetch(`${BASE}/api/v1/workflows/${id}/export`);if(!response.ok)throw new Error(response.status===409?'Evidence ZIP has already been downloaded and revoked.':`Evidence export failed (${response.status}).`);const blob=await response.blob();const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=`sentinelops-nexus-${id}.zip`;anchor.click();URL.revokeObjectURL(url)},
  integrations:()=>req<{integration:string;status:string;last_health_check:string;configured_service:string;last_successful_call?:string;fallback_status:string;trace_id?:string;documentation:string;production_action:string}[]>('/api/v1/platform/integrations'),
+ a2a:(id:number)=>req<Record<string,unknown>[]>(`/api/v1/platform/a2a/messages/${id}`),
+ antigravity:()=>req<{status:string;official_runtime_invoked:boolean;blocker:string;production_action:string}>('/api/v1/integrations/antigravity/status'),
 }

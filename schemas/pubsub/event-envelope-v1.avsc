@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "SentinelOpsEventEnvelopeV1",
+  "namespace": "com.sentinelops.nexus",
+  "fields": [
+    {"name": "event_id", "type": "string"},
+    {"name": "schema_version", "type": "string"},
+    {"name": "event_type", "type": "string"},
+    {"name": "correlation_id", "type": "string"},
+    {"name": "trace_id", "type": "string"},
+    {"name": "production_action", "type": "string"}
+  ]
+}

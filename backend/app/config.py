@@ -20,12 +20,12 @@ class Settings(BaseSettings):
     role_token_secret: str = "development-only-replace-me"
     role_token_expiry_minutes: int = 10
     google_cloud_project: str = ""
-    google_cloud_region: str = "us-central1"
+    google_cloud_region: str = "asia-south1"
     google_genai_use_vertexai: bool = False
     google_api_key: str = ""
     vertex_model: str = "gemini-2.5-flash"
-    bigquery_dataset: str = "sentinelops"
-    pubsub_topic: str = "sentinelops-events"
+    bigquery_dataset: str = "sentinelops_nexus"
+    pubsub_topic: str = "sentinelops-workflow-events"
     gemma_service_url: str = ""
     oidc_issuer: str = ""
     oidc_audience: str = ""
@@ -33,4 +33,6 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 120
     max_request_bytes: int = 262144
     otel_exporter_otlp_endpoint: str = ""
+    antigravity_endpoint: str = ""
+    antigravity_participant_access: bool = False
 settings = Settings()

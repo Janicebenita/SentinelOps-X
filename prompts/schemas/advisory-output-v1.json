@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sentinelops.advisory-output.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "evidence_ids", "authoritative", "production_action"],
+  "properties": {
+    "summary": {"type": "string", "minLength": 1},
+    "evidence_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "contradictions": {"type": "array", "items": {"type": "string"}},
+    "missing_evidence": {"type": "array", "items": {"type": "string"}},
+    "authoritative": {"const": false},
+    "production_action": {"const": "NOT_EXECUTED"}
+  }
+}

@@ -16,7 +16,7 @@ def test_dynamic_integration_status(client):
     assert response.status_code==200
     statuses={x["integration"]:x["status"] for x in response.json()}
     assert statuses["A2A"]=="IMPLEMENTED_AND_VERIFIED"
-    assert statuses["Antigravity"]=="DOCUMENTATION_UNAVAILABLE"
+    assert statuses["Antigravity"]=="DOCUMENTATION_OR_ACCESS_BLOCKED"
     assert all(x["production_action"]=="NOT_EXECUTED" for x in response.json())
 
 def test_event_idempotency_and_auth(client):

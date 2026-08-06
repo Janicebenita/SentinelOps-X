@@ -25,3 +25,6 @@ data/logs/*.jsonl
 data/metrics/*.jsonl
 data/traces/*.jsonl
 !data/**/.gitkeep
+
+# Local credential material must never enter source control.
+Google API Key.docx

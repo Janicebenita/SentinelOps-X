@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..database import get_db
 from ..models import A2AMessageRecord, NexusEvidence, NexusRun
+from ..integrations.antigravity import AntigravityStatus, get_antigravity_status
 from .contracts import A2AMessage, EventEnvelope, EvidenceReasoningRequest, PolicyReviewRequest, ToolCall, utcnow
 from .runtime import event_bus, integration_health, persist_a2a, reason_with_gemini, review_with_gemma, supplemental_forecast
 
@@ -26,6 +27,11 @@ def authorize(value: str | None) -> None:
 
 @router.get("/integrations")
 def integrations(db: Db) -> Any: return integration_health(db)
+
+
+@router.get("/integrations/antigravity/status", response_model=AntigravityStatus)
+def antigravity_status() -> AntigravityStatus:
+    return get_antigravity_status()
 
 
 @router.post("/events/publish")

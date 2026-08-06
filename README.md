@@ -1,372 +1,422 @@
-<p align="center">
-  <img src="docs/assets/sentinelops-nexus-hero.png" alt="SentinelOps Nexus — predictive operational digital twin" width="100%" />
-</p>
+# SentinelOps Nexus
 
-<h1 align="center">🛰️ SentinelOps Nexus</h1>
+**The Enterprise Operational Digital Twin**
 
-<p align="center">
-  <strong>The Enterprise Operational Digital Twin</strong><br/>
-  Predict tomorrow’s operational bottleneck <em>before</em> customers experience it.
-</p>
+Predict tomorrow's operational bottleneck before customers experience it.
 
-<p align="center">
-  <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" />
-  <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white" />
-  <img alt="React" src="https://img.shields.io/badge/UI-React%2018-61DAFB?logo=react&logoColor=0B1020" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript&logoColor=white" />
-  <img alt="Deterministic" src="https://img.shields.io/badge/Simulation-Deterministic-7C3AED" />
-  <img alt="Human governed" src="https://img.shields.io/badge/Control-Human--Governed-F59E0B" />
-  <img alt="No production action" src="https://img.shields.io/badge/Production%20Action-NOT%20EXECUTED-E11D48" />
-</p>
-
-<p align="center">
-  <a href="https://janicebenita-sentinelops-nexus.onrender.com"><strong>Open Live Demo</strong></a> ·
-  <a href="#quick-start"><strong>Quick Start</strong></a> ·
-  <a href="#architecture"><strong>Architecture</strong></a> ·
-  <a href="#product-demo"><strong>Product Demo</strong></a> ·
-  <a href="#safety"><strong>Safety</strong></a> ·
-  <a href="#validation-evidence"><strong>Evidence</strong></a>
-</p>
+> National AI Agent Builder Finale submission for the B2B Services challenge: Late Bottleneck Detection.
 
 > [!IMPORTANT]
-> **Working-build status:** The complete deterministic local workflow is validated without paid credentials.  
-> **Safety boundary:** Approval records a human decision and unlocks evidence export. It never deploys, changes infrastructure, or executes a production action.
+> **PRODUCTION ACTION: NOT EXECUTED**
+>
+> Approval records a governed human decision and enables evidence export.
+>
+> It does not deploy, scale, roll back, reconfigure, or modify production infrastructure.
 
----
+## Live deployment status
 
-## Product routes and secure workforce upgrade
+| Environment | Status | Purpose |
+|---|---|---|
+| Local | IMPLEMENTED_AND_VERIFIED | Complete deterministic workflow and reproducible validation |
+| Render | Legacy live demonstration | Existing public deterministic demo |
+| Google Cloud Run | IMPLEMENTED_REQUIRES_CREDENTIALS | Primary Google-native deployment target; no verified live revision yet |
+
+## Live demo
+
+- Legacy public demonstration: [SentinelOps Nexus on Render](https://janicebenita-sentinelops-nexus.onrender.com/)
+- Local application: `http://localhost:5173/`
+- Local Command Centre: `http://localhost:5173/command-centre`
+- Local five-minute evidence workspace: `http://localhost:5173/judge-demo`
+
+Render remains the current public demonstration environment until the Google Cloud Run deployment is authenticated and verified. No Cloud Run URL is published without live URL, revision, IAM, health, readiness, log, and smoke-test evidence.
+
+SentinelOps Nexus is an evidence-driven operational decision-support product. It forecasts emerging Redis saturation, builds a bounded Digital Twin, replays 12 deterministic scenarios, compares FAST, SAFE, and OPTIMAL interventions, applies mandatory safety gates, and stops at an authorized human decision boundary.
+
+[Quick Start](#running-locally) | [Architecture](#architecture-summary) | [Guided Demo](#guided-product-demo) | [Safety](#security-and-human-control) | [Evaluation Evidence](#evaluation-evidence)
+
+## Project overview
+
+The canonical seeded workflow models a Payment Service whose Redis memory pressure rises before a reactive alert fires. Under the documented deterministic seed, SentinelOps Nexus:
+
+- forecasts the Redis safe-capacity crossing at **+30 minutes**;
+- estimates possible customer impact at **+45 minutes**;
+- creates a version-locked, content-hashed Digital Twin;
+- replays **12 deterministic scenarios**;
+- disqualifies FAST when its mandatory failover gate fails;
+- recommends the highest-scoring eligible candidate, currently OPTIMAL;
+- generates an evidence-grounded executive brief;
+- requires a qualified human decision and rationale; and
+- exports a verifiable Evidence ZIP with `manifest.sha256`.
+
+The bounded deterministic forecast and mandatory safety gates remain authoritative. Model output cannot approve, change workflow state, override eligibility, or execute a production action.
+
+## Architecture summary
+
+```text
+Telemetry Ingestion
+        ↓
+Redis Forecast Service
+        ↓
+Digital Twin Engine
+        ↓
+Simulation Engine
+        ↓
+Optimization Engine
+        ↓
+Gemini Enterprise Agent Platform (formerly Vertex AI)
+        ↓
+Gemma Private Policy Review Engine
+        ↓
+Mandatory Safety Gates
+        ↓
+Verification Agent
+        ↓
+Executive Recommendation Generator
+        ↓
+AWAITING_HUMAN
+        ↓
+Human Approval Stage
+        ↓
+Tamper-Evident SHA-256-Linked Audit Chain
+        ↓
+Evidence ZIP Export
+```
+
+This ordering is a safety invariant. Executive recommendation follows mandatory gates and verification. Human approval follows verification and the explicit `AWAITING_HUMAN` state.
+
+The complete architecture is documented in [docs/architecture.md](docs/architecture.md) and the [single-page architecture board](docs/assets/sentinelops-nexus-architecture.pdf).
+
+## AI reasoning and authority
+
+### Gemini Enterprise Agent Platform (formerly Vertex AI)
+
+Gemini Enterprise Agent Platform (formerly Vertex AI) is the primary AI reasoning engine in the Google-native architecture. When Google credentials are configured, it provides:
+
+- evidence-grounded reasoning;
+- contradiction and missing-evidence detection;
+- scenario and candidate explanations;
+- recommendation synthesis;
+- business-impact explanation; and
+- executive summaries.
+
+Gemini output is schema-validated, evidence-referenced, hashed, traced, audited, and bounded by deterministic fallback behavior. Gemini never approves, executes production actions, bypasses safety gates, or directly mutates workflow state.
+
+### Gemma Private Policy Review Engine
+
+The Gemma Private Policy Review Engine provides a secondary policy and safety review for:
+
+- recommendation-to-gate consistency;
+- evidence completeness;
+- policy-violation classification;
+- contradiction review; and
+- unsafe-recommendation critique.
+
+The Gemma Private Policy Review Engine is advisory. It cannot override Mandatory Safety Gates, approve, change workflow state, or execute production actions.
+
+### Backend authority
+
+The FastAPI backend remains authoritative for:
+
+- deterministic forecasts and scenario calculations;
+- intervention eligibility and safety gates;
+- workflow-state transitions;
+- role verification and approval authorization;
+- recording the qualified human decision and rationale;
+- the tamper-evident SHA-256-linked audit chain; and
+- Evidence ZIP generation.
+
+No model approves a recommendation. Only an authorized human can submit a decision that the backend validates and records.
+
+## Agent orchestration
+
+The current AI Workforce uses an ADK-compatible orchestration boundary and agent registry. The official Google ADK runtime has not yet been verified in the authenticated environment, so its current status is `LOCAL_ADAPTER_ONLY`. The boundary coordinates structured agent execution and Agent-to-Agent (A2A) handoffs while the backend retains workflow authority.
+
+The workforce includes:
+
+- Nexus Orchestrator;
+- Observer Agent;
+- Evidence Agent;
+- Process Discovery Agent;
+- Prediction Agent;
+- Digital Twin Agent;
+- Simulation Agent;
+- Optimization Agent;
+- Verification Agent;
+- Business Impact Agent; and
+- Executive Agent.
+
+Every visible agent card is clickable and opens a backend-driven workspace. Supported run and rerun actions persist status, duration, retry count, inputs, outputs, evidence references, result hashes, and audit events. Typed A2A messages carry workflow, task, correlation, causation, artifact, evidence, status, and trace metadata without storing hidden chain-of-thought.
+
+The official Google ADK runtime was not available in the validated local environment. Local adapter tests are not presented as official managed-runtime evidence.
+
+## Controlled MCP tools
+
+MCP is the authenticated, controlled tool interface used by agents. Implemented read-only and bounded tools cover:
+
+- telemetry and latest-metric retrieval;
+- service topology and SLO retrieval;
+- incident and evidence retrieval;
+- Digital Twin manifest creation;
+- scenario execution and result access;
+- tournament and gate-result access;
+- simulation access;
+- business-impact calculation; and
+- Evidence ZIP export.
+
+MCP tools use strict schemas, authorization, rate limits, correlation IDs, trace IDs, audit events, safe errors, and idempotency where applicable. No MCP tool can deploy, scale, roll back, reconfigure, execute shell commands, or modify cloud infrastructure.
+
+## Data and event architecture
+
+### Transactional workflow state
+
+The backend transactional store is authoritative for workflows, agent executions, verification records, human decisions, and audit-chain state. SQLite provides deterministic local and demonstration persistence. BigQuery is not used as the transactional workflow authority.
+
+### BigQuery analytics
+
+In configured Google Cloud mode, BigQuery is the analytical and historical warehouse for:
+
+- historical telemetry;
+- forecast analytics;
+- simulation results;
+- verification results;
+- model-invocation metadata;
+- audit exports; and
+- evidence metadata.
+
+The repository includes nine partitioned and clustered schemas plus credential-gated provisioning and write/read smoke tooling. Its status is `IMPLEMENTED_REQUIRES_CREDENTIALS`; no live BigQuery use is claimed without an authenticated write/read result and row ID.
+
+### Pub/Sub eventing
+
+Pub/Sub is the asynchronous event-backbone target for:
+
+- Telemetry Events;
+- Agent Task Events;
+- Simulation Events;
+- Verification Events;
+- Model Invocation Events;
+- Evidence Export Events;
+- Workflow Status Events; and
+- BigQuery Export Events.
+
+Typed event envelopes include idempotency, retry, dead-letter, causation, correlation, and trace metadata. Provisioning and publish/consume smoke tooling exist, so the managed integration is `IMPLEMENTED_REQUIRES_CREDENTIALS`. The validated local build uses an idempotent local adapter, and managed publish/consume success is not claimed without an authenticated message ID.
+
+## Key features
+
+- Transparent bounded Redis saturation forecast
+- Version-locked and content-hashed Digital Twin manifest
+- Fixed deterministic seed and 12 reproducible scenarios
+- FAST, SAFE, and OPTIMAL intervention tournament
+- Mandatory eligibility gates that override score
+- Verification Agent with persisted technical and approver checks
+- Evidence-grounded Gemini reasoning with deterministic fallback
+- Gemma Private Policy Review Engine safety-critique boundary
+- Clickable, backend-connected AI Workforce
+- Typed, persisted, and traced A2A messages
+- Authenticated MCP tool gateway
+- Role-qualified human decisions with mandatory rationale
+- Tamper-evident SHA-256-linked audit chain
+- Verifiable Evidence ZIP containing `manifest.sha256`
+- Explicit absence of any production execution endpoint
+
+## Evaluation evidence
+
+| Key evaluation question | Evidence-backed answer |
+|---|---|
+| What bottleneck is emerging? | Redis saturation on the Payment Service critical path |
+| When is safe capacity crossed? | +30 minutes in the canonical deterministic seed |
+| When may customers be affected? | +45 minutes under the displayed assumptions |
+| How many scenarios are replayed? | 12 using the same Twin manifest and fixed seed |
+| Which false fix is detected? | FAST fails the mandatory failover gate |
+| Which strategy is recommended? | The highest-scoring eligible candidate; currently OPTIMAL |
+| Is confidence a probability? | No. It is a heuristic evidence score |
+| Is revenue exposure guaranteed? | No. It is an operational estimate based on visible inputs |
+| Does approval deploy anything? | No. It records a governed human decision and enables evidence export |
+
+## Guided product demo
+
+The command centre supports a deterministic guided walkthrough and manual Explore Mode. Operators can change traffic, Redis capacity, application replicas, and dependency latency; load presets; upload operational JSON; replay all 12 backend-calculated scenarios; and inspect the resulting evidence and hashes.
+
+The guided experience never activates approval. The narrated video remains a separate supporting artifact: [demo_storytelling_video.mp4](demo_storytelling_video.mp4).
+
+Frontend routes include:
 
 | Product area | Route |
 |---|---|
-| Premium landing page | [`/`](https://janicebenita-sentinelops-nexus.onrender.com/) |
-| Command Centre | [`/command-centre`](https://janicebenita-sentinelops-nexus.onrender.com/command-centre) |
-| Clickable AI Workforce | `/agents` |
+| Landing page | `/` |
+| Five-minute Judge Demo | `/judge-demo` |
+| Command Centre | `/command-centre` |
+| AI Workforce | `/agents` |
 | Agent Workspace | `/agents/:agentName` |
 | Workflow detail | `/workflows/:workflowId` |
 | Verification | `/workflows/:workflowId/verification` |
 | Human decision | `/workflows/:workflowId/approval` |
-| Evidence / audit / export | `/workflows/:workflowId/evidence`, `/audit`, `/export` |
-| Architecture / safety / docs | `/architecture`, `/safety`, `/docs` |
-| Google evidence status | `/google-stack`, `/integrations`, `/observability`, `/security-status`, `/model-evaluation` |
+| Evidence, audit, and export | `/workflows/:workflowId/evidence`, `/audit`, `/export` |
+| Architecture, safety, and docs | `/architecture`, `/safety`, `/docs` |
+| Google-stack evidence | `/google-stack`, `/integrations`, `/observability`, `/security-status`, `/model-evaluation` |
 
-The AI Workforce now contains eleven backend-connected agents: Nexus Orchestrator, Observer, Evidence, Process Discovery, Prediction, Digital Twin, Simulation, Optimization, Verification, Business Impact and Executive. Every card is clickable. Run and rerun actions persist execution status, duration, retry count, evidence and result hashes and append chained audit events. See [AI Workforce](docs/agent-workforce.md) and [Verification Agent](docs/verification-agent.md).
+## Repository structure
 
-### Demo role verification
+```text
+backend/                 FastAPI API, workflows, agents, security, audit, providers
+frontend/                React and TypeScript application
+services/                Independently packageable service entry points
+prompts/                 Versioned Gemini/Gemma prompts and evaluations
+deploy/cloud-run/        Cloud Run service manifests and frontend routing
+scripts/                 Validation, provisioning, deployment, and smoke tooling
+sql/                     BigQuery analytical schemas
+docs/                    PRD, architecture, safety, evaluation, and deployment evidence
+.github/workflows/       Local validation and controlled Google Cloud workflows
+Dockerfile.*             Service-specific container definitions
+cloudbuild.yaml          Commit-SHA image build configuration
+```
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, TanStack Query, Recharts |
+| Backend | Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy |
+| Deterministic engine | Python forecasting, Digital Twin, simulation, optimization, safety gates |
+| AI reasoning | Gemini Enterprise Agent Platform (formerly Vertex AI), Gemma Private Policy Review Engine, deterministic fallback |
+| Agent protocols | Google ADK boundary, typed A2A, authenticated MCP |
+| Transactional persistence | SQLite for the deterministic working build |
+| Analytical persistence | BigQuery analytical schemas and credential-gated provision/write/read tooling |
+| Async eventing | Pub/Sub provisioning/smoke tooling with local idempotent fallback adapter |
+| Observability | OpenTelemetry-compatible trace metadata, Cloud Logging, Cloud Monitoring, Cloud Trace targets |
+| Cloud delivery | GitHub Actions, Cloud Build, Artifact Registry, Cloud Run, Secret Manager, IAM, ADC |
+| Quality | Pytest, Vitest, Ruff, MyPy, Bandit, dependency and secret scanning |
+
+## Security and human control
+
+Security controls include:
+
+- OAuth2/OIDC-ready configuration;
+- signed, short-lived JWT role tokens;
+- backend-authoritative RBAC;
+- backend authorization for every human decision;
+- least-privilege Cloud Run IAM design;
+- Secret Manager references for deployed secrets;
+- rate limiting and request-size limits;
+- replay protection and idempotency controls;
+- strict Pydantic validation, CORS, and security headers;
+- mandatory rationale for Senior Developer approval; and
+- explicit model and tool non-authority.
+
+Trial credentials are for demonstration only:
 
 | Role | Trial code | Approval behavior |
 |---|---:|---|
 | Intern | `0000` | May inspect and simulate; cannot approve |
-| Senior Developer | `1111` | May approve with a verified short-lived token and mandatory rationale |
+| Senior Developer | `1111` | May approve only after role verification and with mandatory rationale |
 
-> **Demonstration only:** Replace trial access codes with enterprise SSO and managed RBAC in production. Codes are compared and tokenized only by the backend; they are not compiled into frontend assets, persisted in plaintext, logged, returned or exported.
+Production deployments must replace trial credentials with enterprise identity, SSO, and managed RBAC. Codes remain server-side and must never be bundled into frontend assets, persisted in plaintext, logged, returned, or exported.
 
-Approval records a human decision. The Verification Agent and AI models never approve. No production execution endpoint exists.
+## Observability
 
-The Executive Agent moves a verified recommendation into the explicit `AWAITING_HUMAN` state. Only then can a signed, role-qualified human decision be submitted; evidence, audit and verification routes load their persisted backend artifacts rather than frontend placeholders.
+The architecture propagates request IDs, correlation IDs, trace IDs, and AI invocation IDs through HTTP, agent, A2A, MCP, model, simulation, verification, authorization, decision, and evidence flows. Services emit structured logs with those identifiers where configured.
 
-**PRODUCTION ACTION: NOT EXECUTED**
+OpenTelemetry is the instrumentation boundary. Where Google Cloud credentials and exporters are configured, telemetry targets Cloud Logging, Cloud Monitoring, and Cloud Trace. The local build verifies trace propagation and invocation metadata; it does not claim exported Google Cloud traces without a live trace ID.
 
-Performance work added route-level lazy loading, a zero-API landing paint, deferred charts/evidence/audit/agents, query freshness, immutable asset caching and lightweight health/readiness separation. See [baseline](docs/performance-baseline.md) and [after](docs/performance-after.md).
+Secrets, trial codes, API keys, hidden chain-of-thought, unredacted prompts, and sensitive evidence payloads must not be logged.
 
-## Google-native enterprise platform
+## Deployment
 
-The working build includes typed persisted A2A messages, an authenticated read-only MCP gateway, idempotent event contracts, Gemini and Gemma advisory boundaries, versioned Google AI Studio prompt assets, trace/invocation metadata, standards-shaped short-lived role JWTs, tested rate limiting, and independently packageable Cloud Run services. Live-backend status routes include `/google-stack`, `/integrations`, `/observability`, `/security-status`, and `/model-evaluation`.
-
-Cloud integrations report their actual runtime state. Without Google credentials, explicit local fallbacks remain active and the UI does not claim a Google service was called. Cloud Run configuration exists, but deployment is not claimed until authenticated smoke tests succeed. See the [integration matrix](docs/integration-status-matrix.md), [Cloud Run plan](docs/cloud-run-deployment-plan.md), and [compliance report](docs/final-compliance-report.md).
-
-Vertex AI and BigQuery remain `ROADMAP_ONLY`; Google Pub/Sub and ADK remain `LOCAL_ADAPTER_ONLY`; OpenTelemetry export remains `ROADMAP_ONLY`. Secret Manager, Artifact Registry, Cloud Logging and Cloud Monitoring appear only in credential-required deployment configuration. See the [judge matrix](docs/judge-compliance-matrix.md) for the evidence behind every status.
-
-Google AI Studio is prompt-development/evaluation tooling only. Antigravity is `DOCUMENTATION_UNAVAILABLE`; no undocumented interface was invented.
-
-New API groups include `/api/v1/agents`, per-workflow agent run/rerun/events, `/api/v1/auth/verify-role`, verification records and token-authorized human decisions. Configuration is documented in [.env.example](.env.example).
-
-For the human-led creation story, implementation bugs and their rectifications, read [Making SentinelOps Nexus](docs/making-of-sentinelops-nexus.md).
-
-
-## 🏆 Competition Mission
-
-**National AI Agent Builder Finale · B2B Services · Late Bottleneck Detection**
-
-Traditional monitoring tells an operations team that a threshold **has already failed**. SentinelOps Nexus asks the question that matters earlier:
-
-> **Which constraint will become the next bottleneck, when will customers feel it, and which intervention remains safe under nearby failure conditions?**
-
-Nexus turns telemetry into a traceable decision workflow:
-
-```mermaid
-flowchart LR
-    A["📡 Observe"] --> B["🔭 Forecast"]
-    B --> C["🧬 Build Twin"]
-    C --> D["🧪 Replay 12 Scenarios"]
-    D --> E["🛡️ Apply Safety Gates"]
-    E --> F["👤 Human Decision"]
-```
-
-This is not another alert dashboard. It is a bounded, reproducible operational decision system that predicts, tests, rejects unsafe options, explains its reasoning, and stops at the human-control boundary.
-
----
-
-## ✨ Why SentinelOps Nexus Stands Out
-
-| Capability | What the operator receives | Why it matters |
-|---|---|---|
-| 🔭 Early bottleneck forecast | Safe-capacity crossing and likely customer-impact window | Moves response from reactive to preventive |
-| 🧬 Bounded Digital Twin | Version-locked, content-hashed operational model | Makes every replay traceable and comparable |
-| 🧪 Deterministic scenario lab | 12 reproducible failure and intervention scenarios | Produces independently verifiable evidence |
-| 🏟️ Intervention tournament | FAST, SAFE, and OPTIMAL compared on the same Twin | Prevents recommendation by intuition alone |
-| 🛡️ Mandatory safety gates | Unsafe candidates are disqualified regardless of score | Makes safety a rule, not a suggestion |
-| 💰 Explainable business impact | Visible equations, assumptions, and exposure estimates | Connects engineering risk to business decisions |
-| 👤 Human-governed approval | Named decision, rationale, and audit record | Preserves accountability and control |
-| 📦 Evidence export | Verifiable ZIP with hashes, scenarios, decisions, and audit events | Supports review, governance, and reproducibility |
-
----
-
-## 🎯 Canonical Product Workflow
-
-The seeded **Payment Service** begins healthy while traffic and Redis memory pressure rise. Nexus:
-
-1. detects the weak early signal;
-2. forecasts Redis safe-capacity crossing at **+30 minutes**;
-3. estimates customer impact at **+45 minutes** under documented assumptions;
-4. creates a hashed, bounded Digital Twin;
-5. replays **12 deterministic scenarios** with the same manifest and seed;
-6. evaluates three interventions;
-7. rejects the plausible **FAST** fix because it fails mandatory failover safety;
-8. recommends the highest-scoring eligible strategy—currently **OPTIMAL**;
-9. estimates business exposure using visible inputs and equations; and
-10. stops for a named human decision—without executing any production action.
-
-<a name="validation-evidence"></a>
-
-## 📊 Validation Evidence
-
-| Technical question | Evidence-backed answer |
-|---|---|
-| What bottleneck is emerging? | Redis saturation on the Payment Service critical path |
-| When is safe capacity crossed? | **+30 minutes** in the canonical deterministic seed |
-| When may customers be affected? | **+45 minutes**, subject to displayed assumptions |
-| How many scenarios are replayed? | **12**, using the same Twin manifest and fixed seed |
-| Which false fix is detected? | **FAST**, rejected by the mandatory failover safety gate |
-| Which strategy is recommended? | Highest-scoring eligible candidate; currently **OPTIMAL** |
-| Is confidence a probability? | No—it is a heuristic evidence score |
-| Is revenue exposure guaranteed? | No—it is an operational estimate from visible inputs |
-| Does approval deploy anything? | No—it records a human decision and enables evidence export |
-
----
-
-## 🛡️ Intervention Decision Matrix
-
-| Intervention | Intent | Mandatory gates | Eligible | Decision |
-|---|---|---:|:---:|---|
-| ⚡ **FAST** | Scale application replicas immediately | ❌ Failover safety fails | **No** | Disqualified regardless of score |
-| 🛟 **SAFE** | Redis capacity + controlled failover + traffic shaping | ✅ Pass | **Yes** | Lower-cost eligible alternative |
-| 🎯 **OPTIMAL** | Redis capacity + cache-policy correction + gradual scaling | ✅ Pass | **Yes** | Recommended by transparent score |
-
-> [!CAUTION]
-> **Eligibility overrides score.** A failed mandatory gate can never be outweighed by confidence, predicted benefit, or business value.
-
-```mermaid
-flowchart TD
-    A["Candidate intervention"] --> B{"Mandatory gates pass?"}
-    B -- No --> C["❌ Disqualify"]
-    B -- Yes --> D["📊 Calculate transparent score"]
-    D --> E["🏅 Rank eligible candidates"]
-    E --> F["👤 Human reviews and decides"]
-```
-
----
-
-<a name="product-demo"></a>
-
-## 🎬 Guided Product Demo
-
-The command centre provides two complementary experiences from the mode switcher.
-
-### ▶️ One-click Guided Demo
-
-A six-stop, auto-playing tour presents:
-
-- early signal detection;
-- transparent forecasting;
-- bounded Digital Twin creation;
-- deterministic scenario replay;
-- false-fix rejection; and
-- the human decision boundary.
-
-The tour can be paused, moved backward or forward, or exited at any time. It **never presses the approval button**.
-
-**[Launch the live command centre →](https://janicebenita-sentinelops-nexus.onrender.com)**
-
-### 🎛️ Explore Mode
-
-Operators can change four bounded inputs:
-
-- traffic;
-- Redis capacity;
-- application replicas; and
-- dependency latency.
-
-They can also load presets or upload operational JSON, persist a workflow, replay all 12 backend-calculated scenarios, and inspect each scenario’s inputs, recovery, outcome, evidence references, and deterministic hash.
-
-Use `docs/sample-explore-controls.json` to exercise the upload workflow. Uploaded evidence is content-hashed and added to the backend audit chain.
-
-> [!NOTE]
-> **Rerun = simulation only. Approval = decision recording only.** The interface keeps `PRODUCTION ACTION: NOT EXECUTED` visible throughout.
-
-### Recommended Five-Minute Demo Route
-
-| Time | Demonstrate | Proof point |
-|---:|---|---|
-| 0:00–0:40 | Mission and rising Redis pressure | Healthy-now does not mean safe-next |
-| 0:40–1:20 | +30 and +45 forecast | Early warning precedes reactive alert |
-| 1:20–2:05 | Twin manifest and hash | Model boundary and evidence are explicit |
-| 2:05–3:15 | Twelve-scenario replay | Results are deterministic and inspectable |
-| 3:15–4:10 | FAST rejection and OPTIMAL selection | Safety gates override score |
-| 4:10–5:00 | Human decision and export boundary | Governance is built into the workflow |
-
----
-
-<a name="architecture"></a>
-
-## 🏗️ Architecture
-
-```mermaid
-flowchart TB
-    UI["🖥️ React Command Centre"] --> API["⚡ FastAPI /api/v1"]
-    API --> WF["🧠 Workflow Orchestrator"]
-    WF --> TWIN["🧬 Digital Twin + Forecast"]
-    WF --> SIM["🧪 Deterministic Simulator"]
-    TWIN --> EVID["🔗 Evidence + SHA-256 Chain"]
-    SIM --> EVID
-    EVID --> DB["🗄️ SQLite Persistence"]
-    WF --> GATE["🛡️ Policy & Safety Gates"]
-    GATE --> HUMAN["👤 Human Decision Boundary"]
-```
-
-The Digital Twin is a **bounded operational model under documented assumptions**, not a claim of perfect production replication.
-
-### Yesterday → Now → Tomorrow
-
-The command centre exposes five canonical points: **Yesterday**, **Now**, **+15**, **+30**, and **+45 minutes**.
-
-Forecast calculations remain deterministic and visible:
+Google Cloud Run is the primary deployment target. The release pipeline and connected runtime services are:
 
 ```text
-memory_pct(t) = current_memory_pct + saturation_slope × minutes
-
-threshold_crossing =
-    (safe_threshold - current_memory_pct) / saturation_slope
+GitHub
+  ↓
+GitHub Actions
+  ↓
+Cloud Build
+  ↓
+Artifact Registry
+  ↓
+Cloud Run
+  ├── Secret Manager
+  ├── BigQuery
+  ├── Pub/Sub
+  ├── Cloud Logging
+  ├── Cloud Monitoring
+  ├── Cloud Trace
+  ├── IAM / Service Accounts
+  └── Application Default Credentials
 ```
 
-The UI exposes the method, threshold, residual MAE, error bound, assumptions, and linked evidence IDs.
+Cloud Build builds commit-SHA-tagged service images. Artifact Registry stores those images. Cloud Run deploys revisions from those stored images. The existence of `cloudbuild.yaml`, Dockerfiles, or deployment manifests is configuration evidence—not proof that an image was pushed or a Cloud Run revision was deployed.
 
-### Twelve deterministic scenarios
+The runtime architecture uses Application Default Credentials (ADC), Cloud Run service accounts, least-privilege IAM, Secret Manager references, and GitHub OIDC with Workload Identity Federation. No service-account JSON key or frontend API key is required.
 
-| # | Scenario | # | Scenario |
-|---:|---|---:|---|
-| 01 | Baseline growth | 07 | Reduced Redis capacity |
-| 02 | Redis crash | 08 | Increased application replicas |
-| 03 | Redis latency | 09 | Rollback |
-| 04 | Replica failover | 10 | Rate limiting |
-| 05 | 10× traffic | 11 | Cache-policy correction |
-| 06 | One-million-user stress | 12 | Configuration drift |
+Nine independently packageable Cloud Run services are defined:
 
-Every result includes inputs, status, p95 latency, error rate, recovery estimate, evidence references, and a deterministic SHA-256 hash.
+- `sentinelops-frontend`
+- `sentinelops-api-gateway`
+- `sentinelops-orchestrator`
+- `sentinelops-forecast-service`
+- `sentinelops-simulation-service`
+- `sentinelops-verification-service`
+- `sentinelops-evidence-service`
+- `sentinelops-gemma-service`
+- `sentinelops-mcp-server`
 
----
+Cloud Run deployment remains `IMPLEMENTED_REQUIRES_CREDENTIALS` until live service URLs, revisions, IAM checks, health checks, and readiness checks succeed. The existing Render deployment is a legacy public demonstration, not the primary enterprise deployment architecture.
 
-<a name="safety"></a>
-
-## 🔐 Safety by Design
-
-Only backend policy can change workflow state. The provider/model cannot approve a recommendation.
-
-Human approval means exactly three things:
-
-1. record the named human decision and rationale;
-2. append the decision to the chained audit timeline; and
-3. permit export of the evidence package.
-
-It **never** means deployment or production execution.
-
-The evidence ZIP contains the incident, Twin manifest, source evidence, forecast, scenarios, tournament results, verification results, business-impact estimate, executive brief, audit events, and `manifest.sha256`.
-
----
-
-## 🧰 Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy |
-| Persistence | SQLite for deterministic local/demo operation |
-| Frontend | React 18, TypeScript, Vite, TanStack Query, Recharts |
-| Quality | Pytest, Ruff, MyPy, Bandit, Vitest |
-| Delivery | Docker Compose, Render Blueprint |
-| Provider | Deterministic local provider by default; no paid key required |
-| Optional AI | Gemini/OpenAI narrative adapter boundary |
-
----
-
-<a name="quick-start"></a>
-
-## 🚀 Quick Start
+## Running locally
 
 ### Prerequisites
 
-- Python **3.11+**
-- Node.js **20+**
+- Python 3.11+
+- Node.js 20+
 - pnpm
 
-### Windows PowerShell
+### Backend
 
 ```powershell
 python -m venv .venv
 & ".\.venv\Scripts\python.exe" -m pip install -e ".[dev]"
-
-Set-Location frontend
-pnpm install
-Set-Location ..
-
 & ".\.venv\Scripts\python.exe" -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
-In a second terminal:
+### Frontend
 
 ```powershell
 Set-Location frontend
-pnpm dev
-```
-
-### Linux or macOS
-
-```bash
-python3 -m venv .venv
-./.venv/bin/python -m pip install -e '.[dev]'
-
-cd frontend
 pnpm install
-cd ..
-
-./.venv/bin/python -m uvicorn backend.app.main:app --reload --port 8000
-```
-
-In a second terminal:
-
-```bash
-cd frontend
 pnpm dev
 ```
 
 Open:
 
-- 🖥️ Command centre: `http://localhost:5173`
-- 📚 Interactive API documentation: `http://localhost:8000/docs`
+- Landing page: `http://localhost:5173/`
+- Command Centre: `http://localhost:5173/command-centre`
+- API documentation: `http://localhost:8000/docs`
 
----
+The complete deterministic local workflow runs without paid AI credentials. Missing managed providers activate visible, bounded fallback behavior rather than fabricated cloud success.
 
-## ✅ Validation and Reproducibility
+## Running on Google Cloud
 
-### Backend and end-to-end checks
+Prerequisites are an authenticated Google Cloud CLI, billing access to `sentinelops-nexus-finale`, and the approved `asia-south1` region.
+
+```bash
+export PROJECT_ID=sentinelops-nexus-finale
+export REGION=asia-south1
+
+bash scripts/provision_google_cloud.sh
+gcloud builds submit --config cloudbuild.yaml \
+  --substitutions=_REGION=asia-south1,COMMIT_SHA=$(git rev-parse HEAD) .
+REVISION=$(git rev-parse HEAD) bash scripts/deploy_cloud_run.sh
+
+python scripts/smoke_cloud_run.py
+python scripts/smoke_bigquery.py
+python scripts/smoke_pubsub.py
+bash scripts/verify_google_cloud.sh
+```
+
+Provisioning creates secret containers but never creates or prints secret values. Add approved Secret Manager versions before deployment. Do not claim deployment success unless all authenticated smoke checks pass and their non-secret evidence IDs are recorded.
+
+## Testing
+
+### Backend, security, and end-to-end
 
 ```powershell
 & ".\.venv\Scripts\python.exe" -m pytest backend\tests demo_app\tests -q
@@ -376,7 +426,7 @@ Open:
 & ".\.venv\Scripts\python.exe" scripts\nexus_e2e.py
 ```
 
-### Frontend checks
+### Frontend
 
 ```bash
 cd frontend
@@ -384,150 +434,73 @@ pnpm test
 pnpm run build
 ```
 
-Determinism is part of the product contract: the same Twin manifest, seed, controls, and scenario definition produce the same inspectable outcome hash.
+Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution, A2A and MCP contracts, Gemini Enterprise Agent Platform (formerly Vertex AI) and Gemma Private Policy Review Engine authority boundaries, role verification, Intern rejection, Senior rationale requirements, audit-chain validation, Evidence ZIP verification, frontend routes, and absence of production-execution endpoints.
 
----
+## CI/CD
 
-## 🎥 Narrated Walkthrough
+`.github/workflows/validate.yml` runs backend and frontend tests, type checks, Ruff, MyPy, Bandit, dependency scanning, secret scanning, provider/prompt/protocol/security tests, Docker builds, the end-to-end workflow, and proof that no production-execution route exists.
 
-The reproducible generator renders a synchronized nine-scene Nexus simulation as a 1080p H.264/AAC walkthrough with SRT captions and professional Indian-English narration. The final approval control is never activated.
+`.github/workflows/google-cloud-runtime.yml` is a protected `workflow_dispatch` workflow using GitHub OIDC and Workload Identity Federation. Paid or state-changing cloud checks are not run automatically on every pull request.
 
-```powershell
-& ".\.venv\Scripts\python.exe" scripts\generate_storytelling_video.py --install
-```
+## Implementation status
 
-Generated artifacts include the submission-ready MP4, synchronized captions, `voice.wav`, and intermediate recordings. Lossless voice and intermediate browser recordings remain gitignored build outputs.
+| Component | Status | Evidence boundary |
+|---|---|---|
+| Deterministic workflow, Digital Twin, 12 scenarios, tournament, and mandatory gates | IMPLEMENTED_AND_VERIFIED | Local tests and reproducible end-to-end workflow |
+| Human approval, Intern block, Senior rationale, audit chain, and Evidence ZIP | IMPLEMENTED_AND_VERIFIED | Backend authorization and export validation tests |
+| Gemini Enterprise Agent Platform (formerly Vertex AI) | IMPLEMENTED_REQUIRES_CREDENTIALS | Primary reasoning path and fallback exist; no authenticated invocation evidence |
+| Gemma Private Policy Review Engine | IMPLEMENTED_REQUIRES_CREDENTIALS | Policy service and safe fallback exist; no deployed model revision evidence |
+| Google ADK | LOCAL_ADAPTER_ONLY | Agent registry and orchestration adapter tested; official runtime not verified |
+| A2A | IMPLEMENTED_AND_VERIFIED | Typed, persisted, correlated, and traced handoffs |
+| MCP | IMPLEMENTED_AND_VERIFIED | Authenticated 13-tool controlled gateway and no-mutation tests |
+| Managed supplemental forecasting | LOCAL_FALLBACK_AVAILABLE | Deterministic forecast remains authoritative |
+| BigQuery | IMPLEMENTED_REQUIRES_CREDENTIALS | Nine schemas and credential-gated provision/write/read smoke tooling; no live row ID |
+| Pub/Sub | IMPLEMENTED_REQUIRES_CREDENTIALS | Provisioning and publish/consume smoke tooling plus local adapter; no live message ID |
+| Cloud Run, Artifact Registry, Secret Manager, and service IAM | IMPLEMENTED_REQUIRES_CREDENTIALS | Nine-service packaging and deployment tooling; no live deployment evidence |
+| OpenTelemetry, Cloud Logging, Cloud Monitoring, and Cloud Trace | LOCAL_ADAPTER_ONLY | Local trace propagation exists; no exported trace evidence |
+| OAuth2/OIDC | LOCAL_ADAPTER_ONLY | Configuration boundary exists; enterprise identity provider not connected |
+| JWT and backend RBAC | IMPLEMENTED_AND_VERIFIED | Short-lived role-token and authorization tests |
+| Google AI Studio prompt lifecycle | IMPLEMENTED_REQUIRES_CREDENTIALS | Thirteen task-level CRISPE prompts, schema, and evaluation contracts exist; no Studio session evidence |
+| Antigravity | BLOCKED_BY_PARTICIPANT_ACCESS | Typed provider/status boundary exists; official documentation, SDK, endpoint, and authenticated access were unavailable |
 
-- 🎞️ [Narrated demo video](demo_storytelling_video.mp4) — submission-ready MP4, validated at 4:50
-- 💬 [Synchronized captions](demo_storytelling_video.srt)
+## Documentation links
 
-> [!NOTE]
-> The default narration uses Microsoft `en-IN-NeerjaNeural`. Narration text is sent to Microsoft Edge TTS when the generator runs; use it only where that external processing is acceptable.
-
----
-
-## 📈 Implementation Status
-
-| Layer | Status |
+| Document | Purpose |
 |---|---|
-| Deterministic local provider and seeded workflow | ✅ Implemented and tested |
-| FastAPI `/api/v1`, SQLite persistence, SSE audit events | ✅ Implemented and tested |
-| React command centre backed by persisted API data | ✅ Implemented and tested |
-| Digital Twin, scenarios, tournament, impact, and export | ✅ Implemented and tested |
-| Gemini evidence reasoning | 🟡 Real Gemini API path exists; credentials and a successful invocation are required for verification |
-| Gemma policy review | 🟡 Remote advisory path plus tested deterministic fallback; no deployed model verified |
-| A2A and MCP | ✅ Typed persistence and authenticated read-only tools verified locally |
-| Google ADK | 🟡 Local orchestration adapter only; official ADK runtime not installed or verified |
-| Vertex AI and BigQuery | 🔭 Contracts/schemas only; no callable SDK/write path verified |
-| Pub/Sub and OpenTelemetry | 🟡 Local event/span boundaries only; no Google delivery or exported trace verified |
-| Cloud Run | 🟡 Build/manifests prepared; no deployed Cloud Run URL or IAM evidence available |
+| [Product Requirements Document](docs/PRD.md) | Product scope, requirements, acceptance criteria, and limitations |
+| [Architecture](docs/architecture.md) | Components, service boundaries, authority, and data flow |
+| [Runtime Evidence Index](docs/runtime-evidence-index.md) | Local, CI, cloud, and credential evidence boundaries |
+| [Judge Compliance Matrix](docs/judge-compliance-matrix.md) | Requirement-to-source/test/evidence traceability |
+| [AI Workforce](docs/agent-workforce.md) | Agent responsibilities and workspace behavior |
+| [Verification Agent](docs/verification-agent.md) | Technical and approver qualification checks |
+| [Approval and RBAC](docs/approval-and-rbac.md) | Trial roles, signed tokens, and decision policy |
+| [MCP Runtime](docs/mcp-runtime.md) | Controlled tool contracts and safety restrictions |
+| [Google AI Studio Workflow](docs/google-ai-studio-workflow.md) | CRISPE prompt lifecycle and evidence boundary |
+| [Antigravity Integration](docs/antigravity-integration.md) | Mandatory participant boundary and exact access blocker |
+| [BigQuery Schema](docs/bigquery-schema.md) | Physical analytical DDL and authenticated smoke procedure |
+| [Pub/Sub Eventing](docs/pubsub-eventing.md) | Topics, delivery controls, and smoke procedure |
+| [A2A Runtime](docs/a2a-runtime.md) | Typed communication, persistence, and trace propagation |
+| [Cloud Run Deployment](docs/cloud-run-deployment.md) | Google Cloud deployment and rollback guidance |
+| [Security Architecture](docs/security-architecture.md) | Authentication, authorization, secrets, and threat controls |
+| [Observability](docs/observability.md) | Trace, logging, monitoring, and redaction boundaries |
+| [Evaluation Q&A](docs/technical-qa.md) | Internal evaluation preparation |
+| [Making SentinelOps Nexus](docs/making-of-sentinelops-nexus.md) | Human-led creation story, encountered bugs, and rectifications |
 
----
+## Known limitations
 
-## ☁️ Deployment Notes
-
-| Live resource | Link |
-|---|---|
-| 🖥️ Command centre | [Open SentinelOps Nexus](https://janicebenita-sentinelops-nexus.onrender.com) |
-| ⚡ Versioned API | [Check API health](https://janicebenita-sentinelops-nexus-api.onrender.com/api/v1/health) |
-| 🧪 Simulator | [Check simulator health](https://janicebenita-sentinelops-nexus-simulator.onrender.com/health) |
-| 🚀 Render deployment | [Open deployed application](https://janicebenita-sentinelops-nexus.onrender.com/) |
-
-`render.yaml` defines three independent Nexus services:
-
-- `janicebenita-sentinelops-nexus`
-- `janicebenita-sentinelops-nexus-api`
-- `janicebenita-sentinelops-nexus-simulator`
-
-Render free services may cold-start. SQLite storage is ephemeral in that environment; reset and replay are intentionally deterministic. PostgreSQL is recommended for durable production operation.
-
----
-
-## ⚖️ Honest Limitations
-
+- Managed Gemini Enterprise Agent Platform (formerly Vertex AI), Gemma Private Policy Review Engine, BigQuery, Pub/Sub, Cloud Run, and exported OpenTelemetry evidence requires authenticated cloud execution; configuration alone is not runtime proof.
+- The official Google ADK runtime was unavailable in the validated environment, so the working orchestration boundary remains a local adapter.
 - Included telemetry is deterministic seeded demonstration data, not a live enterprise feed.
-- The forecast is a transparent bounded linear model, not a calibrated predictive probability.
-- Simulation covers documented variables and is not a complete production replica.
-- Business-impact outputs are estimates, not accounting results or guaranteed savings.
-- Enterprise connectors and Google-scale services in the research architecture are not active integrations in this build.
-- The frontend bundle currently produces a non-blocking Vite chunk-size warning.
+- The bounded linear forecast is transparent and reproducible, not a calibrated probability.
+- The Digital Twin is a bounded operational model under documented assumptions, not a complete production replica.
+- Business-impact results are operational estimates, not guaranteed savings or accounting results.
+- SQLite is appropriate for deterministic local operation but is not a durable distributed production store.
+- The tamper-evident SHA-256-linked audit chain detects changes; it is not certified immutable storage.
+- Trial access codes are demonstration credentials and must be replaced by enterprise SSO and RBAC.
+- No production execution endpoint exists.
 
-- Transparent limitations distinguish what is **working now**, what is **bounded by design**, and what belongs to the production roadmap.
-
----
-
-## 📚 Documentation
-
-| Guide | Purpose |
-|---|---|
-| [Product Requirements](docs/PRD.md) | Complete requirements, acceptance criteria, and product boundaries |
-| [Architecture](docs/architecture.md) | Components, boundaries, and data flow |
-| [API Reference](docs/api.md) | Versioned endpoints and contracts |
-| [Demo Guide](docs/demo-script.md) | Reproducible five-minute product walkthrough |
-| [Validation Evidence](docs/evaluation.md) | Claims, metrics, and supporting evidence |
-| [Safety](docs/safety.md) | Mandatory gates and human-control boundary |
-| [Limitations](docs/limitations.md) | Explicit scope and non-claims |
-| [Technical Q&A](docs/technical-qa.md) | Technical design decisions and common questions |
-| [Implementation Plan](docs/implementation-plan.md) | Delivery and production-evolution plan |
----
-
-## ❓ Technical Q&A
-
-<details>
-<summary><strong>How are forecasts produced?</strong></summary>
-
-A transparent bounded linear saturation model exposes its equation, threshold, residual error, error bound, assumptions, and linked evidence.
-</details>
-
-<details>
-<summary><strong>How are scenarios compared fairly?</strong></summary>
-
-All 12 scenarios use the same version-locked Twin manifest and fixed seed, making results reproducible and comparable.
-</details>
-
-<details>
-<summary><strong>How are unsafe recommendations blocked?</strong></summary>
-
-Mandatory eligibility gates are evaluated before ranking. A failed gate disqualifies a candidate regardless of its score.
-</details>
-
-<details>
-<summary><strong>What does approval do?</strong></summary>
-
-It records a named human decision and rationale, adds it to the audit chain, and enables evidence export. It never executes a production action.
-</details>
-
-<details>
-<summary><strong>Why use deterministic data?</strong></summary>
-
-It lets reviewers and developers reproduce the complete workflow without paid credentials, unstable external services, or unverifiable outputs.
-</details>
-
----
-
-## 🗺️ Production Evolution
-
-```mermaid
-flowchart LR
-    A["✅ Deterministic Build"] --> B["🔌 Enterprise Telemetry"]
-    B --> C["📐 Calibrated Forecasting"]
-    C --> D["🌐 Distributed Twin"]
-    D --> E["🏢 Governed Production Pilot"]
-```
-
-The roadmap preserves the core invariant: **evidence first, safety gates second, human authority always**.
-
----
-
-## 👩‍💻 Author
+## Author
 
 Built by **[Janice Benita F](https://github.com/Janicebenita)** for the **National AI Agent Builder Finale**.
 
-Contributions are welcome through focused issues and pull requests. Changes must preserve deterministic gates, evidence traceability, the human approval boundary, and the absence of automatic production execution.
-
----
-
-<p align="center">
-  <strong>Predict early. Simulate safely. Decide with evidence.</strong><br/>
-  <sub>SentinelOps Nexus · Enterprise Operational Intelligence with Human Control</sub>
-</p>
+**Predict early. Simulate safely. Decide with evidence.**

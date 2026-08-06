@@ -24,18 +24,18 @@ def module_available(name: str) -> bool:
         return False
 
 STATUSES = {
-    "Google AI Studio": "LOCAL_ADAPTER_ONLY",
+    "Google AI Studio": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Gemini": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Gemma": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.gemma_service_url else "LOCAL_ADAPTER_ONLY",
     "ADK": "LOCAL_ADAPTER_ONLY",
     "A2A": "IMPLEMENTED_AND_VERIFIED",
     "MCP": "IMPLEMENTED_AND_VERIFIED",
-    "Vertex AI": "ROADMAP_ONLY",
-    "BigQuery": "ROADMAP_ONLY",
-    "Pub/Sub": "LOCAL_ADAPTER_ONLY",
+    "Gemini Enterprise Agent Platform (formerly Vertex AI)": "LOCAL_FALLBACK_AVAILABLE",
+    "BigQuery": "IMPLEMENTED_REQUIRES_CREDENTIALS",
+    "Pub/Sub": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Cloud Run": "IMPLEMENTED_REQUIRES_CREDENTIALS",
-    "Antigravity": "DOCUMENTATION_UNAVAILABLE",
-    "OpenTelemetry": "ROADMAP_ONLY",
+    "Antigravity": "DOCUMENTATION_OR_ACCESS_BLOCKED",
+    "OpenTelemetry": "LOCAL_ADAPTER_ONLY",
     "OAuth2/JWT": "LOCAL_ADAPTER_ONLY",
     "Rate limiting": "IMPLEMENTED_AND_VERIFIED",
 }

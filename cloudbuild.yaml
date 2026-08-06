@@ -1,4 +1,4 @@
-substitutions: {_REGION: us-central1}
+substitutions: {_REGION: asia-south1}
 steps:
 - name: gcr.io/cloud-builders/docker
   args: [build, -f, Dockerfile.api-gateway, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA', .]
@@ -16,6 +16,8 @@ steps:
   args: [build, -f, Dockerfile.gemma, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/gemma:$COMMIT_SHA', .]
 - name: gcr.io/cloud-builders/docker
   args: [build, -f, Dockerfile.evidence, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/evidence:$COMMIT_SHA', .]
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.mcp, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/mcp:$COMMIT_SHA', .]
 images:
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA'
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/frontend:$COMMIT_SHA'
@@ -25,4 +27,5 @@ images:
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/verification:$COMMIT_SHA'
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/gemma:$COMMIT_SHA'
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/evidence:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/mcp:$COMMIT_SHA'
 options: {logging: CLOUD_LOGGING_ONLY}

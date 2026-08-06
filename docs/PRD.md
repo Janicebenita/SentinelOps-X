@@ -4,7 +4,7 @@
 
 Google-native extensions provide Gemini evidence reasoning, Gemma advisory policy review, ADK/A2A orchestration boundaries, an MCP gateway, Vertex supplemental forecasting, BigQuery schemas, Pub/Sub event contracts, Cloud Run packaging, trace metadata and OAuth2/JWT-ready service identity. Deterministic calculations and safety gates remain authoritative, with visible fallback state.
 
-Implementation evidence and judge traceability are maintained in `judge-compliance-matrix.md` and `final-judge-compliance-report.md`. Vertex AI and BigQuery are roadmap-only because no executable cloud client is present. Pub/Sub and official ADK are not claimed beyond local adapters. Short-lived HS256 JWT role tokens are active; OAuth2/OIDC and Cloud Run service IAM require deployment credentials.
+Implementation evidence and judge traceability are maintained in `judge-compliance-matrix.md` and `final-judge-compliance-report.md`. Managed forecasting has a deterministic local fallback; BigQuery, Pub/Sub, OpenTelemetry export and official ADK are not claimed beyond local adapters or credentialed smoke tooling. Short-lived HS256 JWT role tokens are active; OAuth2/OIDC and Cloud Run service IAM require deployment credentials.
 
 ## 1. Document Control
 
@@ -394,6 +394,12 @@ flowchart TD
 ---
 
 ## 31. Roadmap
+
+Antigravity is a mandatory participant integration target. The current build
+contains a typed provider/status boundary and preserves deterministic local
+simulation, but official participant documentation, SDK, endpoint, and access
+were unavailable. Its truthful status is `BLOCKED_BY_PARTICIPANT_ACCESS`; no
+runtime success is fabricated.
 
 *   **Phase 1:** Submitted deterministic working build.
 *   **Phase 2:** Pilot telemetry adapters, durable persistence, and enterprise identity.

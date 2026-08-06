@@ -2,39 +2,44 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-api-gateway}
-spec: {template: {metadata: {annotations: {autoscaling.knative.dev/minScale: '0', autoscaling.knative.dev/maxScale: '5'}}, spec: {serviceAccountName: sentinelops-api@PROJECT_ID.iam.gserviceaccount.com, containerConcurrency: 40, timeoutSeconds: 60, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/api:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}, {name: INTEGRATION_TOKEN, valueFrom: {secretKeyRef: {name: sentinelops-integration-token, key: latest}}}, {name: ROLE_TOKEN_SECRET, valueFrom: {secretKeyRef: {name: sentinelops-role-token-secret, key: latest}}}], resources: {limits: {cpu: '1', memory: 512Mi}}}]}}}
+spec: {template: {metadata: {annotations: {autoscaling.knative.dev/minScale: '0', autoscaling.knative.dev/maxScale: '5'}}, spec: {serviceAccountName: sentinelops-api-gateway-sa@PROJECT_ID.iam.gserviceaccount.com, containerConcurrency: 40, timeoutSeconds: 60, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/api:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}, {name: INTEGRATION_TOKEN, valueFrom: {secretKeyRef: {name: sentinelops-integration-token, key: latest}}}, {name: ROLE_TOKEN_SECRET, valueFrom: {secretKeyRef: {name: sentinelops-role-token-secret, key: latest}}}], resources: {limits: {cpu: '1', memory: 1Gi}}}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-orchestrator}
-spec: {template: {spec: {serviceAccountName: sentinelops-orchestrator@PROJECT_ID.iam.gserviceaccount.com, containerConcurrency: 20, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/orchestrator:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-orchestrator-sa@PROJECT_ID.iam.gserviceaccount.com, containerConcurrency: 20, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/orchestrator:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-forecast-service}
-spec: {template: {spec: {serviceAccountName: sentinelops-forecast@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/forecast:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-forecast-sa@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/forecast:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-simulation-service}
-spec: {template: {spec: {serviceAccountName: sentinelops-simulation@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/simulator:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-simulation-sa@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/simulator:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-verification-service}
-spec: {template: {spec: {serviceAccountName: sentinelops-verification@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/verification:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-verification-sa@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/verification:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-gemma-service}
-spec: {template: {spec: {serviceAccountName: sentinelops-gemma@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/gemma:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}], resources: {limits: {cpu: '2', memory: 2Gi}}}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-gemma-sa@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/gemma:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}], resources: {limits: {cpu: '2', memory: 2Gi}}}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-evidence-service}
-spec: {template: {spec: {serviceAccountName: sentinelops-evidence@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/evidence:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-evidence-sa@PROJECT_ID.iam.gserviceaccount.com, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/evidence:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}
 ---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata: {name: sentinelops-frontend}
-spec: {template: {spec: {containerConcurrency: 80, containers: [{image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/frontend:REVISION, ports: [{containerPort: 8080}]}]}}}
+spec: {template: {spec: {serviceAccountName: sentinelops-frontend-sa@PROJECT_ID.iam.gserviceaccount.com, containerConcurrency: 80, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/frontend:REVISION, ports: [{containerPort: 8080}]}]}}}
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata: {name: sentinelops-mcp-server}
+spec: {template: {spec: {serviceAccountName: sentinelops-mcp-sa@PROJECT_ID.iam.gserviceaccount.com, containerConcurrency: 20, containers: [{image: asia-south1-docker.pkg.dev/PROJECT_ID/sentinelops/mcp:REVISION, ports: [{containerPort: 8080}], env: [{name: PRODUCTION_EXECUTION, value: 'false'}]}]}}}

@@ -1,3 +1,7 @@
-# Prompt Evaluation
+# Prompt evaluation
 
-`prompts/evaluations` covers missing evidence, contradictions, policy failures and authority-refusal behavior. Automated provider tests prove schema validation and malformed-output rejection. A genuine model evaluation requires credentials and must record model/version, prompt version, evidence IDs, latency, output hash, trace ID and fallback state; without that evidence the integration remains credentials-required, not verified.
+Run `python -m pytest backend/tests/test_prompt_catalog.py -q`. The checks load
+both YAML catalogs, compile the JSON schema contract, require unique semantic
+versions and all CRISPE fields, and prove that approval, gate override, workflow
+mutation, and production execution are prohibited. Authenticated managed-model
+quality evaluation remains `IMPLEMENTED_REQUIRES_CREDENTIALS`.

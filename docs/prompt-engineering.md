@@ -1,5 +1,10 @@
-# Prompt Engineering
+# Prompt engineering
 
-Prompt assets use a CRISPE-style contract: Capacity and Role, Request, Insight and Context, Scope and Constraints, Personality and Tone, and Expected Output. Every asset includes a stable prompt ID/version, evidence inputs, refusal conditions, strict output schema, deterministic fallback and evaluation references. Prompts never contain access codes, secrets or private chain-of-thought.
+SentinelOps prompt assets use CRISPE: Capacity and Role, Request, Insight and
+Context, Scope and Constraints, Personality and Tone, and Expected Output.
+Each task also declares evidence inputs, allowed tools, prohibited actions,
+refusal conditions, timeout and fallback behavior, evaluation cases, and
+pass/fail examples. Models return concise structured summaries—not hidden
+chain-of-thought—and remain advisory to deterministic backend policy.
 
-Google AI Studio may be used to compare prompt versions and structured-output behavior. Promotion into the application requires the versioned repository asset, schema tests, refusal tests and a deterministic fallback. AI Studio is not a runtime dependency.
+`PRODUCTION ACTION: NOT EXECUTED`

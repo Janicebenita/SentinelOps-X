@@ -1,3 +1,13 @@
-# Google AI Studio Workflow
+# Google AI Studio prompt lifecycle
 
-AI Studio is prompt-development and evaluation tooling, not a production runtime. Versioned CRISPE prompt specifications live in `prompts/`; evaluation fixtures live in `prompts/evaluations/`. Promotion requires schema, refusal, evidence-grounding and deterministic-fallback tests.
+Status: `IMPLEMENTED_REQUIRES_CREDENTIALS`
+
+Google AI Studio is the prompt prototyping and evaluation environment, while
+the managed Google runtime is the inference target. The repository lifecycle
+is: prototype → evaluation cases → version-controlled CRISPE assets → managed
+runtime invocation → strict schema validation → non-secret audit metadata.
+
+Thirteen task-level Gemini and Gemma prompts live under `prompts/`; automated
+tests verify their structure, uniqueness, refusals, prohibited actions, and
+permanent safety boundary. No AI Studio session is claimed because no exported
+session evidence was available in this environment.
