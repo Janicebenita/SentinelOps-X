@@ -2,7 +2,7 @@ name: Validate SentinelOps
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/google-native-enterprise-compliance]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -59,6 +59,18 @@ jobs:
       - name: Authorization and route tests
         run: python -m pytest backend/tests/test_upgrade.py -q
 
+      - name: Google platform, provider, prompt and protocol contracts
+        run: python -m pytest backend/tests/test_google_platform.py backend/tests/test_providers.py -q
+
+      - name: Prove no production execution route exists
+        run: |
+          python - <<'PY'
+          from backend.app.main import app
+          paths = set(app.openapi()["paths"])
+          forbidden = [p for p in paths if any(x in p.lower() for x in ("/deploy", "/scale", "/rollback", "/production/execute"))]
+          assert not forbidden, forbidden
+          PY
+
       - name: Secret scanning
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -73,8 +85,11 @@ jobs:
 
       - name: Docker builds
         run: |
-          docker build -f backend/Dockerfile -t sentinelops-api .
-          docker build -f demo_app/Dockerfile -t sentinelops-simulator .
+          docker build -f Dockerfile.api-gateway -t sentinelops-api .
+          docker build -f Dockerfile.orchestrator -t sentinelops-orchestrator .
+          docker build -f Dockerfile.simulation -t sentinelops-simulation .
+          docker build -f Dockerfile.gemma -t sentinelops-gemma .
+          docker build -f Dockerfile.frontend -t sentinelops-frontend .
 
       - name: Start complete demo
         run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
