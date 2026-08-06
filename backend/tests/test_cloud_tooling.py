@@ -97,3 +97,11 @@ def test_frontend_cloud_run_uses_runtime_api_url_and_cors_update():
     assert "CORS_ORIGINS=${FRONTEND_URL}" in deploy
     provision = (ROOT / "scripts" / "provision_google_cloud.sh").read_text(encoding="utf-8")
     assert "roles/secretmanager.secretAccessor" in provision
+
+
+def test_database_backed_images_create_non_root_sqlite_directory():
+    for name in ("Dockerfile.api-gateway", "Dockerfile.gemma"):
+        dockerfile = (ROOT / name).read_text(encoding="utf-8")
+        assert "mkdir -p /app/data" in dockerfile
+        assert "chown -R sentinelops:sentinelops /app/data" in dockerfile
+        assert dockerfile.index("chown -R sentinelops:sentinelops /app/data") < dockerfile.index("USER sentinelops")

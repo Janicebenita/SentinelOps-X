@@ -6,6 +6,7 @@ COPY backend backend
 COPY demo_app demo_app
 COPY services services
 RUN pip install --no-cache-dir .
+RUN mkdir -p /app/data && chown -R sentinelops:sentinelops /app/data
 USER sentinelops
 ENV PORT=8080 PRODUCTION_EXECUTION=false
 CMD ["sh","-c","uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT}"]

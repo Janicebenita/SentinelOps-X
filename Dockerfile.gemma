@@ -5,6 +5,7 @@ COPY pyproject.toml README.md ./
 COPY backend backend
 COPY services services
 RUN pip install --no-cache-dir .
+RUN mkdir -p /app/data && chown -R sentinelops:sentinelops /app/data
 USER sentinelops
 ENV PORT=8080 PRODUCTION_EXECUTION=false
 CMD ["sh","-c","uvicorn services.gemma.main:app --host 0.0.0.0 --port ${PORT}"]
