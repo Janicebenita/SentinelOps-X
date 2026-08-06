@@ -1,8 +1,28 @@
-# SentinelOps Nexus
+<p align="center">
+  <img src="docs/assets/sentinelops-nexus-hero.png" alt="SentinelOps Nexus enterprise operational digital twin" width="100%" />
+</p>
 
-**The Enterprise Operational Digital Twin**
+<h1 align="center">🛡️ SentinelOps Nexus</h1>
 
-Predict tomorrow's operational bottleneck before customers experience it.
+<p align="center"><strong>The Enterprise Operational Digital Twin</strong></p>
+<p align="center"><em>Predict tomorrow's operational bottleneck before customers experience it.</em></p>
+
+<p align="center">
+  <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/"><img alt="Google Cloud Run live" src="https://img.shields.io/badge/Google_Cloud_Run-LIVE-4285F4?logo=googlecloud&amp;logoColor=white" /></a>
+  <a href="https://github.com/Janicebenita/SentinelOps-X/actions/workflows/validate.yml"><img alt="Validation workflow" src="https://github.com/Janicebenita/SentinelOps-X/actions/workflows/validate.yml/badge.svg?branch=feat%2Fgoogle-native-enterprise-compliance" /></a>
+  <img alt="Human governed" src="https://img.shields.io/badge/Safety-HUMAN_GOVERNED-00A86B" />
+  <img alt="Production action not executed" src="https://img.shields.io/badge/Production_Action-NOT_EXECUTED-FF8C00" />
+</p>
+
+<p align="center">
+  <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/"><strong>🚀 Open Live Product</strong></a>
+  ·
+  <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/command-centre"><strong>🧭 Command Centre</strong></a>
+  ·
+  <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/judge-demo"><strong>🎬 Guided Demo</strong></a>
+  ·
+  <a href="docs/architecture.md"><strong>🏗️ Architecture</strong></a>
+</p>
 
 > National AI Agent Builder Finale submission for the B2B Services challenge: Late Bottleneck Detection.
 
@@ -13,28 +33,29 @@ Predict tomorrow's operational bottleneck before customers experience it.
 >
 > It does not deploy, scale, roll back, reconfigure, or modify production infrastructure.
 
-## Live deployment status
+## 🌐 Live deployment status
 
 | Environment | Status | Purpose |
 |---|---|---|
 | Local | IMPLEMENTED_AND_VERIFIED | Complete deterministic workflow and reproducible validation |
-| Render | Legacy live demonstration | Existing public deterministic demo |
-| Google Cloud Run | IMPLEMENTED_REQUIRES_CREDENTIALS | Primary Google-native deployment target; no verified live revision yet |
+| Google Cloud Run | IMPLEMENTED_AND_VERIFIED | Primary live deployment; nine services passed health and readiness smoke checks |
 
-## Live demo
+## 🚀 Live product
 
-- Legacy public demonstration: [SentinelOps Nexus on Render](https://janicebenita-sentinelops-nexus.onrender.com/)
+- **Primary application:** [Open SentinelOps Nexus on Google Cloud Run](https://sentinelops-frontend-398391487181.asia-south1.run.app/)
+- **Command Centre:** [Open the operational workspace](https://sentinelops-frontend-398391487181.asia-south1.run.app/command-centre)
+- **Guided product demo:** [Start the deterministic judge workflow](https://sentinelops-frontend-398391487181.asia-south1.run.app/judge-demo)
 - Local application: `http://localhost:5173/`
 - Local Command Centre: `http://localhost:5173/command-centre`
 - Local five-minute evidence workspace: `http://localhost:5173/judge-demo`
 
-Render remains the current public demonstration environment until the Google Cloud Run deployment is authenticated and verified. No Cloud Run URL is published without live URL, revision, IAM, health, readiness, log, and smoke-test evidence.
+Google Cloud Run is the primary live judge-demo environment. The deployed frontend and API passed direct HTTP, runtime-configuration, readiness, and browser CORS checks; all nine Cloud Run service health and readiness endpoints passed the authenticated deployment smoke test.
 
 SentinelOps Nexus is an evidence-driven operational decision-support product. It forecasts emerging Redis saturation, builds a bounded Digital Twin, replays 12 deterministic scenarios, compares FAST, SAFE, and OPTIMAL interventions, applies mandatory safety gates, and stops at an authorized human decision boundary.
 
 [Quick Start](#running-locally) | [Architecture](#architecture-summary) | [Guided Demo](#guided-product-demo) | [Safety](#security-and-human-control) | [Evaluation Evidence](#evaluation-evidence)
 
-## Project overview
+## 🎯 Project overview
 
 The canonical seeded workflow models a Payment Service whose Redis memory pressure rises before a reactive alert fires. Under the documented deterministic seed, SentinelOps Nexus:
 
@@ -50,7 +71,7 @@ The canonical seeded workflow models a Payment Service whose Redis memory pressu
 
 The bounded deterministic forecast and mandatory safety gates remain authoritative. Model output cannot approve, change workflow state, override eligibility, or execute a production action.
 
-## Architecture summary
+## 🏗️ Architecture summary
 
 ```text
 Telemetry Ingestion
@@ -86,7 +107,7 @@ This ordering is a safety invariant. Executive recommendation follows mandatory 
 
 The complete architecture is documented in [docs/architecture.md](docs/architecture.md) and the [single-page architecture board](docs/assets/sentinelops-nexus-architecture.pdf).
 
-## AI reasoning and authority
+## 🧠 AI reasoning and authority
 
 ### Gemini Enterprise Agent Platform (formerly Vertex AI)
 
@@ -127,7 +148,7 @@ The FastAPI backend remains authoritative for:
 
 No model approves a recommendation. Only an authorized human can submit a decision that the backend validates and records.
 
-## Agent orchestration
+## 🤝 Agent orchestration
 
 The current AI Workforce uses an ADK-compatible orchestration boundary and agent registry. The official Google ADK runtime has not yet been verified in the authenticated environment, so its current status is `LOCAL_ADAPTER_ONLY`. The boundary coordinates structured agent execution and Agent-to-Agent (A2A) handoffs while the backend retains workflow authority.
 
@@ -149,7 +170,7 @@ Every visible agent card is clickable and opens a backend-driven workspace. Supp
 
 The official Google ADK runtime was not available in the validated local environment. Local adapter tests are not presented as official managed-runtime evidence.
 
-## Controlled MCP tools
+## 🧰 Controlled MCP tools
 
 MCP is the authenticated, controlled tool interface used by agents. Implemented read-only and bounded tools cover:
 
@@ -165,7 +186,21 @@ MCP is the authenticated, controlled tool interface used by agents. Implemented 
 
 MCP tools use strict schemas, authorization, rate limits, correlation IDs, trace IDs, audit events, safe errors, and idempotency where applicable. No MCP tool can deploy, scale, roll back, reconfigure, execute shell commands, or modify cloud infrastructure.
 
-## Data and event architecture
+## 🛰️ Antigravity integration boundary
+
+SentinelOps Nexus includes a typed, read-only Antigravity participant boundary without inventing an unsupported SDK or runtime contract.
+
+| Capability | Current evidence |
+|---|---|
+| Backend status API | `GET /api/v1/integrations/antigravity/status` |
+| Product visibility | Antigravity status is surfaced in the guided evidence workspace |
+| Safety | Read-only provider; no workflow mutation, approval, gate override, infrastructure action, or production execution |
+| Validation | Provider contract and truthful-status tests run in CI |
+| Official runtime | `BLOCKED_BY_PARTICIPANT_ACCESS` because official participant documentation, SDK, endpoint, and credentials are unavailable |
+
+The implemented boundary is `LOCAL_ADAPTER_ONLY`. It returns explicit blocker and fallback metadata and always preserves **PRODUCTION ACTION: NOT EXECUTED**. A local adapter response is never represented as an official Antigravity invocation. See [Antigravity Integration](docs/antigravity-integration.md).
+
+## 🗄️ Data and event architecture
 
 ### Transactional workflow state
 
@@ -200,7 +235,7 @@ Pub/Sub is the asynchronous event-backbone target for:
 
 Typed event envelopes include idempotency, retry, dead-letter, causation, correlation, and trace metadata. Provisioning and publish/consume smoke tooling exist, so the managed integration is `IMPLEMENTED_REQUIRES_CREDENTIALS`. The validated local build uses an idempotent local adapter, and managed publish/consume success is not claimed without an authenticated message ID.
 
-## Key features
+## ✨ Key features
 
 - Transparent bounded Redis saturation forecast
 - Version-locked and content-hashed Digital Twin manifest
@@ -218,7 +253,7 @@ Typed event envelopes include idempotency, retry, dead-letter, causation, correl
 - Verifiable Evidence ZIP containing `manifest.sha256`
 - Explicit absence of any production execution endpoint
 
-## Evaluation evidence
+## 🔎 Evaluation evidence
 
 | Key evaluation question | Evidence-backed answer |
 |---|---|
@@ -232,7 +267,7 @@ Typed event envelopes include idempotency, retry, dead-letter, causation, correl
 | Is revenue exposure guaranteed? | No. It is an operational estimate based on visible inputs |
 | Does approval deploy anything? | No. It records a governed human decision and enables evidence export |
 
-## Guided product demo
+## 🎬 Guided product demo
 
 The command centre supports a deterministic guided walkthrough and manual Explore Mode. Operators can change traffic, Redis capacity, application replicas, and dependency latency; load presets; upload operational JSON; replay all 12 backend-calculated scenarios; and inspect the resulting evidence and hashes.
 
@@ -254,7 +289,7 @@ Frontend routes include:
 | Architecture, safety, and docs | `/architecture`, `/safety`, `/docs` |
 | Google-stack evidence | `/google-stack`, `/integrations`, `/observability`, `/security-status`, `/model-evaluation` |
 
-## Repository structure
+## 🗂️ Repository structure
 
 ```text
 backend/                 FastAPI API, workflows, agents, security, audit, providers
@@ -270,7 +305,7 @@ Dockerfile.*             Service-specific container definitions
 cloudbuild.yaml          Commit-SHA image build configuration
 ```
 
-## Technology stack
+## ⚙️ Technology stack
 
 | Layer | Technology |
 |---|---|
@@ -286,7 +321,7 @@ cloudbuild.yaml          Commit-SHA image build configuration
 | Cloud delivery | GitHub Actions, Cloud Build, Artifact Registry, Cloud Run, Secret Manager, IAM, ADC |
 | Quality | Pytest, Vitest, Ruff, MyPy, Bandit, dependency and secret scanning |
 
-## Security and human control
+## 🔐 Security and human control
 
 Security controls include:
 
@@ -311,7 +346,7 @@ Trial credentials are for demonstration only:
 
 Production deployments must replace trial credentials with enterprise identity, SSO, and managed RBAC. Codes remain server-side and must never be bundled into frontend assets, persisted in plaintext, logged, returned, or exported.
 
-## Observability
+## 📡 Observability
 
 The architecture propagates request IDs, correlation IDs, trace IDs, and AI invocation IDs through HTTP, agent, A2A, MCP, model, simulation, verification, authorization, decision, and evidence flows. Services emit structured logs with those identifiers where configured.
 
@@ -319,7 +354,7 @@ OpenTelemetry is the instrumentation boundary. Where Google Cloud credentials an
 
 Secrets, trial codes, API keys, hidden chain-of-thought, unredacted prompts, and sensitive evidence payloads must not be logged.
 
-## Deployment
+## ☁️ Deployment
 
 Google Cloud Run is the primary deployment target. The release pipeline and connected runtime services are:
 
@@ -347,7 +382,7 @@ Cloud Build builds commit-SHA-tagged service images. Artifact Registry stores th
 
 The runtime architecture uses Application Default Credentials (ADC), Cloud Run service accounts, least-privilege IAM, Secret Manager references, and GitHub OIDC with Workload Identity Federation. No service-account JSON key or frontend API key is required.
 
-Nine independently packageable Cloud Run services are defined:
+Nine independently packaged Cloud Run services are defined and deployed:
 
 - `sentinelops-frontend`
 - `sentinelops-api-gateway`
@@ -359,9 +394,9 @@ Nine independently packageable Cloud Run services are defined:
 - `sentinelops-gemma-service`
 - `sentinelops-mcp-server`
 
-Cloud Run deployment remains `IMPLEMENTED_REQUIRES_CREDENTIALS` until live service URLs, revisions, IAM checks, health checks, and readiness checks succeed. The existing Render deployment is a legacy public demonstration, not the primary enterprise deployment architecture.
+Cloud Run deployment is `IMPLEMENTED_AND_VERIFIED`: live service URLs and revisions exist, deployment IAM updates completed, every service passed health and readiness smoke checks, and the public frontend-to-API runtime configuration and CORS path were verified.
 
-## Running locally
+## 💻 Running locally
 
 ### Prerequisites
 
@@ -393,7 +428,7 @@ Open:
 
 The complete deterministic local workflow runs without paid AI credentials. Missing managed providers activate visible, bounded fallback behavior rather than fabricated cloud success.
 
-## Running on Google Cloud
+## ☁️ Running on Google Cloud
 
 Prerequisites are an authenticated Google Cloud CLI, billing access to `sentinelops-nexus-finale`, and the approved `asia-south1` region.
 
@@ -414,7 +449,7 @@ bash scripts/verify_google_cloud.sh
 
 Provisioning creates secret containers but never creates or prints secret values. Add approved Secret Manager versions before deployment. Do not claim deployment success unless all authenticated smoke checks pass and their non-secret evidence IDs are recorded.
 
-## Testing
+## 🧪 Testing
 
 ### Backend, security, and end-to-end
 
@@ -436,13 +471,13 @@ pnpm run build
 
 Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution, A2A and MCP contracts, Gemini Enterprise Agent Platform (formerly Vertex AI) and Gemma Private Policy Review Engine authority boundaries, role verification, Intern rejection, Senior rationale requirements, audit-chain validation, Evidence ZIP verification, frontend routes, and absence of production-execution endpoints.
 
-## CI/CD
+## 🔄 CI/CD
 
 `.github/workflows/validate.yml` runs backend and frontend tests, type checks, Ruff, MyPy, Bandit, dependency scanning, secret scanning, provider/prompt/protocol/security tests, Docker builds, the end-to-end workflow, and proof that no production-execution route exists.
 
 `.github/workflows/google-cloud-runtime.yml` is a protected `workflow_dispatch` workflow using GitHub OIDC and Workload Identity Federation. Paid or state-changing cloud checks are not run automatically on every pull request.
 
-## Implementation status
+## ✅ Implementation status
 
 | Component | Status | Evidence boundary |
 |---|---|---|
@@ -456,14 +491,14 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 | Managed supplemental forecasting | LOCAL_FALLBACK_AVAILABLE | Deterministic forecast remains authoritative |
 | BigQuery | IMPLEMENTED_REQUIRES_CREDENTIALS | Nine schemas and credential-gated provision/write/read smoke tooling; no live row ID |
 | Pub/Sub | IMPLEMENTED_REQUIRES_CREDENTIALS | Provisioning and publish/consume smoke tooling plus local adapter; no live message ID |
-| Cloud Run, Artifact Registry, Secret Manager, and service IAM | IMPLEMENTED_REQUIRES_CREDENTIALS | Nine-service packaging and deployment tooling; no live deployment evidence |
+| Cloud Run, Artifact Registry, Secret Manager, and service IAM | IMPLEMENTED_AND_VERIFIED | Commit-tagged images deployed across nine services; live URLs, revisions, IAM updates, health, readiness, runtime configuration, and CORS verified |
 | OpenTelemetry, Cloud Logging, Cloud Monitoring, and Cloud Trace | LOCAL_ADAPTER_ONLY | Local trace propagation exists; no exported trace evidence |
 | OAuth2/OIDC | LOCAL_ADAPTER_ONLY | Configuration boundary exists; enterprise identity provider not connected |
 | JWT and backend RBAC | IMPLEMENTED_AND_VERIFIED | Short-lived role-token and authorization tests |
 | Google AI Studio prompt lifecycle | IMPLEMENTED_REQUIRES_CREDENTIALS | Thirteen task-level CRISPE prompts, schema, and evaluation contracts exist; no Studio session evidence |
-| Antigravity | BLOCKED_BY_PARTICIPANT_ACCESS | Typed provider/status boundary exists; official documentation, SDK, endpoint, and authenticated access were unavailable |
+| Antigravity | LOCAL_ADAPTER_ONLY | Typed read-only boundary and CI tests exist; the runtime status truthfully reports `BLOCKED_BY_PARTICIPANT_ACCESS` until official participant access is available |
 
-## Documentation links
+## 📚 Documentation links
 
 | Document | Purpose |
 |---|---|
@@ -486,9 +521,9 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 | [Evaluation Q&A](docs/technical-qa.md) | Internal evaluation preparation |
 | [Making SentinelOps Nexus](docs/making-of-sentinelops-nexus.md) | Human-led creation story, encountered bugs, and rectifications |
 
-## Known limitations
+## ⚠️ Known limitations
 
-- Managed Gemini Enterprise Agent Platform (formerly Vertex AI), Gemma Private Policy Review Engine, BigQuery, Pub/Sub, Cloud Run, and exported OpenTelemetry evidence requires authenticated cloud execution; configuration alone is not runtime proof.
+- Managed Gemini Enterprise Agent Platform (formerly Vertex AI), Gemma model invocation, BigQuery, Pub/Sub, and exported OpenTelemetry evidence still require their individual authenticated runtime proof; the Cloud Run service deployment itself is verified.
 - The official Google ADK runtime was unavailable in the validated environment, so the working orchestration boundary remains a local adapter.
 - Included telemetry is deterministic seeded demonstration data, not a live enterprise feed.
 - The bounded linear forecast is transparent and reproducible, not a calibrated probability.
@@ -499,7 +534,7 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 - Trial access codes are demonstration credentials and must be replaced by enterprise SSO and RBAC.
 - No production execution endpoint exists.
 
-## Author
+## 👤 Author
 
 Built by **[Janice Benita F](https://github.com/Janicebenita)** for the **National AI Agent Builder Finale**.
 
