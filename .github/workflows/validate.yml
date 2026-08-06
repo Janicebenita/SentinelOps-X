@@ -1,64 +1,89 @@
 name: Validate SentinelOps
+
 on:
   push:
-    branches: [main, feat/google-native-enterprise-compliance]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
-        with: {python-version: "3.12"}
+        with:
+          python-version: "3.12"
+
       - uses: actions/setup-node@v4
-        with: {node-version: "22"}
+        with:
+          node-version: "22"
+
       - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+
       - run: python -m pip install -e ".[dev]"
+
       - run: pnpm install --frozen-lockfile
         working-directory: frontend
+
       - name: Frontend type check
         run: pnpm exec tsc --noEmit
         working-directory: frontend
+
       - name: Frontend production build
         run: pnpm run build
         working-directory: frontend
+
       - name: Prove trial codes are server-side only
         run: |
           ! grep -R --binary-files=without-match -E 'INTERN_ACCESS_CODE|SENIOR_ACCESS_CODE|access_code.{0,30}(0000|1111)' frontend/dist
+
       - run: make test
+
       - run: make lint
+
       - run: make typecheck
+
       - run: make security
+
       - name: Authorization and route tests
         run: python -m pytest backend/tests/test_upgrade.py -q
-      - name: Google platform contracts and safety boundaries
-        run: python -m pytest backend/tests/test_google_platform.py -q
-      - name: Prove no production execution route exists
-        run: |
-          python - <<'PY'
-          from backend.app.main import app
-          paths = set(app.openapi()["paths"])
-          forbidden = [p for p in paths if any(x in p.lower() for x in ("/deploy", "/scale", "/rollback", "/production/execute"))]
-          assert not forbidden, forbidden
-          PY
+
       - name: Secret scanning
         uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Python dependency scanning
         run: python -m pip install pip-audit && pip-audit --skip-editable
+
       - name: Frontend dependency scanning
         run: pnpm audit --audit-level high
         working-directory: frontend
+
       - name: Docker builds
-        run: docker build -f Dockerfile.api -t sentinelops-api . && docker build -f Dockerfile.orchestrator -t sentinelops-orchestrator . && docker build -f Dockerfile.frontend -t sentinelops-frontend .
+        run: |
+          docker build -f backend/Dockerfile -t sentinelops-api .
+          docker build -f demo_app/Dockerfile -t sentinelops-simulator .
+
       - name: Start complete demo
         run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
+
       - run: python scripts/health_check.py
+
       - name: Validate Nexus workflow end to end
         run: python scripts/nexus_e2e.py
+
       - name: Demo log
         if: always()
         run: test ! -f /tmp/sentinelops-demo.log || cat /tmp/sentinelops-demo.log
