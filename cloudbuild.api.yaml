@@ -1,0 +1,7 @@
+substitutions: {_REGION: asia-south1}
+steps:
+- name: gcr.io/cloud-builders/docker
+  args: [build, -f, Dockerfile.api-gateway, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA', .]
+images:
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA'
+options: {logging: CLOUD_LOGGING_ONLY}

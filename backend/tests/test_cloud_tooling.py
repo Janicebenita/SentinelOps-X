@@ -110,3 +110,13 @@ def test_database_backed_images_create_non_root_sqlite_directory():
     assert '"${MCP_REVISION:-$REVISION}"' in deploy
     mcp_build = yaml.safe_load((ROOT / "cloudbuild.mcp.yaml").read_text(encoding="utf-8"))
     assert len(mcp_build["images"]) == 1 and "/mcp:$COMMIT_SHA" in mcp_build["images"][0]
+    api_build = yaml.safe_load((ROOT / "cloudbuild.api.yaml").read_text(encoding="utf-8"))
+    assert len(api_build["images"]) == 1 and "/api:$COMMIT_SHA" in api_build["images"][0]
+    assert "${API_REVISION:-$REVISION}" in deploy
+
+
+def test_readiness_does_not_require_ephemeral_business_seed():
+    source = (ROOT / "backend" / "app" / "main.py").read_text(encoding="utf-8")
+    readiness = source[source.index("def readiness():"):]
+    assert "ready=database and demo_app and provider_ready and safety_ready" in readiness
+    assert "production_action\":\"NOT_EXECUTED" in readiness
