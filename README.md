@@ -24,6 +24,15 @@
   <a href="docs/architecture.md"><strong>🏗️ Architecture</strong></a>
 </p>
 
+<p align="center">
+  <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/judge-demo">
+    <img src="docs/assets/sentinelops-nexus-30-second-flow.gif" alt="30-second SentinelOps Nexus flow: forecast, Digital Twin, simulation, Gemini reasoning, Gemma review, human approval, and Evidence ZIP" width="960" />
+  </a>
+</p>
+
+<p align="center"><strong>Forecast → Digital Twin → Simulation → Gemini Reasoning → Gemma Review → Human Approval → Evidence ZIP</strong></p>
+<p align="center"><sub>30-second product flow · click the animation to open the interactive backend-driven demo</sub></p>
+
 > National AI Agent Builder Finale submission for the B2B Services challenge: Late Bottleneck Detection.
 
 > [!IMPORTANT]
@@ -107,11 +116,37 @@ This ordering is a safety invariant. Executive recommendation follows mandatory 
 
 The complete architecture is documented in [docs/architecture.md](docs/architecture.md) and the [single-page architecture board](docs/assets/sentinelops-nexus-architecture.pdf).
 
-## 🧠 AI reasoning and authority
+## 🧠 Google AI lifecycle and authority
 
-### Gemini Enterprise Agent Platform (formerly Vertex AI)
+SentinelOps Nexus follows the Google-native AI engineering lifecycle in this order:
 
-Gemini Enterprise Agent Platform (formerly Vertex AI) is the primary AI reasoning engine in the Google-native architecture. When Google credentials are configured, it provides:
+```text
+Google AI Studio
+        ↓
+Prompt Management
+        ↓
+Prompt Evaluation
+        ↓
+Gemini Enterprise Agent Platform Runtime (formerly Vertex AI)
+        ↓
+Gemma Private Policy Review Engine
+```
+
+### 1. Google AI Studio
+
+Google AI Studio is the prompt-development and evaluation workspace—not the production runtime. It supports iterative design of evidence-grounded tasks before approved prompt assets enter version control. The repository does not claim a verified Studio session without authenticated session evidence.
+
+### 2. Prompt management
+
+Version-controlled assets under `prompts/gemini/`, `prompts/gemma/`, `prompts/schemas/`, and `prompts/evaluations/` define prompt IDs, versions, CRISPE context, evidence inputs, allowed tools, prohibited actions, refusal conditions, strict output schemas, and bounded fallbacks.
+
+### 3. Prompt evaluation
+
+Automated schema and evaluation tests check expected evidence references, structured outputs, safety refusals, deterministic-authority boundaries, and prohibited approval or production behavior before a prompt can support the canonical workflow.
+
+### 4. Gemini Enterprise Agent Platform runtime (formerly Vertex AI)
+
+Gemini Enterprise Agent Platform (formerly Vertex AI) is the primary AI reasoning runtime in the Google-native architecture. When Google credentials are configured, it provides:
 
 - evidence-grounded reasoning;
 - contradiction and missing-evidence detection;
@@ -122,7 +157,7 @@ Gemini Enterprise Agent Platform (formerly Vertex AI) is the primary AI reasonin
 
 Gemini output is schema-validated, evidence-referenced, hashed, traced, audited, and bounded by deterministic fallback behavior. Gemini never approves, executes production actions, bypasses safety gates, or directly mutates workflow state.
 
-### Gemma Private Policy Review Engine
+### 5. Gemma Private Policy Review Engine
 
 The Gemma Private Policy Review Engine provides a secondary policy and safety review for:
 
@@ -243,6 +278,7 @@ Typed event envelopes include idempotency, retry, dead-letter, causation, correl
 - FAST, SAFE, and OPTIMAL intervention tournament
 - Mandatory eligibility gates that override score
 - Verification Agent with persisted technical and approver checks
+- Google AI Studio prompt lifecycle with versioned CRISPE assets and automated evaluations
 - Evidence-grounded Gemini reasoning with deterministic fallback
 - Gemma Private Policy Review Engine safety-critique boundary
 - Clickable, backend-connected AI Workforce
@@ -312,6 +348,7 @@ cloudbuild.yaml          Commit-SHA image build configuration
 | Frontend | React 18, TypeScript, Vite, TanStack Query, Recharts |
 | Backend | Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy |
 | Deterministic engine | Python forecasting, Digital Twin, simulation, optimization, safety gates |
+| Prompt lifecycle | Google AI Studio workflow, versioned CRISPE prompts, schemas, evaluation cases |
 | AI reasoning | Gemini Enterprise Agent Platform (formerly Vertex AI), Gemma Private Policy Review Engine, deterministic fallback |
 | Agent protocols | Google ADK boundary, typed A2A, authenticated MCP |
 | Transactional persistence | SQLite for the deterministic working build |
@@ -483,6 +520,7 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 |---|---|---|
 | Deterministic workflow, Digital Twin, 12 scenarios, tournament, and mandatory gates | IMPLEMENTED_AND_VERIFIED | Local tests and reproducible end-to-end workflow |
 | Human approval, Intern block, Senior rationale, audit chain, and Evidence ZIP | IMPLEMENTED_AND_VERIFIED | Backend authorization and export validation tests |
+| Google AI Studio prompt lifecycle | IMPLEMENTED_REQUIRES_CREDENTIALS | Thirteen task-level CRISPE prompts, schema, and evaluation contracts exist; no Studio session evidence |
 | Gemini Enterprise Agent Platform (formerly Vertex AI) | IMPLEMENTED_REQUIRES_CREDENTIALS | Primary reasoning path and fallback exist; no authenticated invocation evidence |
 | Gemma Private Policy Review Engine | IMPLEMENTED_REQUIRES_CREDENTIALS | Policy service and safe fallback exist; no deployed model revision evidence |
 | Google ADK | LOCAL_ADAPTER_ONLY | Agent registry and orchestration adapter tested; official runtime not verified |
@@ -495,7 +533,6 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 | OpenTelemetry, Cloud Logging, Cloud Monitoring, and Cloud Trace | LOCAL_ADAPTER_ONLY | Local trace propagation exists; no exported trace evidence |
 | OAuth2/OIDC | LOCAL_ADAPTER_ONLY | Configuration boundary exists; enterprise identity provider not connected |
 | JWT and backend RBAC | IMPLEMENTED_AND_VERIFIED | Short-lived role-token and authorization tests |
-| Google AI Studio prompt lifecycle | IMPLEMENTED_REQUIRES_CREDENTIALS | Thirteen task-level CRISPE prompts, schema, and evaluation contracts exist; no Studio session evidence |
 | Antigravity | LOCAL_ADAPTER_ONLY | Typed read-only boundary and CI tests exist; the runtime status truthfully reports `BLOCKED_BY_PARTICIPANT_ACCESS` until official participant access is available |
 
 ## 📚 Documentation links
