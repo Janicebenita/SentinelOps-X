@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/sentinelops-nexus-hero.png" alt="SentinelOps Nexus enterprise operational digital twin" width="100%" />
+  <img src="https://raw.githubusercontent.com/Janicebenita/SentinelOps-X/main/docs/assets/sentinelops-nexus-hero.png" alt="SentinelOps Nexus enterprise operational digital twin" width="100%" />
 </p>
 
 <h1 align="center">🛡️ SentinelOps Nexus</h1>
@@ -9,9 +9,16 @@
 
 <p align="center">
   <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/"><img alt="Google Cloud Run live" src="https://img.shields.io/badge/Google_Cloud_Run-LIVE-4285F4?logo=googlecloud&amp;logoColor=white" /></a>
-  <a href="https://github.com/Janicebenita/SentinelOps-X/actions/workflows/validate.yml"><img alt="Validation workflow" src="https://github.com/Janicebenita/SentinelOps-X/actions/workflows/validate.yml/badge.svg?branch=feat%2Fgoogle-native-enterprise-compliance" /></a>
+  <a href="https://github.com/Janicebenita/SentinelOps-X/actions/workflows/validate.yml"><img alt="Validation workflow" src="https://github.com/Janicebenita/SentinelOps-X/actions/workflows/validate.yml/badge.svg?branch=main" /></a>
   <img alt="Human governed" src="https://img.shields.io/badge/Safety-HUMAN_GOVERNED-00A86B" />
   <img alt="Production action not executed" src="https://img.shields.io/badge/Production_Action-NOT_EXECUTED-FF8C00" />
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React-Enterprise_UI-149ECA?style=for-the-badge&amp;logo=react&amp;logoColor=white" />
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Typed_API-009688?style=for-the-badge&amp;logo=fastapi&amp;logoColor=white" />
+  <img alt="Google Cloud" src="https://img.shields.io/badge/Google_Cloud-Cloud_Run-4285F4?style=for-the-badge&amp;logo=googlecloud&amp;logoColor=white" />
+  <img alt="Gemini" src="https://img.shields.io/badge/Gemini-Evidence_Reasoning-8E75B2?style=for-the-badge&amp;logo=googlegemini&amp;logoColor=white" />
 </p>
 
 <p align="center">
@@ -26,7 +33,7 @@
 
 <p align="center">
   <a href="https://sentinelops-frontend-398391487181.asia-south1.run.app/judge-demo">
-    <img src="docs/assets/sentinelops-nexus-30-second-flow.gif" alt="30-second SentinelOps Nexus flow: forecast, Digital Twin, simulation, Gemini reasoning, Gemma review, human approval, and Evidence ZIP" width="960" />
+    <img src="https://raw.githubusercontent.com/Janicebenita/SentinelOps-X/main/docs/assets/sentinelops-nexus-30-second-flow.gif" alt="30-second SentinelOps Nexus flow: forecast, Digital Twin, simulation, Gemini reasoning, Gemma review, human approval, and Evidence ZIP" width="960" />
   </a>
 </p>
 
@@ -62,6 +69,14 @@ Google Cloud Run is the primary live judge-demo environment. The deployed fronte
 
 SentinelOps Nexus is an evidence-driven operational decision-support product. It forecasts emerging Redis saturation, builds a bounded Digital Twin, replays 12 deterministic scenarios, compares FAST, SAFE, and OPTIMAL interventions, applies mandatory safety gates, and stops at an authorized human decision boundary.
 
+| Enterprise signal | Product evidence |
+|---|---|
+| Operational foresight | Deterministic Redis safe-capacity forecast before the reactive alert |
+| Decision confidence | Twelve reproducible scenarios and a transparent intervention tournament |
+| AI with bounded authority | Gemini explains; Gemma critiques; deterministic backend gates decide eligibility |
+| Human governance | Verified role, mandatory rationale, backend authorization, and no automatic approval |
+| Auditability | Evidence references, result hashes, trace context, SHA-256-linked events, and Evidence ZIP |
+
 [Quick Start](#running-locally) | [Architecture](#architecture-summary) | [Guided Demo](#guided-product-demo) | [Safety](#security-and-human-control) | [Evaluation Evidence](#evaluation-evidence)
 
 ## 🎯 Project overview
@@ -82,34 +97,26 @@ The bounded deterministic forecast and mandatory safety gates remain authoritati
 
 ## 🏗️ Architecture summary
 
-```text
-Telemetry Ingestion
-        ↓
-Redis Forecast Service
-        ↓
-Digital Twin Engine
-        ↓
-Simulation Engine
-        ↓
-Optimization Engine
-        ↓
-Gemini Enterprise Agent Platform (formerly Vertex AI)
-        ↓
-Gemma Private Policy Review Engine
-        ↓
-Mandatory Safety Gates
-        ↓
-Verification Agent
-        ↓
-Executive Recommendation Generator
-        ↓
-AWAITING_HUMAN
-        ↓
-Human Approval Stage
-        ↓
-Tamper-Evident SHA-256-Linked Audit Chain
-        ↓
-Evidence ZIP Export
+<p align="center">
+  <a href="docs/assets/sentinelops-nexus-architecture.pdf">
+    <img src="https://raw.githubusercontent.com/Janicebenita/SentinelOps-X/main/docs/assets/sentinelops-nexus-architecture-preview.png" alt="SentinelOps Nexus complete enterprise architecture: experience, AI orchestration, deterministic engines, governance, evidence, data, eventing, observability, and safety boundaries" width="100%" />
+  </a>
+</p>
+
+<p align="center"><sub><strong>Complete Google-native enterprise architecture</strong> · click the board for the full-resolution PDF</sub></p>
+
+```mermaid
+flowchart LR
+    T["Telemetry Ingestion"] --> F["Redis Forecast Service"] --> D["Digital Twin Engine"] --> S["Simulation Engine"] --> O["Optimization Engine"]
+    O --> G["Gemini Enterprise Agent Platform<br/>(formerly Vertex AI)"] --> P["Gemma Private Policy Review Engine"]
+    P --> M["Mandatory Safety Gates"] --> V["Verification Agent"] --> E["Executive Recommendation Generator"]
+    E --> H["AWAITING_HUMAN"] --> A["Human Approval Stage"] --> C["Tamper-Evident SHA-256-Linked Audit Chain"] --> Z["Evidence ZIP Export"]
+    classDef deterministic fill:#082f49,stroke:#22d3ee,color:#e0f2fe;
+    classDef ai fill:#312e81,stroke:#a78bfa,color:#f5f3ff;
+    classDef safety fill:#052e16,stroke:#34d399,color:#dcfce7;
+    class T,F,D,S,O deterministic;
+    class G,P ai;
+    class M,V,E,H,A,C,Z safety;
 ```
 
 This ordering is a safety invariant. Executive recommendation follows mandatory gates and verification. Human approval follows verification and the explicit `AWAITING_HUMAN` state.
@@ -120,16 +127,15 @@ The complete architecture is documented in [docs/architecture.md](docs/architect
 
 SentinelOps Nexus follows the Google-native AI engineering lifecycle in this order:
 
-```text
-Google AI Studio
-        ↓
-Prompt Management
-        ↓
-Prompt Evaluation
-        ↓
-Gemini Enterprise Agent Platform Runtime (formerly Vertex AI)
-        ↓
-Gemma Private Policy Review Engine
+```mermaid
+flowchart LR
+    A["Google AI Studio"] --> P["Prompt Management"] --> E["Prompt Evaluation"] --> G["Gemini Runtime"] --> M["Gemma Policy Review"]
+    classDef studio fill:#174ea6,stroke:#8ab4f8,color:#fff;
+    classDef lifecycle fill:#0f766e,stroke:#5eead4,color:#fff;
+    classDef model fill:#4c1d95,stroke:#c4b5fd,color:#fff;
+    class A studio;
+    class P,E lifecycle;
+    class G,M model;
 ```
 
 ### 1. Google AI Studio
