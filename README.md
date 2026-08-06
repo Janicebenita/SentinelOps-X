@@ -305,7 +305,7 @@ Typed event envelopes include idempotency, retry, dead-letter, causation, correl
 
 ## 🎬 Guided product demo
 
-The Judge Demo provides a 20-step interactive evidence tour with play, pause, previous, next, restart, clickable evidence cards, progressive spotlight motion, backend-availability states, and operator-focused explanations. The command centre also supports manual Explore Mode: operators can change traffic, Redis capacity, application replicas, and dependency latency; load presets; upload operational JSON; replay all 12 backend-calculated scenarios; and inspect the resulting evidence and hashes.
+The Judge Demo provides a 15-stage, five-minute interactive workflow with a keyboard-accessible stage rail, deep links, a large live-evidence explanation panel, play, pause, previous, next, restart, Exit Guided Mode, restrained motion, and explicit fallback or credential states. It never submits approval. Its Google Cloud evidence stage explains why each managed integration is retained before displaying the backend-supported status; missing Cloud Build, Artifact Registry, BigQuery, Pub/Sub, or Trace identifiers are never presented as verified. The command centre also supports manual Explore Mode: operators can change traffic, Redis capacity, application replicas, and dependency latency; load presets; upload operational JSON; replay all 12 backend-calculated scenarios; and inspect the resulting evidence and hashes.
 
 The guided experience never activates approval. The narrated video remains a separate supporting artifact: [demo_storytelling_video.mp4](demo_storytelling_video.mp4).
 

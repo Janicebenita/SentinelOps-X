@@ -1,0 +1,5 @@
+import {ChevronLeft,ChevronRight,LogOut,Pause,Play,RotateCcw} from 'lucide-react';
+
+export default function GuidedControls({index,total,playing,guided,onPrevious,onNext,onToggle,onRestart,onExit}:{index:number;total:number;playing:boolean;guided:boolean;onPrevious:()=>void;onNext:()=>void;onToggle:()=>void;onRestart:()=>void;onExit:()=>void}){
+ return <div className="jd-controls" aria-label="Guided demo controls"><span>Stage {index+1} of {total}</span><div><button onClick={onPrevious} disabled={index===0} aria-label="Previous stage"><ChevronLeft/></button><button className="jd-play" onClick={onToggle} aria-label={playing?'Pause guided mode':'Play guided mode'}>{playing?<Pause/>:<Play/>}{playing?'Pause':'Play'}</button><button onClick={onNext} disabled={index===total-1} aria-label="Next stage"><ChevronRight/></button><button onClick={onRestart} aria-label="Restart guided mode"><RotateCcw/>Restart</button><button onClick={onExit} disabled={!guided} aria-label="Exit guided mode"><LogOut/>Exit Guided Mode</button></div></div>;
+}
