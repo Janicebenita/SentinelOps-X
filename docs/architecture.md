@@ -57,6 +57,6 @@ SentinelOps Nexus is an evidence-driven Enterprise Operational Digital Twin. Its
 - React presents Time Travel, evidence, agent trace, business impact, tournament, and approval views.
 - The inherited reactive investigation workflow remains available as a secondary compatibility path.
 
-No LLM controls state transitions, approval, or production execution. Gemini/ADK/A2A/MCP are integration targets; the current public demo does not falsely claim those optional integrations are active.
+No LLM controls state transitions, approval, or production execution. A2A persistence and the authenticated MCP gateway are locally verified. Gemini and Gemma have credentialed call paths with explicit fallbacks. ADK remains a local adapter; Vertex AI, BigQuery, Google Pub/Sub, exported OpenTelemetry traces, Cloud Run and service IAM are not verified in the current public deployment.
 
 See the large Mermaid diagram in the repository README.

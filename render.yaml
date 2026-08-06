@@ -25,6 +25,8 @@ services:
         value: "1111"
       - key: ROLE_TOKEN_SECRET
         generateValue: true
+      - key: INTEGRATION_TOKEN
+        generateValue: true
       - key: ROLE_TOKEN_EXPIRY_MINUTES
         value: "10"
       - key: DATABASE_URL

@@ -65,6 +65,15 @@ class EvidenceReasoningRequest(StrictModel):
     evidence: list[dict[str, Any]]
     purpose: Literal["correlate", "contradictions", "executive_brief", "missing_evidence", "business_impact"]
 
+class EvidenceReasoningOutput(StrictModel):
+    purpose: str
+    summary: str
+    contradictions: list[str] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    evidence_ids: list[str]
+    authoritative: Literal[False] = False
+    production_action: Literal["NOT_EXECUTED"] = "NOT_EXECUTED"
+
 
 class PolicyReviewRequest(StrictModel):
     workflow_id: int

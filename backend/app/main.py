@@ -13,6 +13,8 @@ from .tools.sandbox import get_sandbox
 from .security import reset_rate_limits, security_middleware
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    if settings.environment.lower() not in {"development", "test"} and settings.integration_token == "development-integration-token":
+        raise RuntimeError("INTEGRATION_TOKEN must be configured outside development")
     reset_rate_limits()
     Base.metadata.create_all(engine)
     yield

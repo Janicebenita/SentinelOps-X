@@ -17,8 +17,8 @@
 | Tool interoperability | 13 authenticated MCP tools, strict call schema, no shell/mutation | router + MCP tests | none | IMPLEMENTED_AND_VERIFIED locally |
 | Evidence reasoning | schema-validated advisory output with invocation metadata | runtime/model test | none | IMPLEMENTED_REQUIRES_CREDENTIALS for Gemini call |
 | Private policy review | Gemma endpoints; no approval/gate override | runtime/model test | none | LOCAL_ADAPTER_ONLY |
-| Supplemental forecast | deterministic plus Vertex/fallback/variance contract | forecast API test | none | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| Analytics | nine BigQuery schemas, partitioning/clustering and insert IDs | SQL/provider boundary | none | IMPLEMENTED_REQUIRES_CREDENTIALS |
+| Supplemental forecast | deterministic plus Vertex-shaped fallback contract; no Vertex SDK call | forecast API test | none | ROADMAP_ONLY |
+| Analytics | nine BigQuery schemas and insert-ID helper; no BigQuery writer | SQL/provider boundary | none | ROADMAP_ONLY |
 | Async events | complete envelope, idempotency, retry/DLQ fields | event test | none | Pub/Sub requires credentials |
 | Security | backend RBAC, integration auth, rate/request limits, headers | security + existing authorization tests | none | local controls verified; enterprise OIDC pending |
 | Observability | trace IDs and persisted invocation hashes/latency/fallback | model tests/database | none | OTLP export requires endpoint |

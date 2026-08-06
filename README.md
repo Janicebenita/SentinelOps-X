@@ -411,9 +411,13 @@ Generated artifacts include the submission-ready MP4, synchronized captions, `vo
 | FastAPI `/api/v1`, SQLite persistence, SSE audit events | ✅ Implemented and tested |
 | React command centre backed by persisted API data | ✅ Implemented and tested |
 | Digital Twin, scenarios, tournament, impact, and export | ✅ Implemented and tested |
-| Optional Gemini/OpenAI narrative adapters | 🟡 Adapter boundary exists; not required for demo |
-| Google ADK, A2A, and MCP enterprise connectors | 🔭 Production evolution |
-| Vertex AI, Pub/Sub, Spanner Graph, BigQuery ML, Looker | 🔭 Research architecture; not active in this build |
+| Gemini evidence reasoning | 🟡 Real Gemini API path exists; credentials and a successful invocation are required for verification |
+| Gemma policy review | 🟡 Remote advisory path plus tested deterministic fallback; no deployed model verified |
+| A2A and MCP | ✅ Typed persistence and authenticated read-only tools verified locally |
+| Google ADK | 🟡 Local orchestration adapter only; official ADK runtime not installed or verified |
+| Vertex AI and BigQuery | 🔭 Contracts/schemas only; no callable SDK/write path verified |
+| Pub/Sub and OpenTelemetry | 🟡 Local event/span boundaries only; no Google delivery or exported trace verified |
+| Cloud Run | 🟡 Build/manifests prepared; no deployed Cloud Run URL or IAM evidence available |
 
 ---
 

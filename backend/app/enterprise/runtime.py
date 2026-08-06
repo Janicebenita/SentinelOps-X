@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import time
 from datetime import timedelta
 from typing import Any
@@ -12,8 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..config import settings
+from ..llm.gemini_provider import GeminiProvider
 from ..models import A2AMessageRecord, IntegrationInvocation, NexusRun
-from .contracts import A2AMessage, EventEnvelope, EvidenceReasoningRequest, PolicyReviewRequest, utcnow
+from .contracts import A2AMessage, EventEnvelope, EvidenceReasoningOutput, EvidenceReasoningRequest, PolicyReviewRequest, utcnow
 
 def module_available(name: str) -> bool:
     try:
@@ -22,17 +24,17 @@ def module_available(name: str) -> bool:
         return False
 
 STATUSES = {
-    "Gemini": "IMPLEMENTED_REQUIRES_CREDENTIALS" if (settings.google_api_key or settings.google_cloud_project) else "LOCAL_ADAPTER_ONLY",
+    "Gemini": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Gemma": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.gemma_service_url else "LOCAL_ADAPTER_ONLY",
-    "ADK": "IMPLEMENTED_REQUIRES_CREDENTIALS" if module_available("google.adk") else "LOCAL_ADAPTER_ONLY",
+    "ADK": "LOCAL_ADAPTER_ONLY",
     "A2A": "IMPLEMENTED_AND_VERIFIED",
     "MCP": "IMPLEMENTED_AND_VERIFIED",
-    "Vertex AI": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.google_cloud_project else "LOCAL_ADAPTER_ONLY",
-    "BigQuery": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.google_cloud_project else "LOCAL_ADAPTER_ONLY",
-    "Pub/Sub": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.google_cloud_project else "LOCAL_ADAPTER_ONLY",
+    "Vertex AI": "ROADMAP_ONLY",
+    "BigQuery": "ROADMAP_ONLY",
+    "Pub/Sub": "LOCAL_ADAPTER_ONLY",
     "Cloud Run": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Antigravity": "DOCUMENTATION_UNAVAILABLE",
-    "OpenTelemetry": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.otel_exporter_otlp_endpoint else "LOCAL_ADAPTER_ONLY",
+    "OpenTelemetry": "ROADMAP_ONLY",
 }
 
 
@@ -86,11 +88,18 @@ def invoke(db: Session, name: str, workflow_id: int | None, operation: str, inpu
 
 def reason_with_gemini(db: Session, request: EvidenceReasoningRequest) -> dict[str, Any]:
     started = time.perf_counter()
-    # Deterministic evidence-grounded fallback remains usable without external credentials.
-    output = {"purpose": request.purpose, "summary": f"Reviewed {len(request.evidence)} persisted evidence artifacts.",
+    fallback_output = {"purpose": request.purpose, "summary": f"Reviewed {len(request.evidence)} persisted evidence artifacts.",
         "contradictions": [], "missing_evidence": [] if request.evidence else ["No evidence supplied"],
         "evidence_ids": request.evidence_ids, "authoritative": False, "production_action": "NOT_EXECUTED"}
-    fallback = not bool(settings.google_api_key or settings.google_cloud_project)
+    output = fallback_output; fallback = True
+    if os.getenv("GEMINI_API_KEY"):
+        try:
+            task = ("Use only this supplied evidence. Never calculate authoritative forecasts, decide gates, approve, "
+                "or mutate state. Return the required JSON schema.\n" + json.dumps(request.model_dump(mode="json"), sort_keys=True))
+            output = GeminiProvider(timeout=settings.model_timeout_seconds).generate(task, EvidenceReasoningOutput).model_dump()
+            fallback = False
+        except ValueError:
+            output = fallback_output
     call = invoke(db, "Gemini", request.workflow_id, request.purpose, request.model_dump(mode="json"), output,
         fallback=fallback, model=settings.vertex_model, prompt="evidence-reasoning-v1", started=started)
     return {**output, "fallback_used": fallback, "trace_id": call.trace_id, "output_hash": call.output_hash}
@@ -102,7 +111,21 @@ def review_with_gemma(db: Session, request: PolicyReviewRequest) -> dict[str, An
     output = {"classification": "CONSISTENT" if not failed else "REQUIRES_REVIEW", "failed_gate_references": failed,
         "evidence_complete": bool(request.evidence_ids), "advisory_only": True, "gate_override": False,
         "approval_authority": False, "production_action": "NOT_EXECUTED"}
-    fallback = not bool(settings.gemma_service_url)
+    fallback = True
+    if settings.gemma_service_url:
+        try:
+            import httpx
+            response = httpx.post(f"{settings.gemma_service_url.rstrip('/')}/v1/policy/review",
+                json=request.model_dump(mode="json"), timeout=settings.model_timeout_seconds)
+            response.raise_for_status()
+            remote = response.json()
+            if remote.get("gate_override") is not False or remote.get("approval_authority") is not False:
+                raise ValueError("Gemma response attempted to exceed advisory authority")
+            output = {**output, **remote, "gate_override": False, "approval_authority": False,
+                "advisory_only": True, "production_action": "NOT_EXECUTED"}
+            fallback = False
+        except (httpx.HTTPError, ValueError, TypeError):
+            fallback = True
     call = invoke(db, "Gemma", request.workflow_id, "policy_review", request.model_dump(mode="json"), output,
         fallback=fallback, model="gemma-policy-adapter", prompt="policy-review-v1", started=started)
     return {**output, "fallback_used": fallback, "trace_id": call.trace_id}
@@ -120,12 +143,14 @@ def supplemental_forecast(db: Session, run: NexusRun) -> dict[str, Any]:
 
 def integration_health(db: Session) -> list[dict[str, Any]]:
     rows = []
-    for name, status in STATUSES.items():
+    for name, configured_status in STATUSES.items():
         last = db.scalar(select(IntegrationInvocation).where(IntegrationInvocation.integration == name).order_by(IntegrationInvocation.id.desc()))
+        verified = bool(last and last.status == "success" and not last.fallback_used)
+        status = "IMPLEMENTED_AND_VERIFIED" if verified else configured_status
         rows.append({"integration": name, "status": status, "last_health_check": utcnow(),
             "configured_service": {"Gemini": settings.vertex_model, "Gemma": settings.gemma_service_url or "local-policy-adapter",
                 "BigQuery": settings.bigquery_dataset, "Pub/Sub": settings.pubsub_topic}.get(name, name.lower().replace(" ", "-")),
-            "last_successful_call": last.created_at if last else None, "fallback_status": "ACTIVE" if last and last.fallback_used else "AVAILABLE",
+            "last_successful_call": last.created_at if verified and last else None, "fallback_status": "ACTIVE" if last and last.fallback_used else "NOT_INVOKED",
             "trace_id": last.trace_id if last else None, "documentation": f"/docs#{name.lower().replace(' ', '-')}",
             "production_action": "NOT_EXECUTED"})
     return rows

@@ -11,14 +11,14 @@ Validation date: 2026-08-06. “Deployed” means authenticated cloud deployment
 | Google ADK | Yes | typed orchestration boundary | local boundary | No | Yes | local orchestrator | `backend/app/adk` | LOCAL_ADAPTER_ONLY |
 | A2A | Yes | typed persisted messages | Yes | No | No | SQLite | contract test | IMPLEMENTED_AND_VERIFIED |
 | MCP | Yes | 13 authenticated tools | Yes | No | No | deterministic connectors | MCP API tests | IMPLEMENTED_AND_VERIFIED |
-| Vertex AI | Yes | supplemental forecast contract | fallback tested | No | Yes | bounded linear model | forecast test | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| BigQuery | Yes | schemas/idempotency boundary | local schema test | No | Yes | SQLite/export | SQL + docs | IMPLEMENTED_REQUIRES_CREDENTIALS |
+| Vertex AI | Yes | response contract only | fallback tested | No | Yes | bounded linear model | forecast test | ROADMAP_ONLY |
+| BigQuery | Yes | schemas/idempotency helper only | local schema test | No | Yes | SQLite/export | SQL + docs | ROADMAP_ONLY |
 | Pub/Sub | Yes | envelope/idempotency/DLQ boundary | Yes | No | Yes | local event bus | event test | IMPLEMENTED_REQUIRES_CREDENTIALS |
 | Cloud Run | Yes | eight service manifests/images | config only | No | Yes | Render/local | deploy files | IMPLEMENTED_REQUIRES_CREDENTIALS |
 | Secret Manager | Yes | deployment design/env boundary | config review | No | Yes | local env | security docs | IMPLEMENTED_REQUIRES_CREDENTIALS |
 | Artifact Registry | Yes | Cloud Build image targets | config review | No | Yes | local Docker | cloudbuild | IMPLEMENTED_REQUIRES_CREDENTIALS |
 | Cloud Logging/Monitoring/Trace | Yes | structured trace boundary | local trace tested | No | Yes | invocation DB | observability docs | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| OpenTelemetry | Yes | safe local span contract | type/security checks | No | endpoint | trace IDs | observability module | LOCAL_ADAPTER_ONLY |
+| OpenTelemetry | Yes | unexported local span helper only | type checks | No | endpoint | trace IDs | observability module | ROADMAP_ONLY |
 | OAuth2/OIDC | Yes | service-identity-ready configuration | config review | No | issuer/IAM | signed demo JWT-style tokens | security docs | IMPLEMENTED_REQUIRES_CREDENTIALS |
 | Rate limiting / OWASP controls | Yes | active middleware | Yes | Render pending | No | per-instance bucket | security test | IMPLEMENTED_AND_VERIFIED |
 

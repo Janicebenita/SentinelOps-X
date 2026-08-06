@@ -8,6 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import AgentExecution, NexusAuditEvent, NexusEvidence, NexusRun, VerificationRecord
+from ..adk import orchestrate
+from ..enterprise.contracts import A2AMessage
+from ..enterprise.runtime import expiry, persist_a2a
 from ..schemas.upgrade_contracts import AgentWorkspace, VerificationResult
 from . import nexus_workflow as workflow
 
@@ -81,6 +84,9 @@ def execute(db: Session, run: NexusRun, name: str, actor: str, rerun: bool=False
     previous=db.scalar(select(AgentExecution).where(AgentExecution.workflow_id==run.id,AgentExecution.agent_name==name).order_by(AgentExecution.id.desc())); retry=(previous.retry_count+1 if rerun and previous else 0)
     row=AgentExecution(workflow_id=run.id,agent_name=name,status="RUNNING",started_at=datetime.now(timezone.utc),input_reference=f"workflow:{run.id}:inputs",retry_count=retry); db.add(row); db.commit(); db.refresh(row)
     workflow.append_event(db,run,"agent.rerun_requested" if rerun else "agent.run_requested",actor,{"agent_name":name,"execution_id":row.id})
+    delegation=A2AMessage(workflow_id=run.id,correlation_id=f"workflow-{run.id}",sender="api-gateway" if name=="nexus-orchestrator" else "nexus-orchestrator",receiver=name,action="rerun" if rerun else "run",input_artifacts=[row.input_reference],retry_count=retry,expires_at=expiry())
+    persist_a2a(db,delegation); orchestration=orchestrate(delegation)
+    workflow.append_event(db,run,"a2a.task_delegated","nexus-orchestrator",{"message_id":delegation.message_id,"task_id":delegation.task_id,"receiver":name,"trace_id":delegation.trace_id,"runtime":orchestration["runtime"]})
     started=time.perf_counter()
     try:
         output=_perform(db,run,name); output_hash=workflow.digest(output); row.status="COMPLETED"; row.result_hash=output_hash; row.output_reference=f"sha256:{output_hash}"; row.evidence_ids=["ev-telemetry","ev-config","ev-topology","ev-slo"]
@@ -88,6 +94,8 @@ def execute(db: Session, run: NexusRun, name: str, actor: str, rerun: bool=False
     except Exception as exc:
         row.status="FAILED"; row.error=str(exc)[:1000]; event_type="agent.run_failed"
     row.completed_at=datetime.now(timezone.utc); row.execution_duration_ms=round((time.perf_counter()-started)*1000); db.commit()
+    completion=A2AMessage(workflow_id=run.id,task_id=delegation.task_id,correlation_id=delegation.correlation_id,sender=name,receiver="nexus-orchestrator",action="result",status="completed" if row.status=="COMPLETED" else "rejected",output_artifacts=[row.output_reference] if row.output_reference else [],evidence_ids=row.evidence_ids,error=row.error,retry_count=retry,trace_id=delegation.trace_id,expires_at=expiry())
+    persist_a2a(db,completion)
     workflow.append_event(db,run,event_type,name,{"execution_id":row.id,"status":row.status,"duration_ms":row.execution_duration_ms,"result_hash":row.result_hash,"error":row.error})
     if row.status=="FAILED": raise ValueError(row.error or "Agent execution failed")
     return workspace(db,name,run)

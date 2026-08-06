@@ -371,7 +371,9 @@ flowchart TD
 *   No guaranteed financial benefit.
 *   No durable distributed production persistence.
 *   No certified immutable storage.
-*   No active roadmap integrations (Vertex AI, etc.) in the submitted build.
+*   No verified Vertex AI call, BigQuery write, Pub/Sub delivery, official ADK execution, OTLP export, or Cloud Run deployment in this branch.
+*   Gemini has a credentialed API path and Gemma has a remote policy path, but neither is marked verified without successful invocation evidence.
+*   A2A persistence, authenticated MCP tools, and deterministic local fallbacks are the locally verified integration scope.
 *   No production-action execution endpoint.
 
 ---
