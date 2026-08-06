@@ -27,9 +27,14 @@ for secret in JWT_SIGNING_SECRET DEMO_ROLE_CODE_HASHES sentinelops-integration-t
   gcloud secrets describe "$secret" --project "$PROJECT_ID" >/dev/null 2>&1 || gcloud secrets create "$secret" --project "$PROJECT_ID" --replication-policy=automatic >/dev/null
 done
 API_SA="sentinelops-api-gateway-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+MCP_SA="sentinelops-mcp-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 for secret in sentinelops-integration-token sentinelops-role-token-secret sentinelops-intern-access-code sentinelops-senior-access-code; do
   gcloud secrets add-iam-policy-binding "$secret" --project "$PROJECT_ID" \
     --member "serviceAccount:${API_SA}" --role roles/secretmanager.secretAccessor >/dev/null
+done
+for secret in sentinelops-integration-token sentinelops-role-token-secret; do
+  gcloud secrets add-iam-policy-binding "$secret" --project "$PROJECT_ID" \
+    --member "serviceAccount:${MCP_SA}" --role roles/secretmanager.secretAccessor >/dev/null
 done
 echo "Provisioning boundary complete for project=$PROJECT_ID region=$REGION account=$ACCOUNT"
 echo "Secret containers exist, but no secret values were created or printed. Add versions before deployment."

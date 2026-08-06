@@ -100,8 +100,10 @@ def test_frontend_cloud_run_uses_runtime_api_url_and_cors_update():
 
 
 def test_database_backed_images_create_non_root_sqlite_directory():
-    for name in ("Dockerfile.api-gateway", "Dockerfile.gemma"):
+    for name in ("Dockerfile.api-gateway", "Dockerfile.gemma", "Dockerfile.mcp"):
         dockerfile = (ROOT / name).read_text(encoding="utf-8")
         assert "mkdir -p /app/data" in dockerfile
         assert "chown -R sentinelops:sentinelops /app/data" in dockerfile
         assert dockerfile.index("chown -R sentinelops:sentinelops /app/data") < dockerfile.index("USER sentinelops")
+    deploy = (ROOT / "scripts" / "deploy_cloud_run.sh").read_text(encoding="utf-8")
+    assert 'deploy_private sentinelops-mcp-server mcp sentinelops-mcp-sa "INTEGRATION_TOKEN=' in deploy

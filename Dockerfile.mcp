@@ -6,6 +6,7 @@ COPY pyproject.toml ./
 COPY backend ./backend
 COPY services ./services
 RUN pip install --no-cache-dir .
+RUN mkdir -p /app/data && chown -R sentinelops:sentinelops /app/data
 USER sentinelops
 EXPOSE 8080
 CMD ["sh", "-c", "uvicorn --app-dir services/mcp-server main:app --host 0.0.0.0 --port ${PORT}"]
