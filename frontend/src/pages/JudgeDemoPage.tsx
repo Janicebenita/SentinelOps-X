@@ -4,7 +4,6 @@ import {Activity,Play,ShieldCheck,Sparkles} from 'lucide-react';
 import {nexusApi} from '../api/client';
 import {buildJudgeStages} from '../features/judge-demo/stageAdapter';
 import GuidedControls from '../features/judge-demo/GuidedControls';
-import StageExplanationPanel from '../features/judge-demo/StageExplanationPanel';
 import WorkflowStageRail from '../features/judge-demo/WorkflowStageRail';
 import {STAGE_IDS,type JudgeStageId} from '../features/judge-demo/types';
 import {useGuidedPlayback} from '../features/judge-demo/useGuidedPlayback';
@@ -29,7 +28,6 @@ export default function JudgeDemoPage(){
  const failed=[workflows,telemetry,evidence,audit,verification,integrations].some(query=>query.isError);
  const stages=useMemo(()=>buildJudgeStages({run,telemetry:telemetry.data,evidence:evidence.data,audit:audit.data,verification:verification.data,integrations:integrations.data,a2a:a2a.data,antigravity:antigravity.data,loading,failed}),[run,telemetry.data,evidence.data,audit.data,verification.data,integrations.data,a2a.data,antigravity.data,loading,failed]);
  const playback=useGuidedPlayback(stages.length,updateStageUrl,initialStage());
- const current=stages[playback.index]??stages[0];
  const refresh=()=>Promise.all(['judge-workflows','judge-telemetry','judge-evidence','judge-audit','judge-verification','judge-integrations','judge-a2a'].map(key=>cache.invalidateQueries({queryKey:[key]})));
  const seed=useMutation({mutationFn:nexusApi.seed,onSuccess:async()=>{await refresh();playback.select(0,false)}});
  const execute=useMutation({mutationFn:()=>nexusApi.runAll(run!.id),onSuccess:async()=>{await refresh();playback.restart()}});
@@ -44,7 +42,7 @@ export default function JudgeDemoPage(){
    <header className="jd-hero"><div><small>FIVE-MINUTE INTERACTIVE PRODUCT EXPERIENCE</small><h1>See tomorrow’s bottleneck.<br/><span>Intervene before impact.</span></h1><p>Explore every persisted calculation, AI explanation, deterministic gate, and human-control boundary. Select any stage or play the guided experience.</p><div className="jd-run-actions"><button className="primary" onClick={()=>seed.mutate()} disabled={busy}><Play/>{seed.isPending?'Creating workflow…':'Create deterministic workflow'}</button><button className="primary" onClick={()=>execute.mutate()} disabled={!run||busy}><Activity/>{execute.isPending?'Running 12 scenarios…':'Run backend workflow'}</button></div></div><div className="jd-hero-signal"><Sparkles/><small>LIVE WORKFLOW</small><strong>{run?.state?.replaceAll('_',' ')??'NOT YET STARTED'}</strong><span>Workflow {run?.id??'—'} · Seed {run?.seed??'—'}</span><b>{run?.production_action_executed?'FAILED':'SAFETY BOUNDARY ENFORCED'}</b></div></header>
    {failed&&<div className="jd-alert" role="alert"><b>Backend evidence is currently unavailable.</b><span>The experience explains each retained architecture stage, then labels its evidence state without fabricating success.</span></div>}
    <GuidedControls index={playback.index} total={stages.length} playing={playback.playing} guided={playback.guided} onPrevious={playback.previous} onNext={playback.next} onToggle={playback.toggle} onRestart={playback.restart} onExit={playback.exit}/>
-   <section className="jd-workspace" aria-label="Interactive SentinelOps workflow"><WorkflowStageRail stages={stages} selected={playback.index} onSelect={playback.select}/><StageExplanationPanel key={current.id} stage={current}/></section>
+   <section className="jd-workspace" aria-label="Interactive SentinelOps workflow"><WorkflowStageRail stages={stages} selected={playback.index} onSelect={playback.select}/></section>
    <section className="jd-google-lifecycle"><div><small>GOOGLE-NATIVE AI LIFECYCLE</small><p><b>Google AI Studio</b><i>→</i><b>Prompt Management</b><i>→</i><b>Prompt Evaluation</b><i>→</i><b>Gemini Runtime</b><i>→</i><b>Gemma Policy Review</b></p></div><div><small>DELIVERY AND RUNTIME</small><p><b>Cloud Build</b><i>→</i><b>Artifact Registry</b><i>→</i><b>Cloud Run</b></p><span>BigQuery · Pub/Sub · Secret Manager · Cloud Logging · Cloud Monitoring · Cloud Trace · IAM / Service Accounts</span></div></section>
    <div className="boundary"><ShieldCheck/> PRODUCTION ACTION: NOT EXECUTED</div>
   </main>
