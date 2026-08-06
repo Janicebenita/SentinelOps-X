@@ -51,6 +51,9 @@ def test_pubsub_topics_match_required_contract():
         "sentinelops-bigquery-events",
         "sentinelops-workflow-events",
     }
+    provisioner = (ROOT / "scripts" / "provision_pubsub.py").read_text(encoding="utf-8")
+    assert "roles/pubsub.publisher" in provisioner
+    assert "roles/pubsub.subscriber" in provisioner
 
 
 def test_cloud_build_and_run_cover_nine_services():
@@ -92,3 +95,5 @@ def test_frontend_cloud_run_uses_runtime_api_url_and_cors_update():
     assert "__SENTINELOPS_CONFIG__" in client
     assert "API_BASE_URL=${API_URL}" in deploy
     assert "CORS_ORIGINS=${FRONTEND_URL}" in deploy
+    provision = (ROOT / "scripts" / "provision_google_cloud.sh").read_text(encoding="utf-8")
+    assert "roles/secretmanager.secretAccessor" in provision

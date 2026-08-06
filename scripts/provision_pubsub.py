@@ -74,6 +74,15 @@ def main() -> None:
                     "7d",
                 ]
             )
+        project_number = _run(
+            ["gcloud", "projects", "describe", project, "--format=value(projectNumber)"]
+        ).stdout.strip()
+        service_agent = f"service-{project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+        _run(["gcloud", "pubsub", "topics", "add-iam-policy-binding", dlq, "--project", project,
+            "--member", f"serviceAccount:{service_agent}", "--role", "roles/pubsub.publisher"])
+        _run(["gcloud", "pubsub", "subscriptions", "add-iam-policy-binding", subscription,
+            "--project", project, "--member", f"serviceAccount:{service_agent}",
+            "--role", "roles/pubsub.subscriber"])
     print("Pub/Sub topics, worker subscriptions and dead-letter topics provisioned.")
 
 

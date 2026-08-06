@@ -25,5 +25,9 @@ foreach ($Secret in @('JWT_SIGNING_SECRET','DEMO_ROLE_CODE_HASHES','sentinelops-
   gcloud secrets describe $Secret --project $ProjectId 2>$null
   if ($LASTEXITCODE -ne 0) { gcloud secrets create $Secret --project $ProjectId --replication-policy=automatic | Out-Null }
 }
+$ApiServiceAccount = "sentinelops-api-gateway-sa@$ProjectId.iam.gserviceaccount.com"
+foreach ($Secret in @('sentinelops-integration-token','sentinelops-role-token-secret','sentinelops-intern-access-code','sentinelops-senior-access-code')) {
+  gcloud secrets add-iam-policy-binding $Secret --project $ProjectId --member "serviceAccount:$ApiServiceAccount" --role roles/secretmanager.secretAccessor | Out-Null
+}
 Write-Output "Provisioning boundary complete for project=$ProjectId region=$Region account=$Account"
 Write-Output 'Secret containers exist, but no secret values were created or printed. Add versions before deployment.'
