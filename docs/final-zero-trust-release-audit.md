@@ -4,7 +4,7 @@ Audit date: 2026-08-06
 Repository: `https://github.com/Janicebenita/SentinelOps-X.git`  
 Branch: `feat/google-native-enterprise-compliance`  
 Audited upgrade commit: `bcc97c3f`  
-Zero-trust remediation commit: `4c86c2f`  
+Zero-trust remediation commits: `4c86c2f`, `c71cbe9`, `00be49f`  
 Safety invariant: **PRODUCTION ACTION: NOT EXECUTED**
 
 ## Verdict
@@ -70,7 +70,7 @@ Commands and results after remediation:
 - Compiled access-code scan: **no matches**.
 - `scripts/zero_trust_probe.py`: agent 200, two A2A messages, one shared A2A trace, audit valid, Gemini fallback explicitly true.
 
-The first feature-branch run, [31063621385](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31063621385), passed build, tests, lint, typing, Bandit, authorization, Google-platform contracts and the no-production-route check. It then failed before scanning because shallow checkout omitted the parent revision requested by gitleaks; this was a CI configuration failure, not a detected leak. Checkout was corrected to `fetch-depth: 0`; the subsequent exact-commit result must be checked before promotion.
+The first feature-branch run, [31063621385](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31063621385), reached gitleaks but failed because shallow checkout omitted the parent revision; this was a CI configuration failure, not a detected leak. After correcting checkout to `fetch-depth: 0`, exact code commit `00be49f` passed [run 31063722589](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31063722589), including frontend build/bundle scan, 63 Python tests, lint, MyPy, Bandit, authorization, platform contracts, no-production-route proof, gitleaks, Python/frontend dependency scans, three Docker builds, service health and Nexus E2E.
 
 ## Remediations completed
 
@@ -90,7 +90,7 @@ The first feature-branch run, [31063621385](https://github.com/Janicebenita/Sent
 3. Gemma has no verified model deployment; Gemini has no successful real invocation evidence.
 4. OIDC is not enforced and Cloud Run IAM is untested.
 5. Rate limiting is process-local and unsuitable as the only multi-instance control.
-6. The feature branch is not deployed to Render; the first CI run failed due to shallow Git history before dependency, Docker and E2E stages, pending a corrected rerun.
+6. The feature branch is not deployed to Render; its exact code commit passed CI, but the public services remain on an earlier revision.
 7. Docker images were not locally built because Docker is unavailable.
 8. The live evidence ZIP was transport-verified but not retained for independent content/hash inspection after its one-time download.
 
