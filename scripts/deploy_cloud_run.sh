@@ -53,9 +53,14 @@ gcloud run deploy sentinelops-frontend --project "$PROJECT_ID" --region "$REGION
 
 FRONTEND_URL="$(gcloud run services describe sentinelops-frontend --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
 [[ "$FRONTEND_URL" == https://* ]] || { echo "Frontend URL unavailable" >&2; exit 7; }
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+[[ "$PROJECT_NUMBER" =~ ^[0-9]+$ ]] || { echo "Project number unavailable" >&2; exit 8; }
+REGIONAL_FRONTEND_URL="https://sentinelops-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
+CORS_ORIGINS="${FRONTEND_URL},${REGIONAL_FRONTEND_URL}"
 gcloud run services update sentinelops-api-gateway --project "$PROJECT_ID" --region "$REGION" \
-  --update-env-vars "CORS_ORIGINS=${FRONTEND_URL}" >/dev/null
+  --update-env-vars "^|^CORS_ORIGINS=${CORS_ORIGINS}" >/dev/null
 
 echo "FRONTEND_URL=${FRONTEND_URL}"
+echo "REGIONAL_FRONTEND_URL=${REGIONAL_FRONTEND_URL}"
 echo "API_URL=${API_URL}"
 echo "Cloud Run deployment submitted for revision ${REVISION}. Run scripts/smoke_cloud_run.py before recording success."

@@ -94,7 +94,10 @@ def test_frontend_cloud_run_uses_runtime_api_url_and_cors_update():
     assert "runtime-config.js" in dockerfile and "API_BASE_URL" in dockerfile
     assert "__SENTINELOPS_CONFIG__" in client
     assert "API_BASE_URL=${API_URL}" in deploy
-    assert "CORS_ORIGINS=${FRONTEND_URL}" in deploy
+    assert "gcloud projects describe" in deploy
+    assert "REGIONAL_FRONTEND_URL=" in deploy
+    assert "CORS_ORIGINS=\"${FRONTEND_URL},${REGIONAL_FRONTEND_URL}\"" in deploy
+    assert '--update-env-vars "^|^CORS_ORIGINS=${CORS_ORIGINS}"' in deploy
     provision = (ROOT / "scripts" / "provision_google_cloud.sh").read_text(encoding="utf-8")
     assert "roles/secretmanager.secretAccessor" in provision
 
