@@ -1,6 +1,6 @@
 # SentinelOps Nexus Architecture
 
-The full human-authored architecture board is available as a [single-page PDF](assets/sentinelops-nexus-architecture.pdf). The Mermaid diagrams below remain the repository-native, reviewable source of truth; managed-service runtime claims are governed by the [runtime evidence index](runtime-evidence-index.md).
+The readable architecture overview is available as a [high-contrast architecture board](assets/sentinelops-nexus-architecture-readable.png). The interactive product explorer is served at `/architecture`. The Mermaid diagrams below remain the repository-native, reviewable source of truth; managed-service runtime claims are governed by the [runtime evidence index](runtime-evidence-index.md).
 
 ## Google-native target boundary
 

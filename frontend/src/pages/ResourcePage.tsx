@@ -11,8 +11,7 @@ export default function ResourcePage(){
  const verification=useQuery({queryKey:['verification',id],queryFn:()=>nexusApi.verificationResults(id),enabled:!!id&&path.includes('/verification')});
  const exportEvidence=useMutation({mutationFn:()=>nexusApi.downloadEvidence(id)});
  let title='SentinelOps Nexus Documentation';let body:unknown={routes:['/command-centre','/agents','/architecture','/safety','/docs']};
- if(path==='/architecture'){title='Architecture';body={flow:'React routes → FastAPI → deterministic workflow services → SQLAlchemy artifacts → SHA-256 audit chain',boundary:'No cloud or production execution adapter exists.'}}
- else if(path==='/safety'){title='Safety and Governance';body={intern:'Cannot approve',senior_developer:'May approve with a short-lived verified token and rationale',verification_agent:'Verifies but never approves',production_action:'NOT EXECUTED'}}
+ if(path==='/safety'){title='Safety and Governance';body={intern:'Cannot approve',senior_developer:'May approve with a short-lived verified token and rationale',verification_agent:'Verifies but never approves',production_action:'NOT EXECUTED'}}
  else if(path.includes('/evidence')){title='Evidence Explorer';body=evidence.data??(evidence.isLoading?'Loading persisted evidence…':evidence.error?.message)}
  else if(path.includes('/audit')){title='Audit Timeline';body=audit.data??(audit.isLoading?'Loading chained audit events…':audit.error?.message)}
  else if(path.includes('/verification')){title='Verification Results';body=verification.data??(verification.isLoading?'Loading persisted verification records…':verification.error?.message)}

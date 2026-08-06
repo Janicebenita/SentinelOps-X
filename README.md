@@ -98,8 +98,8 @@ The bounded deterministic forecast and mandatory safety gates remain authoritati
 ## 🏗️ Architecture summary
 
 <p align="center">
-  <a href="docs/assets/sentinelops-nexus-architecture.pdf">
-    <img src="https://raw.githubusercontent.com/Janicebenita/SentinelOps-X/main/docs/assets/sentinelops-nexus-architecture-preview.png" alt="SentinelOps Nexus complete enterprise architecture: experience, AI orchestration, deterministic engines, governance, evidence, data, eventing, observability, and safety boundaries" width="100%" />
+  <a href="docs/assets/sentinelops-nexus-architecture-readable.png">
+    <img src="https://raw.githubusercontent.com/Janicebenita/SentinelOps-X/main/docs/assets/sentinelops-nexus-architecture-readable.png" alt="Readable SentinelOps Nexus safety-first workflow and Google Cloud runtime architecture" width="100%" />
   </a>
 </p>
 
@@ -121,7 +121,7 @@ flowchart LR
 
 This ordering is a safety invariant. Executive recommendation follows mandatory gates and verification. Human approval follows verification and the explicit `AWAITING_HUMAN` state.
 
-The complete architecture is documented in [docs/architecture.md](docs/architecture.md) and the [single-page architecture board](docs/assets/sentinelops-nexus-architecture.pdf).
+The complete architecture is documented in [docs/architecture.md](docs/architecture.md), presented interactively at `/architecture`, and summarized in the [high-contrast architecture board](docs/assets/sentinelops-nexus-architecture-readable.png).
 
 ## 🧠 Google AI lifecycle and authority
 
