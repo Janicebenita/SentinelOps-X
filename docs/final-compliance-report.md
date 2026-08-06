@@ -27,7 +27,7 @@
 
 ## Exact validation evidence
 
-- `pytest backend/tests demo_app/tests -q`: **59 passed**.
+- `pytest backend/tests demo_app/tests -q`: **63 passed**.
 - `ruff check backend demo_app scripts services`: **passed**.
 - `mypy backend demo_app scripts services`: **passed, 87 files**.
 - `bandit -q -lll -r backend demo_app scripts services`: **passed, no high-severity finding output**.

@@ -1,6 +1,8 @@
 name: Validate SentinelOps
 on:
   push:
+    branches: [main, feat/google-native-enterprise-compliance]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 jobs:
