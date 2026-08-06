@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 def utcnow() -> datetime:
@@ -34,13 +34,15 @@ class EventEnvelope(StrictModel):
 
 class A2AMessage(StrictModel):
     message_id: str = Field(default_factory=lambda: uuid4().hex)
+    schema_version: Literal["1.0"] = "1.0"
     workflow_id: int
     task_id: str = Field(default_factory=lambda: uuid4().hex)
     correlation_id: str
-    sender: str
-    receiver: str
+    causation_id: str | None = None
+    sender_agent: str = Field(validation_alias=AliasChoices("sender_agent","sender"))
+    receiver_agent: str = Field(validation_alias=AliasChoices("receiver_agent","receiver"))
     action: str
-    status: Literal["delegated", "running", "completed", "rejected", "retry", "timed_out", "cancelled"] = "delegated"
+    status: Literal["delegated", "running", "progress", "artifact_exchanged", "completed", "rejected", "retry", "timed_out", "cancelled"] = "delegated"
     input_artifacts: list[str] = Field(default_factory=list)
     output_artifacts: list[str] = Field(default_factory=list)
     evidence_ids: list[str] = Field(default_factory=list)
@@ -51,6 +53,11 @@ class A2AMessage(StrictModel):
     trace_id: str = Field(default_factory=lambda: uuid4().hex)
     created_at: datetime = Field(default_factory=utcnow)
     expires_at: datetime
+
+    @property
+    def sender(self) -> str: return self.sender_agent
+    @property
+    def receiver(self) -> str: return self.receiver_agent
 
 
 class ToolCall(StrictModel):

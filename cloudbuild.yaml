@@ -1,7 +1,7 @@
 substitutions: {_REGION: us-central1}
 steps:
 - name: gcr.io/cloud-builders/docker
-  args: [build, -f, Dockerfile.api, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA', .]
+  args: [build, -f, Dockerfile.api-gateway, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/api:$COMMIT_SHA', .]
 - name: gcr.io/cloud-builders/docker
   args: [build, -f, Dockerfile.frontend, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/frontend:$COMMIT_SHA', .]
 - name: gcr.io/cloud-builders/docker
@@ -9,7 +9,7 @@ steps:
 - name: gcr.io/cloud-builders/docker
   args: [build, -f, Dockerfile.forecast, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/forecast:$COMMIT_SHA', .]
 - name: gcr.io/cloud-builders/docker
-  args: [build, -f, Dockerfile.simulator, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/simulator:$COMMIT_SHA', .]
+  args: [build, -f, Dockerfile.simulation, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/simulator:$COMMIT_SHA', .]
 - name: gcr.io/cloud-builders/docker
   args: [build, -f, Dockerfile.verification, -t, '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinelops/verification:$COMMIT_SHA', .]
 - name: gcr.io/cloud-builders/docker

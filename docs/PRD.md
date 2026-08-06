@@ -4,6 +4,8 @@
 
 Google-native extensions provide Gemini evidence reasoning, Gemma advisory policy review, ADK/A2A orchestration boundaries, an MCP gateway, Vertex supplemental forecasting, BigQuery schemas, Pub/Sub event contracts, Cloud Run packaging, trace metadata and OAuth2/JWT-ready service identity. Deterministic calculations and safety gates remain authoritative, with visible fallback state.
 
+Implementation evidence and judge traceability are maintained in `judge-compliance-matrix.md` and `final-judge-compliance-report.md`. Vertex AI and BigQuery are roadmap-only because no executable cloud client is present. Pub/Sub and official ADK are not claimed beyond local adapters. Short-lived HS256 JWT role tokens are active; OAuth2/OIDC and Cloud Run service IAM require deployment credentials.
+
 ## 1. Document Control
 
 | Field | Details |

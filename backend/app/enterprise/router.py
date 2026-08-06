@@ -14,7 +14,7 @@ from .runtime import event_bus, integration_health, persist_a2a, reason_with_gem
 
 router = APIRouter(prefix="/api/v1/platform", tags=["Google-native platform"])
 Db = Annotated[Session, Depends(get_db)]
-TOOLS = {"get_telemetry", "get_latest_metrics", "get_service_topology", "get_slo_config", "get_incident_history",
+TOOLS = {"get_telemetry", "get_latest_metrics", "get_service_topology", "get_slo_configuration", "get_incident_history",
     "get_evidence", "create_twin_manifest", "run_scenario", "get_scenario_result", "get_tournament_results",
     "get_gate_results", "calculate_business_impact", "export_evidence_package"}
 
@@ -82,7 +82,7 @@ def call_tool(tool_name: str, request: ToolCall, db: Db, authorization: Annotate
         "calculate_business_impact": run.impact_json, "create_twin_manifest": run.twin_json,
         "get_scenario_result": run.scenarios_json, "run_scenario": run.scenarios_json,
         "get_latest_metrics": run.forecast_json, "get_telemetry": run.forecast_json,
-        "get_service_topology": {"services": ["payment", "redis"]}, "get_slo_config": {"p95_ms": 500},
+        "get_service_topology": {"services": ["payment", "redis"]}, "get_slo_configuration": {"p95_ms": 500},
         "get_incident_history": [], "export_evidence_package": {"available": run.state == "DECIDED"}}
     return {"tool": tool_name, "result": values[tool_name], "correlation_id": request.correlation_id,
         "production_action": "NOT_EXECUTED", "executed_at": utcnow().isoformat()}

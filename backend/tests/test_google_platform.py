@@ -1,4 +1,6 @@
 from datetime import timedelta
+from pathlib import Path
+import yaml
 
 from backend.app.enterprise.contracts import A2AMessage, EventEnvelope, EvidenceReasoningOutput, utcnow
 from backend.app.models import A2AMessageRecord, IntegrationInvocation
@@ -39,6 +41,17 @@ def test_agent_execution_uses_traced_a2a_delegation(client,db):
     messages=db.query(A2AMessageRecord).filter_by(workflow_id=run["id"],task_id=db.query(A2AMessageRecord).filter_by(workflow_id=run["id"],receiver="prediction-agent").order_by(A2AMessageRecord.id.desc()).first().task_id).all()
     assert {x.status for x in messages}=={"delegated","completed"}
     assert len({x.trace_id for x in messages})==1
+
+def test_adk_agent_registry_and_runtime_boundary():
+    from backend.app.adk import ADK_AVAILABLE,AGENT_DEFINITIONS
+    assert len(AGENT_DEFINITIONS)==10
+    assert all(x.tools and x.allowed_states and x.timeout_seconds for x in AGENT_DEFINITIONS.values())
+    assert ADK_AVAILABLE is False  # exact tested environment; do not claim official runtime
+
+def test_prompt_assets_have_complete_crispe_contracts():
+    required={"prompt_id","version","capacity_and_role","request","insight_and_context","evidence_inputs","scope_and_constraints","personality_and_tone","refusal_conditions","expected_output","fallback_behavior","evaluation_examples"}
+    for path in (Path("prompts/gemini/core-evidence-reasoning-v1.yaml"),Path("prompts/gemma/policy-review-v1.yaml")):
+        assert required <= yaml.safe_load(path.read_text(encoding="utf-8")).keys()
 
 def test_mcp_tools_are_authenticated_read_only_and_backend_driven(client):
     run=ready_run(client); tools=client.get("/api/v1/platform/mcp/tools").json()
@@ -94,3 +107,7 @@ def test_rate_limit_returns_429(client,monkeypatch):
     blocked=client.get("/health")
     assert blocked.status_code==429 and blocked.json()["code"]=="RATE_LIMITED"
     reset_rate_limits()
+
+def test_role_verification_token_is_standard_three_segment_jwt(client):
+    token=client.post("/api/v1/auth/verify-role",json={"actor_name":"JWT Auditor","access_code":"0000"}).json()["verification_token"]
+    assert len(token.split("."))==3

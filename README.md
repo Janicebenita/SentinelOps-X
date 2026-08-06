@@ -47,6 +47,7 @@
 | Human decision | `/workflows/:workflowId/approval` |
 | Evidence / audit / export | `/workflows/:workflowId/evidence`, `/audit`, `/export` |
 | Architecture / safety / docs | `/architecture`, `/safety`, `/docs` |
+| Google evidence status | `/google-stack`, `/integrations`, `/observability`, `/security-status`, `/model-evaluation` |
 
 The AI Workforce now contains eleven backend-connected agents: Nexus Orchestrator, Observer, Evidence, Process Discovery, Prediction, Digital Twin, Simulation, Optimization, Verification, Business Impact and Executive. Every card is clickable. Run and rerun actions persist execution status, duration, retry count, evidence and result hashes and append chained audit events. See [AI Workforce](docs/agent-workforce.md) and [Verification Agent](docs/verification-agent.md).
 
@@ -69,9 +70,11 @@ Performance work added route-level lazy loading, a zero-API landing paint, defer
 
 ## Google-native enterprise platform
 
-The working build includes typed persisted A2A messages, an authenticated read-only MCP gateway, idempotent event contracts, Gemini and Gemma advisory boundaries, a supplemental Vertex forecast contract, BigQuery schemas, trace/invocation metadata, and independently packageable Cloud Run services. Live-backend status routes are `/integrations`, `/observability`, `/security-status`, and `/model-evaluation`.
+The working build includes typed persisted A2A messages, an authenticated read-only MCP gateway, idempotent event contracts, Gemini and Gemma advisory boundaries, versioned Google AI Studio prompt assets, trace/invocation metadata, standards-shaped short-lived role JWTs, tested rate limiting, and independently packageable Cloud Run services. Live-backend status routes include `/google-stack`, `/integrations`, `/observability`, `/security-status`, and `/model-evaluation`.
 
 Cloud integrations report their actual runtime state. Without Google credentials, explicit local fallbacks remain active and the UI does not claim a Google service was called. Cloud Run configuration exists, but deployment is not claimed until authenticated smoke tests succeed. See the [integration matrix](docs/integration-status-matrix.md), [Cloud Run plan](docs/cloud-run-deployment-plan.md), and [compliance report](docs/final-compliance-report.md).
+
+Vertex AI and BigQuery remain `ROADMAP_ONLY`; Google Pub/Sub and ADK remain `LOCAL_ADAPTER_ONLY`; OpenTelemetry export remains `ROADMAP_ONLY`. Secret Manager, Artifact Registry, Cloud Logging and Cloud Monitoring appear only in credential-required deployment configuration. See the [judge matrix](docs/judge-compliance-matrix.md) for the evidence behind every status.
 
 Google AI Studio is prompt-development/evaluation tooling only. Antigravity is `DOCUMENTATION_UNAVAILABLE`; no undocumented interface was invented.
 

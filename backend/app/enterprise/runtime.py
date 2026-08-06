@@ -24,6 +24,7 @@ def module_available(name: str) -> bool:
         return False
 
 STATUSES = {
+    "Google AI Studio": "LOCAL_ADAPTER_ONLY",
     "Gemini": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Gemma": "IMPLEMENTED_REQUIRES_CREDENTIALS" if settings.gemma_service_url else "LOCAL_ADAPTER_ONLY",
     "ADK": "LOCAL_ADAPTER_ONLY",
@@ -35,6 +36,8 @@ STATUSES = {
     "Cloud Run": "IMPLEMENTED_REQUIRES_CREDENTIALS",
     "Antigravity": "DOCUMENTATION_UNAVAILABLE",
     "OpenTelemetry": "ROADMAP_ONLY",
+    "OAuth2/JWT": "LOCAL_ADAPTER_ONLY",
+    "Rate limiting": "IMPLEMENTED_AND_VERIFIED",
 }
 
 

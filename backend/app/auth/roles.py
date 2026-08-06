@@ -50,14 +50,18 @@ def verify_access_code(db: Session, actor_name: str, access_code: str) -> tuple[
     now=datetime.now(timezone.utc); expires=now+timedelta(minutes=settings.role_token_expiry_minutes); token_id=secrets.token_hex(16)
     row=RoleVerification(actor_name=actor_name,role=role,verified=True,verified_at=now,expires_at=expires,token_id=token_id,code_fingerprint=_fingerprint(access_code)); db.add(row); db.commit(); db.refresh(row)
     payload={"sub":actor_name,"role":role,"exp":int(expires.timestamp()),"jti":token_id,"verification_id":row.id}
-    body=_b64(json.dumps(payload,separators=(",",":"),sort_keys=True).encode()); signature=_b64(hmac.new(_secret(),body.encode(),hashlib.sha256).digest())
-    return row,f"{body}.{signature}",PERMISSIONS[role]
+    header=_b64(json.dumps({"alg":"HS256","typ":"JWT"},separators=(",",":"),sort_keys=True).encode())
+    body=_b64(json.dumps(payload,separators=(",",":"),sort_keys=True).encode()); signing=f"{header}.{body}"; signature=_b64(hmac.new(_secret(),signing.encode(),hashlib.sha256).digest())
+    return row,f"{signing}.{signature}",PERMISSIONS[role]
 
 
 def verify_token(db: Session, token: str) -> tuple[dict[str, Any], RoleVerification]:
-    try: body,signature=token.split(".",1)
+    try: header,body,signature=token.split(".",2)
     except ValueError as exc: raise AuthError("INVALID_ROLE_TOKEN","Role verification token is invalid.",401) from exc
-    expected=_b64(hmac.new(_secret(),body.encode(),hashlib.sha256).digest())
+    try: header_payload=json.loads(_unb64(header))
+    except (ValueError,json.JSONDecodeError) as exc: raise AuthError("INVALID_ROLE_TOKEN","Role verification token is invalid.",401) from exc
+    if header_payload != {"alg":"HS256","typ":"JWT"}: raise AuthError("INVALID_ROLE_TOKEN","Role verification token is invalid.",401)
+    expected=_b64(hmac.new(_secret(),f"{header}.{body}".encode(),hashlib.sha256).digest())
     if not hmac.compare_digest(signature,expected): raise AuthError("INVALID_ROLE_TOKEN","Role verification token is invalid.",401)
     try: payload=json.loads(_unb64(body))
     except (ValueError,json.JSONDecodeError) as exc: raise AuthError("INVALID_ROLE_TOKEN","Role verification token is invalid.",401) from exc
