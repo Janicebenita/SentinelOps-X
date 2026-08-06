@@ -70,7 +70,7 @@ Commands and results after remediation:
 - Compiled access-code scan: **no matches**.
 - `scripts/zero_trust_probe.py`: agent 200, two A2A messages, one shared A2A trace, audit valid, Gemini fallback explicitly true.
 
-GitHub Actions has no run for `feat/google-native-enterprise-compliance` because the workflow triggers only on `main`. The latest main run, [31036463435](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31036463435), passed for commit `684ff96`, not for this feature branch.
+The first feature-branch run, [31063621385](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31063621385), passed build, tests, lint, typing, Bandit, authorization, Google-platform contracts and the no-production-route check. It then failed before scanning because shallow checkout omitted the parent revision requested by gitleaks; this was a CI configuration failure, not a detected leak. Checkout was corrected to `fetch-depth: 0`; the subsequent exact-commit result must be checked before promotion.
 
 ## Remediations completed
 
@@ -90,7 +90,7 @@ GitHub Actions has no run for `feat/google-native-enterprise-compliance` because
 3. Gemma has no verified model deployment; Gemini has no successful real invocation evidence.
 4. OIDC is not enforced and Cloud Run IAM is untested.
 5. Rate limiting is process-local and unsuitable as the only multi-instance control.
-6. The feature branch has not run GitHub Actions and is not deployed to Render.
+6. The feature branch is not deployed to Render; the first CI run failed due to shallow Git history before dependency, Docker and E2E stages, pending a corrected rerun.
 7. Docker images were not locally built because Docker is unavailable.
 8. The live evidence ZIP was transport-verified but not retained for independent content/hash inspection after its one-time download.
 
