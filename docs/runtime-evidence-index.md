@@ -16,17 +16,17 @@ selected, valid audit chain, and `PRODUCTION ACTION: NOT EXECUTED`.
 | Capability | Local/CI evidence | Cloud evidence | Status |
 |---|---|---|---|
 | Deterministic workflow | GitHub Actions run `31071715878`; backend, frontend and E2E jobs passed | Render smoke evidence documented in the final report | IMPLEMENTED_AND_VERIFIED |
-| Gemini core reasoning | Provider, strict schema, evidence-reference, authority and fallback tests | No authenticated model invocation ID captured | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| Gemma policy review | Private-service contract and deterministic non-override tests | No managed/private model revision URL captured | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| Google AI Studio | Thirteen task-level CRISPE prompts, compiled schema, and contract tests | No AI Studio session/export evidence | IMPLEMENTED_REQUIRES_CREDENTIALS |
+| Gemini core reasoning | Provider, strict schema, evidence-reference, authority and fallback tests | No authenticated model invocation ID captured | IMPLEMENTED |
+| Gemma policy review | Private-service contract and deterministic non-override tests | No managed/private model revision URL captured | IMPLEMENTED |
+| Google AI Studio | Thirteen task-level CRISPE prompts, compiled schema, and contract tests | No AI Studio session/export evidence | IMPLEMENTED |
 | Antigravity | Typed read-only provider/status boundary and deterministic fallback | Official participant docs, SDK, endpoint, and access unavailable | BLOCKED_BY_PARTICIPANT_ACCESS |
 | Google ADK | Registry, session and orchestration adapter tests | Official ADK package/runtime unavailable in validated environment | LOCAL_ADAPTER_ONLY |
 | A2A | Typed, persisted, correlated and trace-propagated handoff tests | No managed A2A service required | IMPLEMENTED_AND_VERIFIED |
 | MCP | Authenticated read-only tool gateway and no-mutation tests | No deployed MCP Cloud Run URL | IMPLEMENTED_AND_VERIFIED |
 | Managed forecast | Deterministic authoritative fallback and supplemental boundary | No Gemini Enterprise Agent Platform invocation | LOCAL_FALLBACK_AVAILABLE |
-| BigQuery | Nine physical partitioned/clustered DDL files plus credentialed provision/write/read tooling | No dataset row/query job ID | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| Pub/Sub | Typed idempotent adapter plus provisioning and publish/consume smoke tooling | No managed publish/consume message ID | IMPLEMENTED_REQUIRES_CREDENTIALS |
-| Cloud Run | Images/manifests and CI container builds | No `run.app` URL, revision, IAM or health evidence | IMPLEMENTED_REQUIRES_CREDENTIALS |
+| BigQuery | Nine physical partitioned/clustered DDL files plus credentialed provision/write/read tooling | No dataset row/query job ID | IMPLEMENTED |
+| Pub/Sub | Typed idempotent adapter plus provisioning and publish/consume smoke tooling | No managed publish/consume message ID | IMPLEMENTED |
+| Cloud Run | Images/manifests and CI container builds | No `run.app` URL, revision, IAM or health evidence | IMPLEMENTED |
 | OpenTelemetry | Local trace IDs propagate through enterprise adapters | No Cloud Trace span ID | LOCAL_ADAPTER_ONLY |
 | JWT/RBAC | Short-lived signed JWT and approval authority tests | Live Render Intern/Senior probes documented | IMPLEMENTED_AND_VERIFIED for demo JWT; OIDC is LOCAL_ADAPTER_ONLY |
 | Audit and Evidence ZIP | Hash-chain and archive validation tests; live Render probe | No Google-managed storage evidence | IMPLEMENTED_AND_VERIFIED |
