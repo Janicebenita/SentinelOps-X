@@ -14,6 +14,12 @@ demo-video/
 voice.wav
 debug.log
 .coverage
+coverage.xml
+coverage.json
+htmlcov/
+frontend/coverage/
+test-results/
+security-reports/
 .mypy_cache/
 .ruff_cache/
 frontend/node_modules/

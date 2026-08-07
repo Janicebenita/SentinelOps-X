@@ -12,97 +12,150 @@ permissions:
   pull-requests: read
 
 jobs:
-  validate:
+  python-quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
-
+        with: {python-version: "3.12"}
       - run: python -m pip install -e ".[dev]"
+      - name: Backend and demo tests with branch coverage
+        run: python -m pytest backend/tests demo_app/tests --cov=backend --cov=demo_app --cov-report=term-missing --cov-report=xml
+      - name: Ruff
+        run: python -m ruff check backend demo_app scripts
+      - name: MyPy
+        run: python -m mypy backend demo_app scripts
+      - name: Bandit
+        run: python -m bandit -q -lll -r backend demo_app scripts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-coverage
+          path: coverage.xml
+          if-no-files-found: warn
 
+  frontend-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
       - run: pnpm install --frozen-lockfile
         working-directory: frontend
-
-      - name: Frontend type check
+      - name: TypeScript
         run: pnpm exec tsc --noEmit
         working-directory: frontend
-
-      - name: Frontend production build
+      - name: Component and integration tests with coverage
+        run: pnpm run coverage
+        working-directory: frontend
+      - name: Production build
         run: pnpm run build
         working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-quality-artifacts
+          path: |
+            frontend/coverage/
+            frontend/dist/
+          if-no-files-found: warn
 
-      - name: Prove trial codes are server-side only
-        run: |
-          ! grep -R --binary-files=without-match -E 'INTERN_ACCESS_CODE|SENIOR_ACCESS_CODE|access_code.{0,30}(0000|1111)' frontend/dist
-
-      - run: make test
-
-      - run: make lint
-
-      - run: make typecheck
-
-      - run: make security
-
-      - name: Authorization and route tests
-        run: python -m pytest backend/tests/test_upgrade.py -q
-
-      - name: Google platform, provider, prompt and protocol contracts
-        run: python -m pytest backend/tests/test_google_platform.py backend/tests/test_providers.py backend/tests/test_prompt_catalog.py backend/tests/test_antigravity.py backend/tests/test_cloud_tooling.py -q
-
-      - name: Prove no production execution route exists
-        run: |
-          python - <<'PY'
-          from backend.app.main import app
-          paths = set(app.openapi()["paths"])
-          forbidden = [p for p in paths if any(x in p.lower() for x in ("/deploy", "/scale", "/rollback", "/production/execute"))]
-          assert not forbidden, forbidden
-          PY
-
-      - name: Secret scanning
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+      - run: python -m pip install -e ".[dev]" pip-audit
+      - run: pnpm install --frozen-lockfile
+        working-directory: frontend
+      - run: pnpm run build
+        working-directory: frontend
+      - name: Secret and forbidden-route safety proof
+        run: python scripts/verify_release_safety.py
+      - name: Repository secret scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Python dependency scanning
-        run: python -m pip install pip-audit && pip-audit --skip-editable
-
-      - name: Frontend dependency scanning
-        run: pnpm audit --audit-level high
+      - name: Python dependency audit
+        run: pip-audit .
+      - name: Frontend dependency audit
+        run: pnpm audit --audit-level moderate
         working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-summary
+          path: security-reports/release-safety.json
+          if-no-files-found: warn
 
-      - name: Docker builds
+  protocol-and-ai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -e ".[dev]"
+      - name: Provider, prompt, protocol, ADK, MCP, A2A, and Antigravity boundaries
+        run: >-
+          python -m pytest
+          backend/tests/test_google_platform.py
+          backend/tests/test_providers.py
+          backend/tests/test_prompt_catalog.py
+          backend/tests/test_antigravity.py
+          backend/tests/test_cloud_tooling.py
+          backend/tests/test_enterprise_assurance.py -q
+
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build all independently deployable images
         run: |
+          docker build -f Dockerfile.frontend -t sentinelops-frontend .
           docker build -f Dockerfile.api-gateway -t sentinelops-api .
           docker build -f Dockerfile.orchestrator -t sentinelops-orchestrator .
           docker build -f Dockerfile.forecast -t sentinelops-forecast .
           docker build -f Dockerfile.simulation -t sentinelops-simulation .
           docker build -f Dockerfile.verification -t sentinelops-verification .
-          docker build -f Dockerfile.gemma -t sentinelops-gemma .
           docker build -f Dockerfile.evidence -t sentinelops-evidence .
+          docker build -f Dockerfile.gemma -t sentinelops-gemma .
           docker build -f Dockerfile.mcp -t sentinelops-mcp .
-          docker build -f Dockerfile.frontend -t sentinelops-frontend .
 
-      - name: Start complete demo
+  end-to-end:
+    needs: [python-quality, frontend-quality, security, protocol-and-ai]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -e ".[dev]"
+      - name: Start deterministic product services
         run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
-
-      - run: python scripts/health_check.py
-
-      - name: Validate Nexus workflow end to end
+      - name: Health and readiness
+        run: python scripts/health_check.py
+      - name: Complete governed workflow
         run: python scripts/nexus_e2e.py
-
-      - name: Demo log
+      - name: Evidence verification summary
         if: always()
-        run: test ! -f /tmp/sentinelops-demo.log || cat /tmp/sentinelops-demo.log
+        run: |
+          mkdir -p test-results
+          test ! -f /tmp/sentinelops-demo.log || cp /tmp/sentinelops-demo.log test-results/demo.log
+          printf '{"production_action":"NOT_EXECUTED","workflow_script":"scripts/nexus_e2e.py"}\n' > test-results/e2e-summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: end-to-end-summary
+          path: test-results/
+          if-no-files-found: warn

@@ -1,0 +1,11 @@
+import {QueryClient} from '@tanstack/react-query';
+
+/** Shared deterministic fixtures model API boundaries, not component internals. */
+export const eligibleCandidate={candidate_id:'optimal',name:'OPTIMAL',action:'Increase Redis capacity and correct cache policy',expected_benefit:'Bounded recovery',cost_estimate_inr:154000,risk_score:9,recovery_minutes:6,reversible:true,assumptions:[],gates:[{gate:'failover_test',mandatory:true,passed:true,details:'Passed',evidence_ids:['ev-gate']}],score_components:{safety:50},score:87.7,eligible:true,verdict:'Eligible'};
+
+export const awaitingHumanRun={id:7,name:'Payment capacity forecast',state:'AWAITING_HUMAN',seed:20260808,inputs_json:{traffic_multiplier:1,redis_capacity:12000,application_replicas:4,dependency_latency_ms:20,failover_state:'primary',business:{}},forecast_json:{model_name:'bounded-linear-saturation',equation:'memory_pct(t) = 72 + 0.6 * minutes',safe_threshold_pct:90,predicted_crossing_minutes:30,predicted_customer_impact_minutes:45,residual_mae:0,error_bound_minutes:3,evidence_ids:['ev-telemetry']},twin_json:{twin_id:'twin-1',manifest_hash:'a'.repeat(64),source_revision:'abc123',random_seed:20260808,network_policy:'disabled',capacity_constraints:{redis_capacity:12000},evidence_references:['ev-config']},scenarios_json:[],tournament_json:{recommended_candidate_id:'optimal',candidates:[eligibleCandidate],weights:{safety:.4},rule:'Eligibility overrides score'},impact_json:{revenue_exposure_inr:27000000,estimated_recovery_minutes:6},recommendation_json:{summary:'Redis is the limiting resource',recommendation:'Recommend OPTIMAL',evidence_ids:['ev-gate']},human_decision_json:{},production_action_executed:false,created_at:'2026-08-05',updated_at:'2026-08-05'};
+
+export const decidedRun={...awaitingHumanRun,state:'DECIDED',human_decision_json:{decision:'approve',actor:'Senior QA'}};
+export const newTestQueryClient=()=>new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});
+export const okJson=(data:unknown)=>({ok:true,status:200,json:async()=>data,blob:async()=>new Blob(['evidence'])}) as Response;
+export const failedJson=(status:number,message:string)=>({ok:false,status,json:async()=>({detail:message})}) as Response;

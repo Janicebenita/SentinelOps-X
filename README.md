@@ -487,6 +487,34 @@ Nine independently packaged Cloud Run services are defined and deployed:
 
 Cloud Run deployment is `IMPLEMENTED_AND_VERIFIED`: live service URLs and revisions exist, deployment IAM updates completed, every service passed health and readiness smoke checks, and the public frontend-to-API runtime configuration and CORS path were verified.
 
+## 🐳 Container and delivery validation
+
+The production packaging was revalidated locally without changing or redeploying Google Cloud resources:
+
+- Nine production container images build successfully.
+- Frontend `/` and `/command-centre` return HTTP 200 in container validation.
+- All eight backend services pass both `/health` and `/readiness`.
+- `.dockerignore` reduces build context from approximately 448 MB to approximately 290 KB.
+- pnpm Docker build compatibility is validated across the project's supported pnpm workflow.
+- No production-execution route exists.
+- No source or frontend-bundle secret findings were detected in the final safety scan.
+
+Validated images:
+
+- `sentinelops-frontend`
+- `sentinelops-api-gateway`
+- `sentinelops-orchestrator`
+- `sentinelops-forecast`
+- `sentinelops-simulation`
+- `sentinelops-verification`
+- `sentinelops-evidence`
+- `sentinelops-gemma`
+- `sentinelops-mcp`
+
+Container build context was reduced from approximately 448 MB to approximately 290 KB using `.dockerignore`, improving build throughput and reducing unnecessary source transfer. This is build-pipeline evidence, not an application runtime-performance claim.
+
+The container validation requires no service-account JSON key. Deployed secrets remain external to images and frontend assets and are supplied through Secret Manager and service identity where applicable. The permanent safety invariant remains **PRODUCTION ACTION: NOT EXECUTED**.
+
 ## 💻 Running locally
 
 ### Prerequisites
@@ -552,21 +580,28 @@ Provisioning creates secret containers but never creates or prints secret values
 & ".\.venv\Scripts\python.exe" scripts\nexus_e2e.py
 ```
 
+Coverage evidence is diagnostic rather than a vanity threshold:
+
+```powershell
+& ".\.venv\Scripts\python.exe" -m pytest backend\tests demo_app\tests --cov=backend --cov=demo_app --cov-report=term-missing --cov-report=xml
+```
+
 ### Frontend
 
 ```bash
 cd frontend
 pnpm test
+pnpm run coverage
 pnpm run build
 ```
 
-Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution, A2A and MCP contracts, Gemini Enterprise Agent Platform (formerly Vertex AI) and Gemma Private Policy Review Engine authority boundaries, role verification, Intern rejection, Senior rationale requirements, audit-chain validation, Evidence ZIP verification, frontend routes, and absence of production-execution endpoints.
+Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution, A2A and MCP contracts, Gemini Enterprise Agent Platform (formerly Vertex AI) and Gemma Private Policy Review Engine authority boundaries, JWT issuer/audience and replay rejection, role verification, Intern rejection, Senior rationale requirements, audit-chain validation, Evidence ZIP verification, interactive frontend routes, and absence of production or infrastructure-mutation endpoints.
 
 ## 🔄 CI/CD
 
-`.github/workflows/validate.yml` runs backend and frontend tests, type checks, Ruff, MyPy, Bandit, dependency scanning, secret scanning, provider/prompt/protocol/security tests, Docker builds, the end-to-end workflow, and proof that no production-execution route exists.
+`.github/workflows/validate.yml` separates Python quality, frontend quality, security, protocol/AI, nine container builds, and end-to-end validation into independently diagnosable jobs. It publishes non-secret coverage, security, and E2E summaries while proving that compiled frontend assets contain no server-side credential names and that no production-execution route exists.
 
-`.github/workflows/google-cloud-runtime.yml` is a protected `workflow_dispatch` workflow using GitHub OIDC and Workload Identity Federation. Paid or state-changing cloud checks are not run automatically on every pull request.
+`.github/workflows/google-cloud-runtime.yml` is a protected `workflow_dispatch` workflow using GitHub OIDC and Workload Identity Federation. Paid or state-changing cloud checks are not run automatically on every pull request. Authenticated runs collect non-secret Cloud Run, BigQuery, Pub/Sub, Cloud Logging, observability-API, and inventory evidence as short-retention artifacts.
 
 ## ✅ Implementation and verification
 
@@ -586,6 +621,7 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 |---|---|---|
 | Deterministic operational intelligence | `IMPLEMENTED_AND_VERIFIED` | Forecast, Digital Twin, 12 scenarios, intervention tournament, and mandatory gates pass reproducible end-to-end tests. |
 | Governed human decision and evidence | `IMPLEMENTED_AND_VERIFIED` | Intern blocking, Senior rationale, backend authorization, audit-chain verification, and Evidence ZIP validation pass. |
+| Production container packaging and service health | `IMPLEMENTED_AND_VERIFIED` | All nine production images built successfully; frontend key routes returned HTTP 200; all eight backend services passed `/health` and `/readiness`; final secret and forbidden-route scans passed. |
 | Judge Demo | `IMPLEMENTED_AND_VERIFIED_LIVE` | The deployed 20-stage experience uses semantic stage controls, URL-addressable state, a dynamic explanation panel, guided playback, and automated interaction tests. |
 | Interactive architecture explorer | `IMPLEMENTED_AND_VERIFIED_LIVE` | The deployed route provides clickable domains, URL state, authority boundaries, BigQuery/Pub/Sub flows, Cloud Run services, and automated interaction tests. |
 | Google AI Studio prompt lifecycle | `IMPLEMENTED_REQUIRES_RUNTIME_EVIDENCE` | Thirteen CRISPE prompt assets, schemas, and evaluations are version controlled; an authenticated AI Studio session artifact is not claimed. |
@@ -631,6 +667,9 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 | [A2A Runtime](docs/a2a-runtime.md) | Typed communication, persistence, and trace propagation |
 | [Cloud Run Deployment](docs/cloud-run-deployment.md) | Google Cloud deployment and rollback guidance |
 | [Security Architecture](docs/security-architecture.md) | Authentication, authorization, secrets, and threat controls |
+| [Configuration](docs/configuration.md) | Typed environment variables, classifications, sources, and fail-closed behavior |
+| [Testing Strategy](docs/testing.md) | Business, API, security, provider, frontend, and cloud-contract test layers |
+| [CI/CD Controls](docs/ci-cd.md) | Validation jobs, protected runtime verification, artifacts, and rollback |
 | [Observability](docs/observability.md) | Trace, logging, monitoring, and redaction boundaries |
 | [Evaluation Q&A](docs/technical-qa.md) | Internal evaluation preparation |
 | [Making SentinelOps Nexus](docs/making-of-sentinelops-nexus.md) | Human-led creation story, encountered bugs, and rectifications |

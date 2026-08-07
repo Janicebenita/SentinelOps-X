@@ -1,0 +1,43 @@
+# Source-control and local environment state
+.git
+.github
+.env
+.env.*
+.venv
+*.egg-info
+
+# Python caches, test output, and local databases
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+coverage.xml
+htmlcov
+*.db
+test-results
+security-reports
+
+# Frontend dependencies and generated artifacts are rebuilt in-container
+frontend/node_modules
+frontend/dist
+frontend/coverage
+frontend/.vite
+*.tsbuildinfo
+.pnpm-store
+
+# Local operational and media artifacts
+data/logs/*.jsonl
+data/metrics/*.jsonl
+data/traces/*.jsonl
+storytelling-output
+demo-video
+.video_tools
+*.log
+
+# Tests are validated before image packaging and are not runtime dependencies
+backend/tests
+demo_app/tests
+frontend/src/**/*.test.ts
+frontend/src/**/*.test.tsx

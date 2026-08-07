@@ -23,6 +23,8 @@ export default function JudgeDemoPage(){
   const rows=workflows.data as NexusRun[]|undefined;
   if(!rows?.length)return undefined;
   const selected=selectedRunId===null?undefined:rows.find(item=>item.id===selectedRunId);
+  // A newly created shell has no evidence to explain. Prefer an explicitly
+  // selected run, then the newest persisted run that has entered the workflow.
   return selected??rows.find(item=>item.state!=='CREATED'||Boolean(item.forecast_json?.predicted_crossing_minutes))??rows[0];
  },[workflows.data,selectedRunId]);
  const telemetry=useQuery({queryKey:['judge-telemetry',run?.id],queryFn:()=>nexusApi.telemetry(run!.id),enabled:Boolean(run),staleTime:15_000,retry:1});

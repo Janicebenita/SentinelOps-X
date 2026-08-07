@@ -43,6 +43,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
       - name: Validate identity, project and billing
         run: |
+          mkdir -p runtime-evidence
           test "$(gcloud config get-value project)" = "$PROJECT_ID"
           test -n "$(gcloud auth list --filter=status:ACTIVE --format='value(account)' | head -n1)"
           test "$(gcloud billing projects describe "$PROJECT_ID" --format='value(billingEnabled)')" = "True"
@@ -63,13 +64,29 @@ jobs:
         run: bash scripts/deploy_cloud_run.sh
       - name: Cloud Run health and readiness smoke
         if: ${{ inputs.deploy || inputs.verify_existing }}
-        run: python scripts/smoke_cloud_run.py
+        run: python scripts/smoke_cloud_run.py | tee runtime-evidence/cloud-run.log
       - name: BigQuery write/read smoke
         if: ${{ inputs.deploy || inputs.verify_existing }}
-        run: python scripts/smoke_bigquery.py
+        run: python scripts/smoke_bigquery.py | tee runtime-evidence/bigquery.log
       - name: Pub/Sub publish/consume smoke
         if: ${{ inputs.deploy || inputs.verify_existing }}
-        run: python scripts/smoke_pubsub.py
+        run: python scripts/smoke_pubsub.py | tee runtime-evidence/pubsub.log
+      - name: Local OpenTelemetry propagation contract
+        run: python scripts/smoke_otel.py | tee runtime-evidence/opentelemetry-local.log
+      - name: Read-only Cloud Logging and observability configuration checks
+        if: ${{ inputs.deploy || inputs.verify_existing }}
+        run: |
+          gcloud logging read 'resource.type="cloud_run_revision"' --project "$PROJECT_ID" --limit 5 --format=json > runtime-evidence/cloud-logging.json
+          gcloud services list --enabled --project "$PROJECT_ID" --filter='name:(monitoring.googleapis.com OR cloudtrace.googleapis.com OR logging.googleapis.com)' --format=json > runtime-evidence/observability-apis.json
+          python -c "import json; assert json.load(open('runtime-evidence/cloud-logging.json', encoding='utf-8')), 'No Cloud Run logs returned'"
       - name: Record non-secret cloud inventory
         if: ${{ inputs.deploy || inputs.verify_existing }}
-        run: bash scripts/verify_google_cloud.sh
+        run: bash scripts/verify_google_cloud.sh | tee runtime-evidence/cloud-inventory.log
+      - name: Upload non-secret runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-cloud-runtime-evidence-${{ github.run_id }}
+          path: runtime-evidence/
+          if-no-files-found: warn
+          retention-days: 14

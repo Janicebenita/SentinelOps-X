@@ -1,7 +1,17 @@
 from pathlib import Path
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
+    """Validated process configuration shared by API and service entry points.
+
+    Defaults are intentionally suitable only for local deterministic execution.
+    Managed environments must inject identity and secret values through their
+    runtime configuration (Cloud Run uses Secret Manager references).
+    """
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     database_url: str = "sqlite:///./data/sentinelops.db"
     llm_provider: str = "mock"
@@ -35,4 +45,19 @@ class Settings(BaseSettings):
     otel_exporter_otlp_endpoint: str = ""
     antigravity_endpoint: str = ""
     antigravity_participant_access: bool = False
+
+    @model_validator(mode="after")
+    def enforce_safety_invariants(self) -> "Settings":
+        # SentinelOps records decisions but deliberately has no production
+        # execution authority. Rejecting this at configuration load prevents a
+        # deployment flag from silently weakening that architectural boundary.
+        if self.production_execution:
+            raise ValueError("PRODUCTION_EXECUTION must remain false")
+        if self.role_token_expiry_minutes <= 0:
+            raise ValueError("ROLE_TOKEN_EXPIRY_MINUTES must be positive")
+        if self.rate_limit_per_minute <= 0 or self.max_request_bytes <= 0:
+            raise ValueError("request safety limits must be positive")
+        return self
+
+
 settings = Settings()

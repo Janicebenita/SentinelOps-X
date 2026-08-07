@@ -10,5 +10,14 @@ export default defineConfig({
       "/health": "http://127.0.0.1:8000",
     },
   },
-  test: { environment: "jsdom" },
+  test: {
+    environment: "jsdom",
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "lcov"],
+      reportsDirectory: "coverage",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**"],
+    },
+  },
 });
