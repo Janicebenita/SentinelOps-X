@@ -29,6 +29,7 @@ def _gcloud(*args: str) -> str:
 def main() -> None:
     project = os.getenv("PROJECT_ID", "sentinelops-nexus-finale")
     region = os.getenv("REGION", "asia-south1")
+    identity_service_account = os.getenv("CI_SERVICE_ACCOUNT", "").strip()
     if project != "sentinelops-nexus-finale" or shutil.which("gcloud") is None:
         raise SystemExit("Expected project and authenticated gcloud CLI are required.")
     evidence: list[dict[str, str]] = []
@@ -37,7 +38,10 @@ def main() -> None:
         revision = _gcloud("run", "services", "describe", service, "--project", project, "--region", region, "--format=value(status.latestReadyRevisionName)")
         headers: dict[str, str] = {}
         if service not in {"sentinelops-frontend", "sentinelops-api-gateway"}:
-            token = _gcloud("auth", "print-identity-token", f"--audiences={url}")
+            token_args = ["auth", "print-identity-token", f"--audiences={url}"]
+            if identity_service_account:
+                token_args.append(f"--impersonate-service-account={identity_service_account}")
+            token = _gcloud(*token_args)
             headers["Authorization"] = f"Bearer {token}"
         if service == "sentinelops-api-gateway":
             seed = urllib.request.Request(f"{url}/api/v1/demo/seed", data=b"{}", headers={"Content-Type": "application/json"}, method="POST")

@@ -24,6 +24,7 @@ jobs:
     env:
       PROJECT_ID: sentinelops-nexus-finale
       REGION: asia-south1
+      CI_SERVICE_ACCOUNT: sentinelops-ci-deployer-sa@sentinelops-nexus-finale.iam.gserviceaccount.com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
