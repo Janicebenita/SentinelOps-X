@@ -53,8 +53,8 @@
 
 | Environment | Status | Purpose |
 |---|---|---|
-| Local | IMPLEMENTED_AND_VERIFIED | Complete deterministic workflow and reproducible validation |
-| Google Cloud Run | IMPLEMENTED_AND_VERIFIED | Primary live deployment; nine services passed health and readiness smoke checks |
+| Local | `IMPLEMENTED_AND_VERIFIED` | Complete deterministic workflow and reproducible validation |
+| Google Cloud Run | `IMPLEMENTED_AND_VERIFIED_LIVE` | Primary live deployment; nine services passed authenticated health and readiness checks |
 
 ## 🚀 Live product
 
@@ -259,7 +259,7 @@ In configured Google Cloud mode, BigQuery is the analytical and historical wareh
 - audit exports; and
 - evidence metadata.
 
-The repository includes nine partitioned and clustered schemas plus credential-gated provisioning and write/read smoke tooling. Its status is `IMPLEMENTED_REQUIRES_CREDENTIALS`; no live BigQuery use is claimed without an authenticated write/read result and row ID.
+The repository includes nine partitioned and clustered schemas. Authenticated GitHub OIDC verification has provisioned the dataset, inserted an audit-evidence row, and read it back with a recorded query job ID. BigQuery remains analytical storage; it never becomes authoritative for workflow state.
 
 ### Pub/Sub eventing
 
@@ -274,7 +274,7 @@ Pub/Sub is the asynchronous event-backbone target for:
 - Workflow Status Events; and
 - BigQuery Export Events.
 
-Typed event envelopes include idempotency, retry, dead-letter, causation, correlation, and trace metadata. Provisioning and publish/consume smoke tooling exist, so the managed integration is `IMPLEMENTED_REQUIRES_CREDENTIALS`. The validated local build uses an idempotent local adapter, and managed publish/consume success is not claimed without an authenticated message ID.
+Typed event envelopes include idempotency, retry, dead-letter, causation, correlation, and trace metadata. Authenticated GitHub OIDC verification has published, received, and acknowledged a uniquely correlated workflow event. The deterministic local adapter remains available for offline operation.
 
 ## ✨ Key features
 
@@ -568,26 +568,49 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 
 `.github/workflows/google-cloud-runtime.yml` is a protected `workflow_dispatch` workflow using GitHub OIDC and Workload Identity Federation. Paid or state-changing cloud checks are not run automatically on every pull request.
 
-## ✅ Implementation status
+## ✅ Implementation and verification
 
-| Component | Status | Evidence boundary |
+| Readiness area | Product outcome |
+|---|---|
+| Operational intelligence | ✅ Deterministic forecast, Digital Twin, 12-scenario replay, tournament, safety gates, and verification pass reproducibly. |
+| Human control | ✅ Intern approval is blocked; a verified Senior Developer and mandatory rationale are required; no production action is executed. |
+| Live Google Cloud platform | ✅ Nine Cloud Run services, Cloud Build images, Artifact Registry, IAM, Secret Manager, BigQuery write/read, and Pub/Sub publish/receive/acknowledge are live-verified. |
+| AI assurance | 🛡️ Gemini and Gemma remain explanation and policy-review boundaries; deterministic policy and backend authorization stay authoritative even when managed-model evidence is unavailable. |
+
+<details>
+<summary><strong>View the detailed evidence-backed component matrix</strong></summary>
+
+> **Evidence rule:** Status labels reflect only capabilities verified at the stated boundary; configuration or source code alone is not treated as managed-runtime proof.
+
+| Component | Current status | Evidence boundary |
 |---|---|---|
-| Deterministic workflow, Digital Twin, 12 scenarios, tournament, and mandatory gates | IMPLEMENTED_AND_VERIFIED | Local tests and reproducible end-to-end workflow |
-| Human approval, Intern block, Senior rationale, audit chain, and Evidence ZIP | IMPLEMENTED_AND_VERIFIED | Backend authorization and export validation tests |
-| Google AI Studio prompt lifecycle | IMPLEMENTED_REQUIRES_CREDENTIALS | Thirteen task-level CRISPE prompts, schema, and evaluation contracts exist; no Studio session evidence |
-| Gemini Enterprise Agent Platform (formerly Vertex AI) | IMPLEMENTED_REQUIRES_CREDENTIALS | Primary reasoning path and fallback exist; no authenticated invocation evidence |
-| Gemma Private Policy Review Engine | IMPLEMENTED_REQUIRES_CREDENTIALS | Policy service and safe fallback exist; no deployed model revision evidence |
-| Google ADK | LOCAL_ADAPTER_ONLY | Agent registry and orchestration adapter tested; official runtime not verified |
-| A2A | IMPLEMENTED_AND_VERIFIED | Typed, persisted, correlated, and traced handoffs |
-| MCP | IMPLEMENTED_AND_VERIFIED | Authenticated 13-tool controlled gateway and no-mutation tests |
-| Managed supplemental forecasting | LOCAL_FALLBACK_AVAILABLE | Deterministic forecast remains authoritative |
-| BigQuery | IMPLEMENTED_REQUIRES_CREDENTIALS | Nine schemas and credential-gated provision/write/read smoke tooling; no live row ID |
-| Pub/Sub | IMPLEMENTED_REQUIRES_CREDENTIALS | Provisioning and publish/consume smoke tooling plus local adapter; no live message ID |
-| Cloud Run, Artifact Registry, Secret Manager, and service IAM | IMPLEMENTED_AND_VERIFIED | Commit-tagged images deployed across nine services; live URLs, revisions, IAM updates, health, readiness, runtime configuration, and CORS verified |
-| OpenTelemetry, Cloud Logging, Cloud Monitoring, and Cloud Trace | LOCAL_ADAPTER_ONLY | Local trace propagation exists; no exported trace evidence |
-| OAuth2/OIDC | LOCAL_ADAPTER_ONLY | Configuration boundary exists; enterprise identity provider not connected |
-| JWT and backend RBAC | IMPLEMENTED_AND_VERIFIED | Short-lived role-token and authorization tests |
-| Antigravity | LOCAL_ADAPTER_ONLY | Typed read-only boundary and CI tests exist; the runtime status truthfully reports `BLOCKED_BY_PARTICIPANT_ACCESS` until official participant access is available |
+| Deterministic operational intelligence | `IMPLEMENTED_AND_VERIFIED` | Forecast, Digital Twin, 12 scenarios, intervention tournament, and mandatory gates pass reproducible end-to-end tests. |
+| Governed human decision and evidence | `IMPLEMENTED_AND_VERIFIED` | Intern blocking, Senior rationale, backend authorization, audit-chain verification, and Evidence ZIP validation pass. |
+| Judge Demo | `IMPLEMENTED_AND_VERIFIED_LIVE` | The deployed 20-stage experience uses semantic stage controls, URL-addressable state, a dynamic explanation panel, guided playback, and automated interaction tests. |
+| Interactive architecture explorer | `IMPLEMENTED_AND_VERIFIED_LIVE` | The deployed route provides clickable domains, URL state, authority boundaries, BigQuery/Pub/Sub flows, Cloud Run services, and automated interaction tests. |
+| Google AI Studio prompt lifecycle | `IMPLEMENTED_REQUIRES_RUNTIME_EVIDENCE` | Thirteen CRISPE prompt assets, schemas, and evaluations are version controlled; an authenticated AI Studio session artifact is not claimed. |
+| Gemini Enterprise Agent Platform (formerly Vertex AI) | `IMPLEMENTED_REQUIRES_RUNTIME_EVIDENCE` | Evidence-grounded reasoning, schema validation, metadata capture, and bounded fallback are implemented; a managed invocation ID is still required for live model verification. |
+| Gemma Private Policy Review Engine | `RUNTIME_EVIDENCE_REQUIRED` | The policy service is deployed and healthy on Cloud Run with a safe advisory fallback; managed Gemma model-invocation evidence is not yet claimed. |
+| Google ADK boundary | `LOCAL_ADAPTER_ONLY` | The tested agent registry and orchestration contract preserve backend authority; the official ADK runtime has not been independently evidenced. |
+| A2A handoffs | `IMPLEMENTED_AND_VERIFIED` | Typed messages are persisted, correlated, traced, retried, and covered by protocol tests. |
+| MCP controlled tools | `IMPLEMENTED_AND_VERIFIED_LIVE` | The authenticated 13-tool gateway is deployed and healthy; schemas, authorization, audit, rate limits, and no-infrastructure-mutation behavior are tested. |
+| Managed supplemental forecasting | `LOCAL_FALLBACK_AVAILABLE` | The supplemental provider boundary is available while the deterministic bounded forecast remains authoritative. |
+| BigQuery infrastructure | `IMPLEMENTED_AND_VERIFIED_LIVE` | Dataset and nine physical analytical tables were provisioned in `sentinelops-nexus-finale`. |
+| BigQuery write/read path | `IMPLEMENTED_AND_VERIFIED_LIVE` | [Authenticated workflow #14](https://github.com/Janicebenita/SentinelOps-X/actions/runs/31140376799) inserted evidence row `smoke-c5c11478-5b8d-43c2-bee5-e3223e000bac` and read it with query job `sentinelops_smoke_85ef5547783b49249e05043d42800030`. |
+| Pub/Sub event path | `IMPLEMENTED_AND_VERIFIED_LIVE` | The same authenticated run published, received, and acknowledged message `20178966799882394` on `sentinelops-workflow-events`. |
+| Cloud Run | `IMPLEMENTED_AND_VERIFIED_LIVE` | Nine services expose live revisions and passed authenticated health and readiness checks in workflow #14. |
+| Artifact Registry and Cloud Build | `IMPLEMENTED_AND_VERIFIED_LIVE` | Commit-SHA container images were built, published, and used by the deployed Cloud Run revisions. |
+| Secret Manager | `IMPLEMENTED_AND_VERIFIED_LIVE` | Enabled secret versions are consumed through Cloud Run secret references; secrets are not embedded in images or frontend assets. |
+| IAM and service accounts | `IMPLEMENTED_AND_VERIFIED_LIVE` | Dedicated service identities, least-privilege bindings, and GitHub Workload Identity Federation are active. |
+| OpenTelemetry instrumentation | `IMPLEMENTED_AND_VERIFIED_LOCAL` | Request, correlation, trace, and AI invocation metadata propagation is covered by local tests. |
+| Cloud Logging | `IMPLEMENTED_AND_VERIFIED_LIVE` | Structured Cloud Run application and revision logs have been retrieved during live deployment validation. |
+| Cloud Monitoring | `IMPLEMENTED_REQUIRES_RUNTIME_EVIDENCE` | Monitoring integration is configured; a captured live metric or dashboard artifact remains required. |
+| Cloud Trace | `IMPLEMENTED_REQUIRES_RUNTIME_EVIDENCE` | Trace propagation is implemented; an exported Google Cloud trace ID remains required. |
+| OAuth2/OIDC boundary | `LOCAL_ADAPTER_ONLY` | OIDC-ready configuration exists; enterprise identity-provider sign-in is not presented as active. |
+| JWT and backend RBAC | `IMPLEMENTED_AND_VERIFIED` | Short-lived token validation, Intern rejection, Senior authorization, and mandatory rationale are tested. |
+| Antigravity boundary | `LOCAL_ADAPTER_ONLY` | A tested read-only contract exists; runtime condition remains `BLOCKED_BY_PARTICIPANT_ACCESS` until an official participant API, SDK, or credential is supplied. |
+
+</details>
 
 ## 📚 Documentation links
 
@@ -614,7 +637,7 @@ Tests cover deterministic forecasts, scenarios, mandatory gates, agent execution
 
 ## ⚠️ Known limitations
 
-- Managed Gemini Enterprise Agent Platform (formerly Vertex AI), Gemma model invocation, BigQuery, Pub/Sub, and exported OpenTelemetry evidence still require their individual authenticated runtime proof; the Cloud Run service deployment itself is verified.
+- Managed Gemini Enterprise Agent Platform (formerly Vertex AI), managed Gemma inference, Cloud Monitoring, and exported Cloud Trace evidence still require their individual authenticated runtime proof. BigQuery write/read, Pub/Sub publish/receive/acknowledge, and Cloud Run health/readiness are verified live by authenticated workflow #14.
 - The official Google ADK runtime was unavailable in the validated environment, so the working orchestration boundary remains a local adapter.
 - Included telemetry is deterministic seeded demonstration data, not a live enterprise feed.
 - The bounded linear forecast is transparent and reproducible, not a calibrated probability.
