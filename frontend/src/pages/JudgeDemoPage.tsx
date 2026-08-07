@@ -4,14 +4,16 @@ import {Activity,Play,ShieldCheck,Sparkles} from 'lucide-react';
 import {nexusApi} from '../api/client';
 import {buildJudgeStages} from '../features/judge-demo/stageAdapter';
 import GuidedControls from '../features/judge-demo/GuidedControls';
+import StageExplanationPanel from '../features/judge-demo/StageExplanationPanel';
 import WorkflowStageRail from '../features/judge-demo/WorkflowStageRail';
-import {STAGE_IDS,type JudgeStageId} from '../features/judge-demo/types';
+import {STAGE_IDS} from '../features/judge-demo/stages';
+import type {JudgeStageId} from '../features/judge-demo/types';
 import {useGuidedPlayback} from '../features/judge-demo/useGuidedPlayback';
 import '../features/judge-demo/judgeDemo.css';
 import type {NexusRun} from '../types';
 
 const initialStage=()=>{const value=new URLSearchParams(location.search).get('stage') as JudgeStageId|null;const index=value?STAGE_IDS.indexOf(value):-1;return index<0?0:index};
-const updateStageUrl=(index:number)=>{const url=new URL(location.href);url.searchParams.set('stage',STAGE_IDS[index]);history.replaceState({},'',`${url.pathname}${url.search}${url.hash}`)};
+const updateStageUrl=(index:number,mode:'push'|'replace')=>{const url=new URL(location.href);url.searchParams.set('stage',STAGE_IDS[index]);history[mode==='push'?'pushState':'replaceState']({},'',`${url.pathname}${url.search}${url.hash}`)};
 
 export default function JudgeDemoPage(){
  const cache=useQueryClient();
@@ -42,7 +44,7 @@ export default function JudgeDemoPage(){
    <header className="jd-hero"><div><small>FIVE-MINUTE INTERACTIVE PRODUCT EXPERIENCE</small><h1>See tomorrow’s bottleneck.<br/><span>Intervene before impact.</span></h1><p>Explore every persisted calculation, AI explanation, deterministic gate, and human-control boundary. Select any stage or play the guided experience.</p><div className="jd-run-actions"><button className="primary" onClick={()=>seed.mutate()} disabled={busy}><Play/>{seed.isPending?'Creating workflow…':'Create deterministic workflow'}</button><button className="primary" onClick={()=>execute.mutate()} disabled={!run||busy}><Activity/>{execute.isPending?'Running 12 scenarios…':'Run backend workflow'}</button></div></div><div className="jd-hero-signal"><Sparkles/><small>LIVE WORKFLOW</small><strong>{run?.state?.replaceAll('_',' ')??'NOT YET STARTED'}</strong><span>Workflow {run?.id??'—'} · Seed {run?.seed??'—'}</span><b>{run?.production_action_executed?'FAILED':'SAFETY BOUNDARY ENFORCED'}</b></div></header>
    {failed&&<div className="jd-alert" role="alert"><b>Backend evidence is currently unavailable.</b><span>The experience explains each retained architecture stage, then labels its evidence state without fabricating success.</span></div>}
    <GuidedControls index={playback.index} total={stages.length} playing={playback.playing} guided={playback.guided} onPrevious={playback.previous} onNext={playback.next} onToggle={playback.toggle} onRestart={playback.restart} onExit={playback.exit}/>
-   <section className="jd-workspace" aria-label="Interactive SentinelOps workflow"><WorkflowStageRail stages={stages} selected={playback.index} onSelect={playback.select}/></section>
+   <section className="jd-workspace" aria-label="Interactive SentinelOps workflow"><WorkflowStageRail stages={stages} selected={playback.index} onSelect={playback.select}/><StageExplanationPanel key={stages[playback.index].id} stage={stages[playback.index]}/></section>
    <section className="jd-google-lifecycle"><div><small>GOOGLE-NATIVE AI LIFECYCLE</small><p><b>Google AI Studio</b><i>→</i><b>Prompt Management</b><i>→</i><b>Prompt Evaluation</b><i>→</i><b>Gemini Runtime</b><i>→</i><b>Gemma Policy Review</b></p></div><div><small>DELIVERY AND RUNTIME</small><p><b>Cloud Build</b><i>→</i><b>Artifact Registry</b><i>→</i><b>Cloud Run</b></p><span>BigQuery · Pub/Sub · Secret Manager · Cloud Logging · Cloud Monitoring · Cloud Trace · IAM / Service Accounts</span></div></section>
    <div className="boundary"><ShieldCheck/> PRODUCTION ACTION: NOT EXECUTED</div>
   </main>

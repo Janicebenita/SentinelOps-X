@@ -1,12 +1,12 @@
 import type {NexusAuditV1,NexusCandidate,NexusEvidenceV1,NexusRun,NexusScenario,NexusTelemetry} from '../../types';
 
-export const STAGE_IDS=['problem','healthy-state','redis-pressure','capacity-crossing','customer-impact','digital-twin','scenario-progress','intervention-tournament','fast-disqualification','gemini-reasoning','gemma-policy-review','mandatory-safety-gates','verification-result','executive-recommendation','human-boundary','intern-rejection','senior-rationale','audit-chain-update','evidence-zip','google-cloud-evidence'] as const;
-export type JudgeStageId=typeof STAGE_IDS[number];
+export type JudgeStageId='problem'|'current-healthy-state'|'rising-redis-pressure'|'safe-capacity-crossing'|'customer-impact-estimate'|'digital-twin'|'scenario-progress'|'intervention-tournament'|'fast-disqualification'|'gemini-reasoning'|'gemma-policy-review'|'mandatory-safety-gates'|'verification-result'|'executive-recommendation'|'human-boundary'|'intern-rejection'|'senior-rationale'|'audit-chain-update'|'evidence-zip'|'google-cloud-evidence';
 export type EvidenceStatus='VERIFIED_LIVE'|'VERIFIED_LOCAL'|'IMPLEMENTED_REQUIRES_CREDENTIALS'|'LOCAL_ADAPTER_ONLY'|'FALLBACK_ACTIVE'|'BLOCKED_BY_PARTICIPANT_ACCESS'|'NOT_YET_EXECUTED'|'FAILED';
-export type StageFact={label:string;value:string;emphasis?:'good'|'warn'|'bad'};
+export type StageFact={label:string;value:string;source:'backend'|'derived'|'fallback';emphasis?:'good'|'warn'|'bad'};
+export type EvidenceReference={label:string;value:string};
 export interface JudgeDemoStage{
  id:JudgeStageId;order:number;title:string;shortDescription:string;metric?:string;purpose:string;whatItDoes:string;whyItMatters:string;
- implemented:string[];missingForLiveOperation:string[];status:EvidenceStatus;liveData:StageFact[];evidenceReferences:string[];hashes:string[];timings:string[];
+ implemented:string[];missingForLiveOperation:string[];status:EvidenceStatus;liveData:StageFact[];evidenceReferences:EvidenceReference[];hashes:string[];timings:string[];
  assumptions:string[];safetyImplications:string[];googleCloudServices:string[];nextStageId?:JudgeStageId;judgeTakeaway:string;backendFieldMap?:Record<string,string>;href?:string;
  scenarios?:NexusScenario[];candidates?:NexusCandidate[];audit?:NexusAuditV1;telemetry?:NexusTelemetry;evidence?:NexusEvidenceV1[];
 }
