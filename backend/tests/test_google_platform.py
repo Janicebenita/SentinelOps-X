@@ -19,6 +19,20 @@ def test_dynamic_integration_status(client):
     assert statuses["Antigravity"]=="DOCUMENTATION_OR_ACCESS_BLOCKED"
     assert all(x["production_action"]=="NOT_EXECUTED" for x in response.json())
 
+def test_cloud_run_status_uses_runtime_environment_evidence(client,monkeypatch):
+    monkeypatch.setenv("K_SERVICE","sentinelops-api-gateway")
+    monkeypatch.setenv("K_REVISION","sentinelops-api-gateway-00005-abc")
+    monkeypatch.setenv("K_CONFIGURATION","sentinelops-api-gateway")
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT","sentinelops-nexus-finale")
+    monkeypatch.setenv("GOOGLE_CLOUD_REGION","asia-south1")
+    item=next(x for x in client.get("/api/v1/platform/integrations").json() if x["integration"]=="Cloud Run")
+    assert item["status"]=="IMPLEMENTED_AND_VERIFIED"
+    assert item["runtime_service"]=="sentinelops-api-gateway"
+    assert item["runtime_revision"]=="sentinelops-api-gateway-00005-abc"
+    assert item["runtime_project"]=="sentinelops-nexus-finale"
+    assert item["runtime_region"]=="asia-south1"
+    assert item["production_action"]=="NOT_EXECUTED"
+
 def test_event_idempotency_and_auth(client):
     run=ready_run(client); event=EventEnvelope(workflow_id=run["id"],correlation_id="test",source_service="test",
         event_type="simulation.completed",actor="qa")

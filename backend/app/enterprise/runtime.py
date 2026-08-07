@@ -146,15 +146,30 @@ def supplemental_forecast(db: Session, run: NexusRun) -> dict[str, Any]:
 
 def integration_health(db: Session) -> list[dict[str, Any]]:
     rows = []
+    cloud_run_runtime = {
+        "service": os.getenv("K_SERVICE"),
+        "revision": os.getenv("K_REVISION"),
+        "configuration": os.getenv("K_CONFIGURATION"),
+        "project": os.getenv("GOOGLE_CLOUD_PROJECT"),
+        "region": os.getenv("GOOGLE_CLOUD_REGION"),
+    }
+    cloud_run_verified = bool(cloud_run_runtime["service"] and cloud_run_runtime["revision"])
     for name, configured_status in STATUSES.items():
         last = db.scalar(select(IntegrationInvocation).where(IntegrationInvocation.integration == name).order_by(IntegrationInvocation.id.desc()))
-        verified = bool(last and last.status == "success" and not last.fallback_used)
+        verified = bool(last and last.status == "success" and not last.fallback_used) or (name == "Cloud Run" and cloud_run_verified)
         status = "IMPLEMENTED_AND_VERIFIED" if verified else configured_status
+        configured_service = {"Gemini": settings.vertex_model, "Gemma": settings.gemma_service_url or "local-policy-adapter",
+            "BigQuery": settings.bigquery_dataset, "Pub/Sub": settings.pubsub_topic,
+            "Cloud Run": cloud_run_runtime["service"] or "cloud-run"}.get(name, name.lower().replace(" ", "-"))
         rows.append({"integration": name, "status": status, "last_health_check": utcnow(),
-            "configured_service": {"Gemini": settings.vertex_model, "Gemma": settings.gemma_service_url or "local-policy-adapter",
-                "BigQuery": settings.bigquery_dataset, "Pub/Sub": settings.pubsub_topic}.get(name, name.lower().replace(" ", "-")),
+            "configured_service": configured_service,
             "last_successful_call": last.created_at if verified and last else None, "fallback_status": "ACTIVE" if last and last.fallback_used else "NOT_INVOKED",
             "trace_id": last.trace_id if last else None, "documentation": f"/docs#{name.lower().replace(' ', '-')}",
+            "runtime_service": cloud_run_runtime["service"] if name == "Cloud Run" else None,
+            "runtime_revision": cloud_run_runtime["revision"] if name == "Cloud Run" else None,
+            "runtime_configuration": cloud_run_runtime["configuration"] if name == "Cloud Run" else None,
+            "runtime_project": cloud_run_runtime["project"] if name == "Cloud Run" else None,
+            "runtime_region": cloud_run_runtime["region"] if name == "Cloud Run" else None,
             "production_action": "NOT_EXECUTED"})
     return rows
 

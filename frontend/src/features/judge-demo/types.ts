@@ -10,5 +10,5 @@ export interface JudgeDemoStage{
  assumptions:string[];safetyImplications:string[];googleCloudServices:string[];nextStageId?:JudgeStageId;judgeTakeaway:string;backendFieldMap?:Record<string,string>;href?:string;
  scenarios?:NexusScenario[];candidates?:NexusCandidate[];audit?:NexusAuditV1;telemetry?:NexusTelemetry;evidence?:NexusEvidenceV1[];
 }
-export type IntegrationHealth={integration:string;status:string;last_health_check:string;configured_service:string;last_successful_call?:string;fallback_status:string;trace_id?:string;documentation:string;production_action:string};
+export type IntegrationHealth={integration:string;status:string;last_health_check:string;configured_service:string;last_successful_call?:string;fallback_status:string;trace_id?:string;documentation:string;production_action:string;runtime_service?:string;runtime_revision?:string;runtime_configuration?:string;runtime_project?:string;runtime_region?:string};
 export type StageAdapterInput={run?:NexusRun;telemetry?:NexusTelemetry[];evidence?:NexusEvidenceV1[];audit?:NexusAuditV1[];verification?:Record<string,unknown>[];integrations?:IntegrationHealth[];a2a?:Record<string,unknown>[];antigravity?:{status:string;official_runtime_invoked:boolean;blocker:string;production_action:string};loading:boolean;failed:boolean};
