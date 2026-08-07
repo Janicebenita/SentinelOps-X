@@ -10,7 +10,7 @@ import uuid
 from datetime import UTC, datetime
 import hashlib
 
-from scripts.provision_bigquery import main as provision_bigquery
+from provision_bigquery import main as provision_bigquery
 
 
 def main() -> None:
