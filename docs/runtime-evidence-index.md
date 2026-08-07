@@ -17,7 +17,7 @@ selected, valid audit chain, and `PRODUCTION ACTION: NOT EXECUTED`.
 |---|---|---|---|
 | Deterministic workflow | GitHub Actions run `31071715878`; backend, frontend and E2E jobs passed | Render smoke evidence documented in the final report | IMPLEMENTED_AND_VERIFIED |
 | Gemini core reasoning | Provider, strict schema, evidence-reference, authority and fallback tests | authenticated model invocation ID captured | IMPLEMENTED |
-| Gemma policy review | Private-service contract and deterministic override tests | managed/private model revision URL captured | IMPLEMENTED |
+| Gemma policy review | Private-service contract and deterministic override tests | no managed/private model revision URL captured | IMPLEMENTED |
 | Google AI Studio | Thirteen task-level CRISPE prompts, compiled schema, and contract tests | AI Studio session/export evidence | IMPLEMENTED |
 | Antigravity | Typed read-only provider/status boundary and deterministic fallback | Official participant docs, SDK, endpoint, and access unavailable | BLOCKED_BY_PARTICIPANT_ACCESS |
 | Google ADK | Registry, session and orchestration adapter tests | Official ADK package/runtime unavailable in validated environment | LOCAL_ADAPTER_ONLY |
