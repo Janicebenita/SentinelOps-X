@@ -37,7 +37,7 @@ def main() -> None:
     row = json.dumps({"event_id": event_id, "workflow_id": "cloud-smoke", "event_type": "cloud.smoke",
         "event_timestamp": now, "actor_type": "SYSTEM", "actor_id": "credentialed-smoke-test",
         "trace_id": uuid.uuid4().hex, "correlation_id": uuid.uuid4().hex,
-        "payload_json": payload, "payload_hash": payload_hash, "previous_hash": "GENESIS",
+        "payload_json": json.dumps(payload, sort_keys=True), "payload_hash": payload_hash, "previous_hash": "GENESIS",
         "chain_position": 1, "signature": None, "signer_key_id": None, "evidence_ids": [event_id],
         "schema_version": "1", "ingestion_timestamp": now})
     with tempfile.TemporaryDirectory(prefix="sentinelops-bq-smoke-") as temporary_directory:
