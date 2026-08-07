@@ -331,20 +331,68 @@ Frontend routes include:
 | Architecture, safety, and docs | [Architecture](https://sentinelops-frontend-398391487181.asia-south1.run.app/architecture) · [Safety](https://sentinelops-frontend-398391487181.asia-south1.run.app/safety) · [Docs](https://sentinelops-frontend-398391487181.asia-south1.run.app/docs) |
 | Google-stack evidence | [Google stack](https://sentinelops-frontend-398391487181.asia-south1.run.app/google-stack) · [Integrations](https://sentinelops-frontend-398391487181.asia-south1.run.app/integrations) · [Observability](https://sentinelops-frontend-398391487181.asia-south1.run.app/observability) · [Security](https://sentinelops-frontend-398391487181.asia-south1.run.app/security-status) · [Model evaluation](https://sentinelops-frontend-398391487181.asia-south1.run.app/model-evaluation) |
 
-## 🗂️ Repository structure
+## 📂 Enterprise solution repository
+
+SentinelOps Nexus is organized as a production-style, Google Cloud–native enterprise platform. Each repository module has a clearly defined architectural responsibility across product experience, deterministic intelligence, AI orchestration, cloud delivery, security, observability, and evidence governance.
+
+| Repository module | Enterprise responsibility |
+|---|---|
+| `frontend/` | React and TypeScript product experience for the Command Centre, Judge Demo, AI Workforce, approval workflow, architecture explorer, and evidence views. |
+| `backend/` | FastAPI application implementing governed workflows, deterministic intelligence, Digital Twin logic, safety gates, verification, RBAC, JWT handling, audit-chain logic, evidence generation, provider boundaries, and typed APIs. |
+| `services/` | Independently packageable service entry points for orchestration, forecasting, simulation, verification, evidence, Gemma policy review, MCP tooling, and bounded integration adapters. |
+| `prompts/` | Version-controlled Gemini and Gemma prompts, CRISPE instructions, output schemas, and evaluation cases supporting the Google AI Studio prompt lifecycle. |
+| `deploy/cloud-run/` | Cloud Run service descriptors, frontend routing configuration, and runtime service configuration. |
+| `scripts/` | Provisioning, validation, deployment, smoke testing, cloud verification, evidence collection, and operational automation. |
+| `sql/` | Partitioned and clustered BigQuery schemas for telemetry, workflows, agent execution, scenarios, verification, model invocations, business impact, audit exports, and forecast evaluation. |
+| `docs/` | PRD, architecture, safety, security, deployment, evaluation, observability, runtime-evidence, compliance, and governance documentation. |
+| `.github/workflows/` | CI workflows for comprehensive validation and controlled Google Cloud runtime verification. |
+| `Dockerfile.*` | Service-specific container definitions for reproducible Cloud Run packaging. |
+| `cloudbuild.yaml` | Commit-SHA container build configuration for Cloud Build and Artifact Registry publishing. |
+
+### 🏗️ Repository architecture at a glance
 
 ```text
-backend/                 FastAPI API, workflows, agents, security, audit, providers
-frontend/                React and TypeScript application
-services/                Independently packageable service entry points
-prompts/                 Versioned Gemini/Gemma prompts and evaluations
-deploy/cloud-run/        Cloud Run service manifests and frontend routing
-scripts/                 Validation, provisioning, deployment, and smoke tooling
-sql/                     BigQuery analytical schemas
-docs/                    PRD, architecture, safety, evaluation, and deployment evidence
-.github/workflows/       Local validation and controlled Google Cloud workflows
-Dockerfile.*             Service-specific container definitions
-cloudbuild.yaml          Commit-SHA image build configuration
+SentinelOps Nexus
+│
+├── Product experience
+│   ├── Command Centre
+│   ├── Judge Demo
+│   ├── AI Workforce
+│   └── Approval and evidence workspaces
+│
+├── Backend intelligence
+│   ├── Workflow engine
+│   ├── Redis forecast
+│   ├── Digital Twin
+│   ├── Simulation and optimization
+│   ├── Mandatory Safety Gates
+│   └── Verification and audit
+│
+├── Cloud services
+│   ├── API gateway
+│   ├── Orchestrator
+│   ├── Forecast service
+│   ├── Simulation service
+│   ├── Verification service
+│   ├── Evidence service
+│   ├── Gemma service
+│   └── MCP server
+│
+├── Google Cloud delivery
+│   ├── Cloud Build
+│   ├── Artifact Registry
+│   ├── Cloud Run
+│   ├── Secret Manager
+│   ├── IAM and service accounts
+│   ├── BigQuery
+│   └── Pub/Sub
+│
+└── Evidence and governance
+    ├── SHA-256 audit chain
+    ├── Evidence ZIP
+    ├── Prompt library
+    ├── Runtime evidence
+    └── PRD and architecture documentation
 ```
 
 ## ⚙️ Technology stack
