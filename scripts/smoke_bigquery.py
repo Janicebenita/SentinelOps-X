@@ -6,9 +6,11 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 import uuid
 from datetime import UTC, datetime
 import hashlib
+from pathlib import Path
 
 from provision_bigquery import main as provision_bigquery
 
@@ -38,12 +40,14 @@ def main() -> None:
         "payload_json": payload, "payload_hash": payload_hash, "previous_hash": "GENESIS",
         "chain_position": 1, "signature": None, "signer_key_id": None, "evidence_ids": [event_id],
         "schema_version": "1", "ingestion_timestamp": now})
-    subprocess.run(  # noqa: S603
-        ["bq", f"--project_id={project}", "insert", f"{dataset}.audit_event_exports", "-"],
-        input=row + "\n",
-        text=True,
-        check=True,
-    )
+    with tempfile.TemporaryDirectory(prefix="sentinelops-bq-smoke-") as temporary_directory:
+        row_file = Path(temporary_directory) / "audit-event.ndjson"
+        row_file.write_text(row + "\n", encoding="utf-8")
+        subprocess.run(  # noqa: S603
+            ["bq", f"--project_id={project}", "insert", f"{dataset}.audit_event_exports", str(row_file)],
+            text=True,
+            check=True,
+        )
     query = f"SELECT event_id, payload_hash, previous_hash FROM `{project}.{dataset}.audit_event_exports` WHERE event_id='{event_id}' AND payload_hash='{payload_hash}' AND previous_hash='GENESIS' LIMIT 1"
     result = subprocess.run(  # noqa: S603
         ["bq", f"--project_id={project}", "query", "--use_legacy_sql=false", "--format=csv", f"--job_id={query_job_id}", query],
