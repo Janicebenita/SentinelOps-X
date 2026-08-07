@@ -1,4 +1,4 @@
-import {useEffect,useMemo} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
 import {Activity,Play,ShieldCheck,Sparkles} from 'lucide-react';
 import {nexusApi} from '../api/client';
@@ -17,8 +17,14 @@ const updateStageUrl=(index:number,mode:'push'|'replace')=>{const url=new URL(lo
 
 export default function JudgeDemoPage(){
  const cache=useQueryClient();
+ const [selectedRunId,setSelectedRunId]=useState<number|null>(null);
  const workflows=useQuery({queryKey:['judge-workflows'],queryFn:nexusApi.workflows,staleTime:15_000,retry:1});
- const run=workflows.data?.at(-1) as NexusRun|undefined;
+ const run=useMemo(()=>{
+  const rows=workflows.data as NexusRun[]|undefined;
+  if(!rows?.length)return undefined;
+  const selected=selectedRunId===null?undefined:rows.find(item=>item.id===selectedRunId);
+  return selected??rows.find(item=>item.state!=='CREATED'||Boolean(item.forecast_json?.predicted_crossing_minutes))??rows[0];
+ },[workflows.data,selectedRunId]);
  const telemetry=useQuery({queryKey:['judge-telemetry',run?.id],queryFn:()=>nexusApi.telemetry(run!.id),enabled:Boolean(run),staleTime:15_000,retry:1});
  const evidence=useQuery({queryKey:['judge-evidence',run?.id],queryFn:()=>nexusApi.evidence(run!.id),enabled:Boolean(run),staleTime:15_000,retry:1});
  const audit=useQuery({queryKey:['judge-audit',run?.id],queryFn:()=>nexusApi.timeline(run!.id),enabled:Boolean(run),staleTime:15_000,retry:1});
@@ -31,8 +37,8 @@ export default function JudgeDemoPage(){
  const stages=useMemo(()=>buildJudgeStages({run,telemetry:telemetry.data,evidence:evidence.data,audit:audit.data,verification:verification.data,integrations:integrations.data,a2a:a2a.data,antigravity:antigravity.data,loading,failed}),[run,telemetry.data,evidence.data,audit.data,verification.data,integrations.data,a2a.data,antigravity.data,loading,failed]);
  const playback=useGuidedPlayback(stages.length,updateStageUrl,initialStage());
  const refresh=()=>Promise.all(['judge-workflows','judge-telemetry','judge-evidence','judge-audit','judge-verification','judge-integrations','judge-a2a'].map(key=>cache.invalidateQueries({queryKey:[key]})));
- const seed=useMutation({mutationFn:nexusApi.seed,onSuccess:async()=>{await refresh();playback.select(0,false)}});
- const execute=useMutation({mutationFn:()=>nexusApi.runAll(run!.id),onSuccess:async()=>{await refresh();playback.restart()}});
+ const seed=useMutation({mutationFn:nexusApi.seed,onSuccess:async created=>{setSelectedRunId(created.id);await refresh();playback.select(0,false)}});
+ const execute=useMutation({mutationFn:()=>nexusApi.runAll(run!.id),onSuccess:async executed=>{setSelectedRunId(executed.id);await refresh();playback.restart()}});
  const busy=seed.isPending||execute.isPending;
 
  useEffect(()=>{const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;const panel=document.getElementById('judge-stage-panel');if(panel&&typeof panel.scrollIntoView==='function')panel.scrollIntoView({behavior:reduced?'auto':'smooth',block:'nearest'})},[playback.index]);
