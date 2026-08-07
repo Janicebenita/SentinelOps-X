@@ -8,6 +8,11 @@ on:
         required: true
         default: false
         type: boolean
+      verify_existing:
+        description: Verify the existing deployment without rebuilding or redeploying
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -57,14 +62,14 @@ jobs:
           REVISION: ${{ github.sha }}
         run: bash scripts/deploy_cloud_run.sh
       - name: Cloud Run health and readiness smoke
-        if: ${{ inputs.deploy }}
+        if: ${{ inputs.deploy || inputs.verify_existing }}
         run: python scripts/smoke_cloud_run.py
       - name: BigQuery write/read smoke
-        if: ${{ inputs.deploy }}
+        if: ${{ inputs.deploy || inputs.verify_existing }}
         run: python scripts/smoke_bigquery.py
       - name: Pub/Sub publish/consume smoke
-        if: ${{ inputs.deploy }}
+        if: ${{ inputs.deploy || inputs.verify_existing }}
         run: python scripts/smoke_pubsub.py
       - name: Record non-secret cloud inventory
-        if: ${{ inputs.deploy }}
+        if: ${{ inputs.deploy || inputs.verify_existing }}
         run: bash scripts/verify_google_cloud.sh
