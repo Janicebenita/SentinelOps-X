@@ -151,3 +151,36 @@ def test_cloudwatch_parallel_series_export_is_pivoted_and_calculated(client):
     assert len(run["inputs_json"]["telemetry_points"]) == 4
     assert len(run["scenarios_json"]) == 12
     assert run["inputs_json"]["source_label"] == "manual-upload/cloudwatch-metric-data.json"
+
+
+def test_distinct_uploaded_telemetry_drives_distinct_scenarios_and_tournaments(client):
+    low = telemetry_document()
+    high = telemetry_document()
+    for index, point in enumerate(low["telemetry"]):
+        point["redis_saturation"] = 35 + index * 4
+    for index, point in enumerate(high["telemetry"]):
+        point["redis_saturation"] = 62 + index * 8
+
+    runs = []
+    for filename, document in (("low-pressure.json", low), ("high-pressure.json", high)):
+        response = client.post("/api/v1/workflows/import-json", json={
+            "filename": filename,
+            "content": json.dumps(document),
+        })
+        assert response.status_code == 200, response.text
+        runs.append(response.json())
+
+    def baseline_pressure(run):
+        baseline = next(item for item in run["scenarios_json"] if item["scenario_id"] == "baseline-growth")
+        assert baseline["inputs"]["analysis_basis"] == "latest uploaded telemetry saturation"
+        return baseline["inputs"]["calculated_saturation_pct"]
+
+    def tournament_signature(run):
+        return [
+            (item["score"], item["risk_score"], item["recovery_minutes"], item["cost_estimate_inr"])
+            for item in run["tournament_json"]["candidates"]
+        ]
+
+    assert baseline_pressure(runs[0]) < baseline_pressure(runs[1])
+    assert tournament_signature(runs[0]) != tournament_signature(runs[1])
+    assert runs[0]["recommendation_json"] != runs[1]["recommendation_json"]

@@ -597,6 +597,9 @@ def build_twin(db: Session, run: NexusRun) -> TwinManifestContract:
 
 def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
     require_state(run,"TWIN_READY"); controls=TwinControls.model_validate(run.inputs_json); twin=TwinManifestContract.model_validate(run.twin_json)
+    observed_points=telemetry(controls)
+    observed_saturation=max(observed_points,key=lambda point:point.minute).redis_memory_pct if controls.telemetry_points else None
+    base_effective_capacity=controls.redis_capacity*max(.65,controls.application_replicas/4)
     # Every scenario is evaluated from the submitted controls.  The modifiers are
     # explicit so the lab remains explainable while still behaving like a model,
     # rather than a collection of pre-recorded outcomes.
@@ -621,7 +624,14 @@ def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
         scenario_replicas=int(modifier.get("application_replicas",controls.application_replicas))
         dependency_latency=(controls.dependency_latency_ms+int(modifier.get("additional_latency_ms",0)))*float(modifier.get("latency_factor",1))
         effective_capacity=scenario_capacity*max(.65,scenario_replicas/4)
-        saturation=min(180,98*12000/max(1,effective_capacity)*scenario_traffic)
+        if observed_saturation is None:
+            saturation=min(180,98*12000/max(1,effective_capacity)*scenario_traffic)
+            analysis_basis="bounded control model"
+        else:
+            relative_traffic=scenario_traffic/max(.01,controls.traffic_multiplier)
+            relative_capacity=base_effective_capacity/max(1,effective_capacity)
+            saturation=min(180,max(0,observed_saturation*relative_traffic*relative_capacity))
+            analysis_basis="latest uploaded telemetry saturation"
         if modifier.get("redis_available") is False:
             p95,error,recovery=5000.0,100.0,max(8,round(24/scenario_replicas+12))
         else:
@@ -632,7 +642,7 @@ def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
             if modifier.get("failover")=="replica": p95=round(p95*1.18,1); recovery+=3
         status: Literal["pass","degraded","fail"] = "fail" if error>=5 or p95>=900 else ("degraded" if error>=1 or p95>=500 else "pass")
         avoided=status=="pass" and sid in {"replica-failover","increased-app-replicas","rollback-intervention","rate-limiting-intervention","cache-policy-correction"}
-        inputs={"base_controls":controls.model_dump(mode="json",exclude={"business"}),"scenario_modifier":modifier,"calculated_saturation_pct":round(saturation,1)}
+        inputs={"base_controls":controls.model_dump(mode="json",exclude={"business"}),"scenario_modifier":modifier,"calculated_saturation_pct":round(saturation,1),"analysis_basis":analysis_basis}
         body={"scenario_id":sid,"seed":twin.random_seed,"inputs":inputs,"status":status,"p95_ms":p95,"error_rate_pct":error,"recovery_minutes":recovery}
         results.append(ScenarioResultContract(scenario_id=sid,name=sid.replace("-"," ").title(),inputs=inputs,status=status,bottleneck_avoided=avoided,p95_ms=p95,error_rate_pct=error,recovery_minutes=recovery,result_hash=digest(body),evidence_ids=["ev-telemetry","ev-config","ev-topology"]))
     run.scenarios_json=[x.model_dump(mode="json") for x in results]; db.commit(); transition(db,run,"SIMULATED","simulation-agent",{"scenario_count":len(results),"result_hashes":[x.result_hash for x in results]}); return results

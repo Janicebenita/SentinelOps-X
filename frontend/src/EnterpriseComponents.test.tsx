@@ -44,4 +44,26 @@ describe('approval and evidence integration boundaries',()=>{
   expect(await screen.findByText(/recorded human decision enables/)).toBeTruthy();
   await waitFor(()=>expect((screen.getByRole('button',{name:/Export evidence ZIP/}) as HTMLButtonElement).disabled).toBe(false));
  });
+
+ it('separates a recorded approval from intentional non-execution',async()=>{
+  history.replaceState({},'','/workflows/7/approval');
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+   const url=String(input);
+   if(url.endsWith('/api/v1/workflows'))return okJson([awaitingHumanRun]);
+   if(url.endsWith('/api/v1/auth/verify-role'))return okJson({verified:true,role:'SENIOR_DEVELOPER',permissions:['approve'],expires_at:'2026-08-05',verification_token:'signed-token'});
+   if(url.endsWith('/approve'))return okJson({decision:'approve',production_action:'NOT EXECUTED'});
+   return okJson({});
+  }));
+  mount(<ApprovalPage/>);
+  fireEvent.change(screen.getByLabelText('Actor name'),{target:{value:'Senior QA'}});
+  fireEvent.change(screen.getByLabelText('Trial access code'),{target:{value:'1111'}});
+  fireEvent.click(screen.getByRole('button',{name:'Verify role'}));
+  await screen.findByText(/VERIFIED ROLE: SENIOR DEVELOPER/);
+  fireEvent.change(screen.getByLabelText('Mandatory rationale'),{target:{value:'Reviewed every mandatory gate.'}});
+  fireEvent.click(screen.getByRole('button',{name:'Approve Recommendation'}));
+  expect(await screen.findByText('APPROVED — HUMAN DECISION RECORDED')).toBeTruthy();
+  expect(screen.getByText(/Production systems were intentionally not changed/)).toBeTruthy();
+  expect(screen.getByText(/DECISION STATUS: RECORDED/)).toBeTruthy();
+  expect(screen.getByText('PRODUCTION ACTION: NOT EXECUTED')).toBeTruthy();
+ });
 });
