@@ -25,6 +25,9 @@ class TwinControls(StrictModel):
     dependency_latency_ms: int = Field(20, ge=0, le=5000)
     failover_state: Literal["primary", "replica", "unavailable"] = "primary"
     seed: int = 20260808
+    source_label: str = Field("seeded/payment-service", min_length=3, max_length=200)
+    normalization_notes: list[str] = Field(default_factory=list, max_length=50)
+    telemetry_points: list["TelemetryPoint"] = Field(default_factory=list, max_length=1000)
     business: BusinessAssumptions = Field(default_factory=lambda: BusinessAssumptions(
         conversion_rate=0.034,
         average_order_value_inr=3200,
@@ -37,7 +40,12 @@ class TwinControls(StrictModel):
 class EvidenceUpload(StrictModel):
     filename: str = Field(min_length=1, max_length=160)
     category: Literal["telemetry", "configuration", "topology", "slo", "other"] = "configuration"
-    content: str = Field(min_length=2, max_length=262144)
+    content: str = Field(min_length=2, max_length=10485760)
+
+
+class OperationalJsonImport(StrictModel):
+    filename: str = Field(min_length=1, max_length=160)
+    content: str = Field(min_length=2, max_length=10485760)
 
 
 class TelemetryPoint(StrictModel):
@@ -56,6 +64,9 @@ class TelemetryPoint(StrictModel):
     order_conversion_rate: float
     average_order_value_inr: float
     reactive_alert: bool
+
+
+TwinControls.model_rebuild()
 
 
 class EvidenceRecord(StrictModel):
@@ -208,4 +219,5 @@ class RunCreate(StrictModel):
         dependency_latency_ms=20,
         failover_state="primary",
         seed=20260808,
+        source_label="seeded/payment-service",
     ))

@@ -39,7 +39,7 @@ done
 
 gcloud run deploy sentinelops-api-gateway --project "$PROJECT_ID" --region "$REGION" --platform managed \
   --image "${REGISTRY}/api:${API_REVISION:-$REVISION}" --service-account "$API_SA" --allow-unauthenticated \
-  --port 8080 --cpu 1 --memory 512Mi --concurrency 40 --timeout 60 --min-instances 0 --max-instances 5 \
+  --port 8080 --cpu 1 --memory 512Mi --concurrency 40 --timeout 60 --min-instances 0 --max-instances 1 \
   --set-env-vars PRODUCTION_EXECUTION=false,ENVIRONMENT=production,DEMO_APP_URL=,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_REGION=${REGION},BIGQUERY_DATASET=sentinelops_nexus,PUBSUB_TOPIC=sentinelops-workflow-events \
   --set-secrets INTEGRATION_TOKEN=sentinelops-integration-token:latest,ROLE_TOKEN_SECRET=sentinelops-role-token-secret:latest,INTERN_ACCESS_CODE=sentinelops-intern-access-code:latest,SENIOR_ACCESS_CODE=sentinelops-senior-access-code:latest
 

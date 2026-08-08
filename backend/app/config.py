@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     integration_token: str = "development-integration-token"
     rate_limit_per_minute: int = 120
     max_request_bytes: int = 262144
+    operational_import_max_bytes: int = 10485760
     otel_exporter_otlp_endpoint: str = ""
     antigravity_endpoint: str = ""
     antigravity_participant_access: bool = False
@@ -55,7 +56,11 @@ class Settings(BaseSettings):
             raise ValueError("PRODUCTION_EXECUTION must remain false")
         if self.role_token_expiry_minutes <= 0:
             raise ValueError("ROLE_TOKEN_EXPIRY_MINUTES must be positive")
-        if self.rate_limit_per_minute <= 0 or self.max_request_bytes <= 0:
+        if (
+            self.rate_limit_per_minute <= 0
+            or self.max_request_bytes <= 0
+            or self.operational_import_max_bytes <= 0
+        ):
             raise ValueError("request safety limits must be positive")
         return self
 

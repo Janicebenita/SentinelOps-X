@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import io
 import json
+import math
+import re
 import subprocess
 import zipfile
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -15,6 +17,7 @@ from sqlalchemy.orm import Session
 from ..models import NexusAuditEvent, NexusEvidence, NexusRun
 from ..schemas.nexus_contracts import (
     AgentEnvelope,
+    BusinessAssumptions,
     BusinessImpactResult,
     EvidenceUpload,
     EvidenceRecord,
@@ -23,6 +26,7 @@ from ..schemas.nexus_contracts import (
     GateResult,
     HumanDecisionInput,
     InterventionCandidate,
+    OperationalJsonImport,
     RunCreate,
     ScenarioResultContract,
     TelemetryPoint,
@@ -103,6 +107,8 @@ def source_revision() -> str:
 
 
 def telemetry(controls: TwinControls) -> list[TelemetryPoint]:
+    if controls.telemetry_points:
+        return sorted(controls.telemetry_points, key=lambda point: point.minute)
     base = [
         ("Yesterday", -1440, 4100, 44), ("Now", 0, 8500, 72),
         ("+15 min", 15, 9800, 81), ("+30 min", 30, 11100, 90), ("+45 min", 45, 12500, 98),
@@ -122,6 +128,420 @@ def telemetry(controls: TwinControls) -> list[TelemetryPoint]:
     return points
 
 
+def _coerce_numeric(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        parsed = float(value)
+    elif isinstance(value, str):
+        try:
+            parsed = float(value.strip())
+        except ValueError:
+            return None
+    else:
+        return None
+    return parsed if math.isfinite(parsed) else None
+
+
+def _key(value: str) -> str:
+    value = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", value)
+    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
+
+
+def _flatten(row: dict[str, Any], prefix: str = "", depth: int = 0) -> dict[str, Any]:
+    flattened: dict[str, Any] = {}
+    for raw_key, value in row.items():
+        name = _key(f"{prefix}_{raw_key}" if prefix else str(raw_key))
+        if isinstance(value, dict) and depth < 4:
+            flattened.update(_flatten(value, name, depth + 1))
+        elif not isinstance(value, (dict, list)):
+            flattened[name] = value
+    return flattened
+
+
+def _lookup(row: dict[str, Any], aliases: tuple[str, ...]) -> Any:
+    flat = _flatten(row)
+    normalized = tuple(_key(alias) for alias in aliases)
+    for alias in normalized:
+        if alias in flat:
+            return flat[alias]
+    for key, value in flat.items():
+        if any(key.endswith(f"_{alias}") for alias in normalized):
+            return value
+    return None
+
+
+def _lookup_exact(row: dict[str, Any], aliases: tuple[str, ...]) -> Any:
+    flat = _flatten(row)
+    for alias in (_key(value) for value in aliases):
+        if alias in flat:
+            return flat[alias]
+    return None
+
+
+def _optional_numeric(row: dict[str, Any], aliases: tuple[str, ...]) -> float | None:
+    return _coerce_numeric(_lookup(row, aliases))
+
+
+TIMESTAMP_ALIASES = (
+    "timestamp", "observed_at", "time", "datetime", "date", "event_time", "start_time",
+)
+REQUEST_RATE_ALIASES = (
+    "request_rate", "requests_per_minute", "rpm", "throughput", "requests_per_min",
+    "transactions_per_minute", "operations_per_minute", "http_requests_per_minute",
+    "request_count", "requests", "invocations", "operation_count",
+)
+REQUESTS_PER_SECOND_ALIASES = (
+    "requests_per_second", "rps", "qps", "queries_per_second", "transactions_per_second",
+)
+P50_ALIASES = ("p50_ms", "latency_p50_ms", "response_time_p50_ms", "median_latency_ms")
+P95_ALIASES = (
+    "p95_ms", "latency_p95_ms", "response_time_p95_ms", "checkout_p95_ms",
+    "duration_p95_ms", "latency_ms", "response_time_ms", "duration_ms",
+    "target_response_time", "average_latency_ms", "average_response_time_ms",
+)
+P99_ALIASES = ("p99_ms", "latency_p99_ms", "response_time_p99_ms", "duration_p99_ms")
+MEMORY_ALIASES = (
+    "redis_memory_pct", "redis_saturation", "redis_memory_usage_pct", "used_memory_pct",
+    "memory_utilization", "memory_utilization_pct", "memory_usage_pct", "memory_percent",
+    "resource_utilization_pct", "saturation_pct", "utilization_pct",
+)
+CPU_ALIASES = (
+    "redis_cpu_pct", "redis_cpu_usage_pct", "cpu_utilization", "cpu_utilization_pct",
+    "cpu_usage_pct", "cpu_percent", "processor_utilization_pct", "cpuutilization",
+)
+CACHE_ALIASES = ("cache_hit_rate_pct", "cache_hit_pct", "cache_hit_ratio", "cache_hit_rate")
+QUEUE_ALIASES = (
+    "queue_depth", "pending_requests", "backlog", "messages_visible", "queue_size",
+    "pending_tasks", "active_connections",
+)
+REPLICA_ALIASES = (
+    "application_replicas", "replicas", "instance_count", "desired_count", "running_count",
+    "pod_count", "worker_count",
+)
+ERROR_RATE_ALIASES = (
+    "error_rate_pct", "error_rate", "errors_pct", "failure_rate_pct", "failure_rate",
+    "http_5xx_rate_pct", "5xx_rate_pct",
+)
+ERROR_COUNT_ALIASES = ("error_count", "errors", "failed_requests", "failure_count", "http_5xx")
+CAPACITY_ALIASES = (
+    "redis_capacity", "redis_capacity_units", "capacity", "provisioned_capacity",
+    "max_requests_per_minute", "request_capacity", "quota", "limit",
+)
+
+
+def _series_rows(document: Any) -> list[dict[str, Any]]:
+    """Pivot common CloudWatch, Prometheus, Grafana and Datadog series exports."""
+    pivot: dict[str, dict[str, Any]] = {}
+
+    def visit(node: Any) -> None:
+        if isinstance(node, dict):
+            timestamps = node.get("Timestamps") or node.get("timestamps")
+            values = node.get("Values") or node.get("values") or node.get("points")
+            metric = node.get("Label") or node.get("label") or node.get("MetricName") or node.get("name") or node.get("id")
+            metric_labels = node.get("metric")
+            if isinstance(metric_labels, dict):
+                metric = metric_labels.get("__name__") or metric_labels.get("name") or metric
+            if isinstance(timestamps, list) and isinstance(values, list) and len(timestamps) == len(values):
+                for stamp, value in zip(timestamps, values, strict=True):
+                    key = str(stamp)
+                    pivot.setdefault(key, {"timestamp": stamp})[_key(str(metric or "value"))] = value
+            elif isinstance(values, list) and values and all(isinstance(point, (list, tuple)) and len(point) >= 2 for point in values):
+                for stamp, value, *_ in values:
+                    key = str(stamp)
+                    pivot.setdefault(key, {"timestamp": stamp})[_key(str(metric or "value"))] = value
+            for value in node.values():
+                if isinstance(value, (dict, list)):
+                    visit(value)
+        elif isinstance(node, list):
+            for item in node:
+                visit(item)
+
+    visit(document)
+    return list(pivot.values()) if len(pivot) >= 3 else []
+
+
+def _row_score(rows: list[dict[str, Any]]) -> int:
+    aliases = (
+        TIMESTAMP_ALIASES + REQUEST_RATE_ALIASES + REQUESTS_PER_SECOND_ALIASES + P50_ALIASES
+        + P95_ALIASES + P99_ALIASES + MEMORY_ALIASES + CPU_ALIASES + CACHE_ALIASES
+        + QUEUE_ALIASES + REPLICA_ALIASES + ERROR_RATE_ALIASES + ERROR_COUNT_ALIASES
+    )
+    keys = {_key(alias) for alias in aliases}
+    score = 0
+    for row in rows[:25]:
+        flat = _flatten(row)
+        score += sum(1 for name in flat if name in keys or any(name.endswith(f"_{key}") for key in keys))
+    return score
+
+
+def _telemetry_rows(document: Any) -> list[dict[str, Any]]:
+    series = _series_rows(document)
+    candidates: list[list[dict[str, Any]]] = [series] if series else []
+
+    def visit(node: Any) -> None:
+        if isinstance(node, list):
+            if len(node) >= 3 and all(isinstance(item, dict) for item in node):
+                candidates.append(node)
+            for item in node:
+                if isinstance(item, (dict, list)):
+                    visit(item)
+        elif isinstance(node, dict):
+            for value in node.values():
+                if isinstance(value, (dict, list)):
+                    visit(value)
+
+    visit(document)
+    ranked = sorted(candidates, key=lambda rows: (_row_score(rows), len(rows)), reverse=True)
+    return ranked[0] if ranked and _row_score(ranked[0]) > 0 else []
+
+
+def _note(notes: list[str], message: str) -> None:
+    if message not in notes:
+        notes.append(message)
+
+
+def _minute_offsets(rows: list[dict[str, Any]], notes: list[str]) -> list[int]:
+    explicit = [
+        _coerce_numeric(_lookup_exact(row, ("minute", "offset_minutes", "time_offset_minutes")))
+        for row in rows
+    ]
+    if all(value is not None for value in explicit):
+        values = [round(float(value)) for value in explicit if value is not None]
+        latest_minute = max(values)
+        return [value - latest_minute for value in values]
+    timestamps: list[datetime] = []
+    for row in rows:
+        raw = _lookup_exact(row, TIMESTAMP_ALIASES)
+        try:
+            numeric = _coerce_numeric(raw)
+            if numeric is not None:
+                seconds = numeric / 1000 if numeric > 10_000_000_000 else numeric
+                parsed = datetime.fromtimestamp(seconds, tz=timezone.utc)
+            elif isinstance(raw, str):
+                parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            else:
+                raise ValueError
+            timestamps.append(parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed.astimezone(timezone.utc))
+        except (OSError, OverflowError, ValueError):
+            _note(notes, "No complete timestamp field was found; source row order was treated as five-minute intervals")
+            return [5 * (index - len(rows) + 1) for index in range(len(rows))]
+    latest_timestamp = max(timestamps)
+    return [round((stamp - latest_timestamp).total_seconds() / 60) for stamp in timestamps]
+
+
+def _percent(value: float | None) -> float | None:
+    if value is None:
+        return None
+    return value * 100 if 0 <= value <= 1 else value
+
+
+def _bounded_capacity(value: float) -> int:
+    return max(6000, min(50000, round(value)))
+
+
+def _request_rate(row: dict[str, Any]) -> float | None:
+    per_minute = _optional_numeric(row, REQUEST_RATE_ALIASES)
+    if per_minute is not None:
+        return per_minute
+    per_second = _optional_numeric(row, REQUESTS_PER_SECOND_ALIASES)
+    return per_second * 60 if per_second is not None else None
+
+
+def normalize_operational_json(payload: OperationalJsonImport) -> TwinControls:
+    try:
+        document: Any = json.loads(payload.content)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Uploaded operational file must contain valid JSON") from exc
+    if not isinstance(document, (dict, list)):
+        raise ValueError("Operational JSON must be an object or an array of telemetry objects")
+    root = document if isinstance(document, dict) else {}
+    controls_raw = root.get("controls") or root.get("configuration") or root.get("config") or root
+    if not isinstance(controls_raw, dict):
+        controls_raw = root
+    rows = _telemetry_rows(document)
+    notes: list[str] = []
+    normalized_points: list[TelemetryPoint] = []
+    if rows:
+        if len(rows) < 3:
+            raise ValueError("At least three telemetry points are required for an evidence-based trend")
+        if len(rows) > 1000:
+            last = len(rows) - 1
+            rows = [rows[round(index * last / 999)] for index in range(1000)]
+            _note(notes, "Input contained more than 1,000 observations; 1,000 evenly spaced points were retained")
+        minutes = _minute_offsets(rows, notes)
+        latest_row = rows[max(range(len(rows)), key=lambda index: minutes[index])]
+        capacity = _optional_numeric(controls_raw, CAPACITY_ALIASES)
+        if capacity is None:
+            capacity = _optional_numeric(root, CAPACITY_ALIASES)
+        if capacity is None:
+            capacity = _optional_numeric(latest_row, CAPACITY_ALIASES)
+            if capacity is not None:
+                _note(notes, "redis_capacity read from the latest uploaded telemetry point")
+        observed_rates = [rate for row in rows if (rate := _request_rate(row)) is not None]
+        if capacity is None and observed_rates:
+            capacity = math.ceil(max(observed_rates) * 1.25 / 1000) * 1000
+            _note(notes, "redis_capacity derived as 125% of the highest uploaded request rate")
+        if capacity is None:
+            capacity = 12000
+            _note(notes, "redis_capacity was absent; the documented 12,000-unit model baseline was applied")
+        capacity = _bounded_capacity(capacity)
+        configured_replicas = _optional_numeric(controls_raw, ("application_replicas",) + REPLICA_ALIASES)
+        configured_latency = _optional_numeric(
+            controls_raw,
+            ("dependency_latency_ms", "dependency_latency", "upstream_latency_ms"),
+        )
+        meaningful_observations = 0
+        for row, minute in zip(rows, minutes, strict=True):
+            request_rate = _request_rate(row)
+            p50 = _optional_numeric(row, P50_ALIASES)
+            p95 = _optional_numeric(row, P95_ALIASES)
+            p99 = _optional_numeric(row, P99_ALIASES)
+            memory = _percent(_optional_numeric(row, MEMORY_ALIASES))
+            cpu = _percent(_optional_numeric(row, CPU_ALIASES))
+            cache_hit = _percent(_optional_numeric(row, CACHE_ALIASES))
+            queue = _optional_numeric(row, QUEUE_ALIASES)
+            replicas = _optional_numeric(row, REPLICA_ALIASES)
+            error = _percent(_optional_numeric(row, ERROR_RATE_ALIASES))
+            error_count = _optional_numeric(row, ERROR_COUNT_ALIASES)
+            observed = (request_rate, p50, p95, p99, memory, cpu, queue, error, error_count)
+            meaningful_observations += sum(value is not None for value in observed)
+            if memory is None:
+                if cpu is not None:
+                    memory = cpu
+                    _note(notes, "Redis memory was absent; uploaded CPU utilization was used as the saturation proxy")
+                elif request_rate is not None:
+                    memory = 100 * request_rate / capacity
+                    _note(notes, "Redis memory was absent; request rate divided by model capacity was used as the saturation proxy")
+                elif p95 is not None:
+                    memory = 68 + max(0, p95 - 120) ** (1 / 1.55)
+                    _note(notes, "Redis memory was absent; uploaded p95 latency was converted to a bounded saturation proxy")
+                elif queue is not None:
+                    memory = 60 + math.sqrt(max(0, queue)) * 4
+                    _note(notes, "Redis memory was absent; uploaded queue depth was converted to a bounded saturation proxy")
+                elif error is not None:
+                    memory = 88 + max(0, error * 6) ** (1 / 1.35)
+                    _note(notes, "Redis memory was absent; uploaded error rate was converted to a bounded saturation proxy")
+                else:
+                    memory = 0
+            memory = min(100, max(0, memory))
+            if request_rate is None:
+                request_rate = capacity * memory / 100
+                _note(notes, "Request rate was absent; model capacity multiplied by observed saturation was used")
+            if p95 is None:
+                p95 = 120 + max(0, memory - 68) ** 1.55 + (configured_latency or 0)
+                _note(notes, "p95 latency was absent and calculated from the bounded saturation curve")
+            if p50 is None:
+                p50 = p95 * 0.42
+                _note(notes, "p50 latency was absent and derived from calculated p95 latency")
+            if p99 is None:
+                p99 = p95 * 1.48
+                _note(notes, "p99 latency was absent and derived from calculated p95 latency")
+            if cpu is None:
+                cpu = memory * 0.88
+                _note(notes, "CPU utilization was absent and derived from saturation")
+            if cache_hit is None:
+                cache_hit = max(25, 98 - memory * 0.28)
+                _note(notes, "Cache-hit rate was absent and derived from saturation")
+            if queue is None:
+                queue = max(0, memory - 70) ** 1.72 * 3
+                _note(notes, "Queue depth was absent and derived from saturation")
+            if replicas is None:
+                replicas = configured_replicas or 4
+                _note(notes, "Application replica count was absent; configured or four-replica baseline was applied")
+            if error is None and error_count is not None:
+                error = 100 * error_count / max(1, request_rate)
+                _note(notes, "Error rate was calculated from uploaded error count and request rate")
+            if error is None:
+                error = max(0, memory - 90) ** 1.4 / 8
+                _note(notes, "Error rate was absent and derived from saturation")
+            label = _lookup(row, ("label", "display_name", "period"))
+            normalized_points.append(TelemetryPoint(
+                label=str(label or ("Now" if minute == 0 else f"{minute:+d} min")),
+                minute=minute, request_rate=max(0, round(request_rate)),
+                p50_ms=max(0, p50), p95_ms=max(0, p95), p99_ms=max(0, p99),
+                redis_cpu_pct=min(100, max(0, cpu)), redis_memory_pct=min(100, max(0, memory)),
+                cache_hit_rate_pct=min(100, max(0, cache_hit)), queue_depth=max(0, round(queue)),
+                application_replicas=max(1, round(replicas)), error_rate_pct=min(100, max(0, error)),
+                order_conversion_rate=_optional_numeric(controls_raw, ("conversion_rate",)) or 0.034,
+                average_order_value_inr=_optional_numeric(controls_raw, ("average_order_value_inr", "average_order_value")) or 3200,
+                reactive_alert=error >= 5,
+            ))
+        if meaningful_observations == 0:
+            raise ValueError(
+                "No operational numeric signals were found. Include at least one time-series signal such as "
+                "requests, latency, CPU, memory, queue depth, or error rate."
+            )
+        normalized_points.sort(key=lambda point: point.minute)
+        latest = normalized_points[-1]
+        traffic = _optional_numeric(controls_raw, ("traffic_multiplier", "load_multiplier", "traffic_factor"))
+        if traffic is None:
+            traffic = min(10, max(0.5, latest.request_rate / 8500))
+            _note(notes, "traffic_multiplier derived from latest request_rate / canonical 8,500 RPM baseline")
+        replicas = configured_replicas or latest.application_replicas
+        dependency_latency = configured_latency
+        if dependency_latency is None:
+            dependency_latency = min(5000, max(0, round(latest.p95_ms - 120)))
+            _note(notes, "dependency_latency_ms derived from latest p95_ms minus the documented 120 ms service baseline")
+    else:
+        traffic = _optional_numeric(controls_raw, ("traffic_multiplier", "load_multiplier", "traffic_factor"))
+        capacity = _optional_numeric(controls_raw, CAPACITY_ALIASES)
+        replicas = _optional_numeric(controls_raw, ("application_replicas",) + REPLICA_ALIASES)
+        dependency_latency = _optional_numeric(
+            controls_raw, ("dependency_latency_ms", "dependency_latency", "upstream_latency_ms")
+        )
+        missing = [
+            name for name, value in (
+                ("traffic_multiplier", traffic), ("redis_capacity", capacity),
+                ("application_replicas", replicas), ("dependency_latency_ms", dependency_latency),
+            ) if value is None
+        ]
+        if missing:
+            raise ValueError(
+                "No supported telemetry series was found in the operational JSON. Supply records containing timestamps and numeric "
+                "requests, latency, CPU, memory, queue, or error signals, "
+                f"or provide explicit controls. Missing controls: {', '.join(missing)}"
+            )
+    assert traffic is not None and capacity is not None and replicas is not None and dependency_latency is not None
+    failover_raw = str(_lookup(controls_raw, ("failover_state",)) or "primary").lower()
+    if failover_raw not in {"primary", "replica", "unavailable"}:
+        failover_raw = "primary"
+        _note(notes, "Unknown failover state was normalized to primary")
+    failover = cast(Literal["primary", "replica", "unavailable"], failover_raw)
+    conversion = _optional_numeric(controls_raw, ("conversion_rate",)) or 0.034
+    order_value = _optional_numeric(controls_raw, ("average_order_value_inr", "average_order_value")) or 3200
+    risk_window = _optional_numeric(controls_raw, ("risk_window_minutes",)) or 60
+    failure_rate = _percent(_optional_numeric(controls_raw, ("projected_failure_rate",))) or 18
+    sla_penalty = _optional_numeric(controls_raw, ("sla_penalty_inr", "sla_penalty")) or 250000
+    seed = _optional_numeric(controls_raw, ("seed", "random_seed")) or 20260808
+    return TwinControls(
+        traffic_multiplier=min(10, max(0.5, traffic)), redis_capacity=_bounded_capacity(capacity),
+        application_replicas=min(50, max(1, round(replicas))),
+        dependency_latency_ms=min(5000, max(0, round(dependency_latency))),
+        failover_state=failover, seed=round(seed),
+        source_label=f"manual-upload/{payload.filename}", normalization_notes=notes,
+        telemetry_points=normalized_points,
+        business=BusinessAssumptions(
+            conversion_rate=min(1, max(0, conversion)),
+            average_order_value_inr=max(0.01, order_value),
+            risk_window_minutes=min(1440, max(1, round(risk_window))),
+            projected_failure_rate=min(1, max(0, failure_rate / 100)),
+            sla_penalty_inr=max(0, sla_penalty),
+        ),
+    )
+
+
+def import_operational_json(db: Session, payload: OperationalJsonImport) -> NexusRun:
+    controls = normalize_operational_json(payload)
+    run = create_run(db, RunCreate(name=f"Imported operational forecast: {payload.filename}", controls=controls))
+    upload_evidence(db, run, EvidenceUpload(filename=payload.filename, category="telemetry", content=payload.content))
+    append_event(db, run, "telemetry.normalized", "observer-agent", {
+        "source": controls.source_label, "point_count": len(controls.telemetry_points),
+        "normalization_notes": controls.normalization_notes, "production_action": "NOT EXECUTED",
+    })
+    return run_all(db, run)
+
+
 def create_run(db: Session, payload: RunCreate) -> NexusRun:
     row = NexusRun(name=payload.name, seed=payload.controls.seed, inputs_json=payload.controls.model_dump(mode="json"))
     db.add(row); db.commit(); db.refresh(row); append_event(db,row,"run.created","nexus-orchestrator",{"controls":row.inputs_json,"production_action":"NOT EXECUTED"}); return row
@@ -130,7 +550,7 @@ def create_run(db: Session, payload: RunCreate) -> NexusRun:
 def observe(db: Session, run: NexusRun) -> list[EvidenceRecord]:
     require_state(run, "CREATED"); controls=TwinControls.model_validate(run.inputs_json); points=telemetry(controls)
     evidence_specs: list[tuple[str, str, str, dict[str, Any], str]] = [
-        ("ev-telemetry","telemetry","seeded/payment-service",{"points":[x.model_dump(mode="json") for x in points]},"Five-point operational window normalised."),
+        ("ev-telemetry","telemetry",controls.source_label,{"points":[x.model_dump(mode="json") for x in points]},"Uploaded operational window normalised." if controls.telemetry_points else "Five-point operational window normalised."),
         ("ev-topology","topology","seeded/service-map",{"path":["checkout-api","payment-service","redis-primary"]},"Critical payment path reconstructed."),
         ("ev-config","configuration","seeded/runtime-config",{"redis_capacity":controls.redis_capacity,"application_replicas":controls.application_replicas},"Capacity constraints captured."),
         ("ev-slo","slo","seeded/slo",{"checkout_p95_ms":500,"error_rate_pct":5},"Customer-facing alert thresholds captured."),
@@ -149,11 +569,21 @@ def topology(db: Session, run: NexusRun) -> TopologyResult:
 
 
 def predict(db: Session, run: NexusRun) -> ForecastResult:
-    require_state(run,"OBSERVED"); controls=TwinControls.model_validate(run.inputs_json); points=telemetry(controls); now=points[1]
-    slope=(points[3].redis_memory_pct-now.redis_memory_pct)/30; crossing=max(0,round((90-now.redis_memory_pct)/max(.01,slope))); impact=max(crossing+15,45)
-    residuals=[abs(point.redis_memory_pct-(now.redis_memory_pct+slope*point.minute)) for point in points[1:4]]; mae=round(sum(residuals)/len(residuals),2)
-    score=round(min(95,55+25*min(1,slope)+15*(1-min(1,mae/10))))
-    result=ForecastResult(model_name="bounded linear saturation trend",equation=f"memory_pct(t) = {now.redis_memory_pct} + {slope:.3f} * minutes",observation_window="Yesterday, Now, +15, +30 minutes",forecast_horizon_minutes=45,safe_threshold_pct=90,reactive_alert_threshold_pct=5,predicted_crossing_minutes=crossing,predicted_customer_impact_minutes=impact,residual_mae=mae,error_bound_minutes=max(3,round(mae/max(.01,slope))),heuristic_evidence_score=score,confidence_label="High" if score>=80 else "Moderate",assumptions=["Traffic trend remains locally linear for 45 minutes","Redis capacity and application replicas remain fixed","No unmodelled upstream outage occurs"],evidence_ids=["ev-telemetry","ev-config","ev-slo"])
+    require_state(run,"OBSERVED"); controls=TwinControls.model_validate(run.inputs_json); points=telemetry(controls)
+    if controls.telemetry_points:
+        now=max(points,key=lambda point:point.minute); x_mean=sum(point.minute for point in points)/len(points); y_mean=sum(point.redis_memory_pct for point in points)/len(points)
+        denominator=sum((point.minute-x_mean)**2 for point in points); slope=sum((point.minute-x_mean)*(point.redis_memory_pct-y_mean) for point in points)/max(1,denominator)
+        crossing=0 if now.redis_memory_pct>=90 else (46 if slope<=0 else max(0,round((90-now.redis_memory_pct)/slope))); impact=crossing+15
+        residuals=[abs(point.redis_memory_pct-(y_mean+slope*(point.minute-x_mean))) for point in points]
+        observation_window=f"{len(points)} uploaded observations ending at minute 0"
+        assumptions=["Uploaded telemetry timestamps are ordered observations","The observed Redis memory slope remains locally linear for 45 minutes","Uploaded capacity and replica configuration remain fixed","No unmodelled upstream outage occurs"]
+    else:
+        now=points[1]; slope=(points[3].redis_memory_pct-now.redis_memory_pct)/30; crossing=max(0,round((90-now.redis_memory_pct)/max(.01,slope))); impact=max(crossing+15,45)
+        residuals=[abs(point.redis_memory_pct-(now.redis_memory_pct+slope*point.minute)) for point in points[1:4]]
+        observation_window="Yesterday, Now, +15, +30 minutes"; assumptions=["Traffic trend remains locally linear for 45 minutes","Redis capacity and application replicas remain fixed","No unmodelled upstream outage occurs"]
+    mae=round(sum(residuals)/len(residuals),2)
+    score=round(max(0,min(95,55+25*min(1,slope)+15*(1-min(1,mae/10)))))
+    result=ForecastResult(model_name="bounded linear saturation trend",equation=f"memory_pct(t) = {now.redis_memory_pct} + {slope:.3f} * minutes",observation_window=observation_window,forecast_horizon_minutes=45,safe_threshold_pct=90,reactive_alert_threshold_pct=5,predicted_crossing_minutes=crossing,predicted_customer_impact_minutes=impact,residual_mae=mae,error_bound_minutes=max(3,round(mae/max(.01,abs(slope)))),heuristic_evidence_score=score,confidence_label="High" if score>=80 else "Moderate",assumptions=assumptions,evidence_ids=["ev-telemetry","ev-config","ev-slo"])
     run.forecast_json=result.model_dump(mode="json"); db.commit(); transition(db,run,"PREDICTED","prediction-agent",result.model_dump(mode="json")); return result
 
 
@@ -167,6 +597,9 @@ def build_twin(db: Session, run: NexusRun) -> TwinManifestContract:
 
 def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
     require_state(run,"TWIN_READY"); controls=TwinControls.model_validate(run.inputs_json); twin=TwinManifestContract.model_validate(run.twin_json)
+    observed_points=telemetry(controls)
+    observed_saturation=max(observed_points,key=lambda point:point.minute).redis_memory_pct if controls.telemetry_points else None
+    base_effective_capacity=controls.redis_capacity*max(.65,controls.application_replicas/4)
     # Every scenario is evaluated from the submitted controls.  The modifiers are
     # explicit so the lab remains explainable while still behaving like a model,
     # rather than a collection of pre-recorded outcomes.
@@ -191,7 +624,14 @@ def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
         scenario_replicas=int(modifier.get("application_replicas",controls.application_replicas))
         dependency_latency=(controls.dependency_latency_ms+int(modifier.get("additional_latency_ms",0)))*float(modifier.get("latency_factor",1))
         effective_capacity=scenario_capacity*max(.65,scenario_replicas/4)
-        saturation=min(180,98*12000/max(1,effective_capacity)*scenario_traffic)
+        if observed_saturation is None:
+            saturation=min(180,98*12000/max(1,effective_capacity)*scenario_traffic)
+            analysis_basis="bounded control model"
+        else:
+            relative_traffic=scenario_traffic/max(.01,controls.traffic_multiplier)
+            relative_capacity=base_effective_capacity/max(1,effective_capacity)
+            saturation=min(180,max(0,observed_saturation*relative_traffic*relative_capacity))
+            analysis_basis="latest uploaded telemetry saturation"
         if modifier.get("redis_available") is False:
             p95,error,recovery=5000.0,100.0,max(8,round(24/scenario_replicas+12))
         else:
@@ -202,7 +642,7 @@ def simulate(db: Session, run: NexusRun) -> list[ScenarioResultContract]:
             if modifier.get("failover")=="replica": p95=round(p95*1.18,1); recovery+=3
         status: Literal["pass","degraded","fail"] = "fail" if error>=5 or p95>=900 else ("degraded" if error>=1 or p95>=500 else "pass")
         avoided=status=="pass" and sid in {"replica-failover","increased-app-replicas","rollback-intervention","rate-limiting-intervention","cache-policy-correction"}
-        inputs={"base_controls":controls.model_dump(mode="json",exclude={"business"}),"scenario_modifier":modifier,"calculated_saturation_pct":round(saturation,1)}
+        inputs={"base_controls":controls.model_dump(mode="json",exclude={"business"}),"scenario_modifier":modifier,"calculated_saturation_pct":round(saturation,1),"analysis_basis":analysis_basis}
         body={"scenario_id":sid,"seed":twin.random_seed,"inputs":inputs,"status":status,"p95_ms":p95,"error_rate_pct":error,"recovery_minutes":recovery}
         results.append(ScenarioResultContract(scenario_id=sid,name=sid.replace("-"," ").title(),inputs=inputs,status=status,bottleneck_avoided=avoided,p95_ms=p95,error_rate_pct=error,recovery_minutes=recovery,result_hash=digest(body),evidence_ids=["ev-telemetry","ev-config","ev-topology"]))
     run.scenarios_json=[x.model_dump(mode="json") for x in results]; db.commit(); transition(db,run,"SIMULATED","simulation-agent",{"scenario_count":len(results),"result_hashes":[x.result_hash for x in results]}); return results

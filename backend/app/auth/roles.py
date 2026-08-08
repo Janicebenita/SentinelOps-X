@@ -42,24 +42,36 @@ def _fingerprint(code: str) -> str:
     return hmac.new(_secret(), code.encode(), hashlib.sha256).hexdigest()[:16]
 
 
+def _signed_role_token(payload: dict[str, Any]) -> str:
+    header=_b64(json.dumps({"alg":"HS256","typ":"JWT"},separators=(",",":"),sort_keys=True).encode())
+    body=_b64(json.dumps(payload,separators=(",",":"),sort_keys=True).encode())
+    signing=f"{header}.{body}"
+    signature=_b64(hmac.new(_secret(),signing.encode(),hashlib.sha256).digest())
+    return f"{signing}.{signature}"
+
+
 def verify_access_code(db: Session, actor_name: str, access_code: str) -> tuple[RoleVerification, str, list[str]]:
     role = None
     if hmac.compare_digest(access_code.encode(), settings.intern_access_code.encode()): role = "INTERN"
     if hmac.compare_digest(access_code.encode(), settings.senior_access_code.encode()): role = "SENIOR_DEVELOPER"
     if role is None: raise AuthError("INVALID_ACCESS_CODE", "Access code verification failed.", 401)
-    now=datetime.now(timezone.utc); expires=now+timedelta(minutes=settings.role_token_expiry_minutes); token_id=secrets.token_hex(16)
-    row=RoleVerification(actor_name=actor_name,role=role,verified=True,verified_at=now,expires_at=expires,token_id=token_id,code_fingerprint=_fingerprint(access_code)); db.add(row); db.commit(); db.refresh(row)
+    now=datetime.now(timezone.utc); expires=now+timedelta(minutes=settings.role_token_expiry_minutes)
+    row=RoleVerification(actor_name=actor_name,role=role,verified=True,verified_at=now,expires_at=expires,token_id="pending",code_fingerprint=_fingerprint(access_code)); db.add(row); db.flush()
     # Role tokens contain identity and authorization claims, never the access
     # code. Issuer/audience are optional for local mode and mandatory whenever
     # the deployment configures an OIDC boundary.
-    payload={"sub":actor_name,"role":role,"exp":int(expires.timestamp()),"jti":token_id,"verification_id":row.id}
+    payload={"sub":actor_name,"role":role,"exp":int(expires.timestamp()),"verification_id":row.id}
     if settings.oidc_issuer:
         payload["iss"] = settings.oidc_issuer
     if settings.oidc_audience:
         payload["aud"] = settings.oidc_audience
-    header=_b64(json.dumps({"alg":"HS256","typ":"JWT"},separators=(",",":"),sort_keys=True).encode())
-    body=_b64(json.dumps(payload,separators=(",",":"),sort_keys=True).encode()); signing=f"{header}.{body}"; signature=_b64(hmac.new(_secret(),signing.encode(),hashlib.sha256).digest())
-    return row,f"{signing}.{signature}",PERMISSIONS[role]
+    forbidden_fragments={settings.intern_access_code,settings.senior_access_code}
+    for _ in range(32):
+        row.token_id=secrets.token_hex(16); payload["jti"]=row.token_id; token=_signed_role_token(payload)
+        if not any(fragment and fragment in token for fragment in forbidden_fragments):
+            db.commit(); db.refresh(row); return row,token,PERMISSIONS[role]
+    db.rollback()
+    raise RuntimeError("Unable to issue a role token that satisfies response-redaction policy")
 
 
 def verify_token(db: Session, token: str) -> tuple[dict[str, Any], RoleVerification]:

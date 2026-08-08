@@ -7,6 +7,7 @@ import re
 from collections.abc import Iterator
 from pathlib import Path
 
+from backend.app.config import settings
 from backend.app.main import app
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,12 +18,16 @@ SECRET_PATTERNS = {
     "google_api_key": re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
     "github_token": re.compile(r"gh[oprsu]_[0-9A-Za-z]{30,}"),
 }
-FRONTEND_FORBIDDEN = (
-    "INTERN_ACCESS_CODE",
-    "SENIOR_ACCESS_CODE",
-    "ROLE_TOKEN_SECRET",
-    "INTEGRATION_TOKEN",
-)
+FRONTEND_FORBIDDEN = {
+    "INTERN_ACCESS_CODE_NAME": "INTERN_ACCESS_CODE",
+    "SENIOR_ACCESS_CODE_NAME": "SENIOR_ACCESS_CODE",
+    "ROLE_TOKEN_SECRET_NAME": "ROLE_TOKEN_SECRET",
+    "INTEGRATION_TOKEN_NAME": "INTEGRATION_TOKEN",
+}
+FRONTEND_ACCESS_CODES = {
+    "INTERN_ACCESS_CODE_VALUE": settings.intern_access_code,
+    "SENIOR_ACCESS_CODE_VALUE": settings.senior_access_code,
+}
 
 
 def source_files() -> Iterator[Path]:
@@ -52,7 +57,23 @@ def main() -> None:
     dist = ROOT / "frontend" / "dist"
     if dist.exists():
         bundle = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for path in dist.rglob("*") if path.is_file())
-        bundle_findings.extend(name for name in FRONTEND_FORBIDDEN if name in bundle)
+        bundle_findings.extend(label for label, value in FRONTEND_FORBIDDEN.items() if value and value in bundle)
+        credential_terms=r"intern|senior|access.?code|trial.?code|role"
+        bundle_findings.extend(
+            label for label, value in FRONTEND_ACCESS_CODES.items()
+            if value and re.search(
+                rf"(?i)(?:{credential_terms}).{{0,96}}{re.escape(value)}|{re.escape(value)}.{{0,96}}(?:{credential_terms})",
+                bundle,
+            )
+        )
+        for path in (ROOT / "frontend" / "src").rglob("*"):
+            if not path.is_file() or ".test." in path.name or "test" in path.parts:
+                continue
+            text=path.read_text(encoding="utf-8",errors="ignore")
+            bundle_findings.extend(
+                label for label,value in FRONTEND_ACCESS_CODES.items()
+                if value and re.search(rf"(?<!\d){re.escape(value)}(?!\d)",text)
+            )
         bundle_findings.extend(name for name, pattern in SECRET_PATTERNS.items() if pattern.search(bundle))
 
     summary = {

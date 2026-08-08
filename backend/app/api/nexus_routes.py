@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..auth.roles import AuthError, verify_access_code, verify_token
 from ..models import HumanDecision, NexusAuditEvent, NexusEvidence, NexusRun, VerificationRecord
-from ..schemas.nexus_contracts import EvidenceUpload, HumanDecisionInput, RunCreate, TwinControls
+from ..schemas.nexus_contracts import EvidenceUpload, HumanDecisionInput, OperationalJsonImport, RunCreate, TwinControls
 from ..schemas.upgrade_contracts import AgentActionRequest, AuthorizedDecision, RoleVerifyRequest
 from ..services import nexus_workflow as workflow
 from ..services import workforce
@@ -85,6 +85,11 @@ def telemetry(run_id: int, db: Db) -> list[dict[str, Any]]:
 @router.post("/workflows")
 def create_workflow(payload: RunCreate, db: Db) -> dict[str, Any]:
     return workflow.serialize(workflow.create_run(db, payload))
+
+
+@router.post("/workflows/import-json")
+def import_workflow_json(payload: OperationalJsonImport, db: Db) -> dict[str, Any]:
+    return _action(lambda: workflow.serialize(workflow.import_operational_json(db, payload)))
 
 
 @router.get("/workflows")
