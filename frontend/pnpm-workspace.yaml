@@ -4,6 +4,7 @@ packages:
 # Pin the patched transitive CSS parser across Vite and Vitest.
 overrides:
   postcss: 8.5.23
+  nanoid: 3.3.17
 
 # esbuild is the only dependency permitted to run its platform-binary install.
 allowBuilds:
