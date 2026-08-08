@@ -5,6 +5,7 @@ import zipfile
 
 from sqlalchemy import select
 
+from backend.app.auth import roles
 from backend.app.config import settings
 from backend.app.models import AgentExecution, HumanDecision, RoleVerification, VerificationRecord
 
@@ -75,6 +76,20 @@ def test_verification_persists_and_plaintext_codes_never_persist_or_return(clien
     assert "1111" not in response.text and "0000" not in response.text
     rows=db.scalars(select(RoleVerification)).all()
     assert all(row.code_fingerprint not in {"0000","1111"} for row in rows)
+
+
+def test_role_token_is_regenerated_if_serialized_token_matches_demo_code(client,monkeypatch):
+    original=roles._signed_role_token
+    calls={"count":0}
+
+    def collide_once(payload):
+        calls["count"]+=1
+        return "header.1111.signature" if calls["count"]==1 else original(payload)
+
+    monkeypatch.setattr(roles,"_signed_role_token",collide_once)
+    response=client.post("/api/v1/auth/verify-role",json={"actor_name":"Collision QA","access_code":"1111"})
+    assert response.status_code==200
+    assert "1111" not in response.text and "0000" not in response.text
 
 
 def test_no_production_execution_endpoint_exists(client):

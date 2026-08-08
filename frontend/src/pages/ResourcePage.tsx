@@ -370,11 +370,11 @@ function SafetyPage() {
           <div className="safety-card">
             <h2>Role-Based Authority (RBAC)</h2>
             <div className="role-rule">
-              <span className="role-tag intern">INTERN (Code 0000)</span>
+              <span className="role-tag intern">INTERN · SERVER-VERIFIED TRIAL ACCESS</span>
               <p>May inspect telemetry, run scenarios, and request evidence. Cannot approve recommendations.</p>
             </div>
             <div className="role-rule">
-              <span className="role-tag senior">SENIOR DEVELOPER (Code 1111)</span>
+              <span className="role-tag senior">SENIOR DEVELOPER · SERVER-VERIFIED TRIAL ACCESS</span>
               <p>May approve recommendations only after mandatory rationale entry and SHA-256 gate validation.</p>
             </div>
           </div>

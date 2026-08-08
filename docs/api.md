@@ -30,8 +30,20 @@ Both responses explicitly report `production_action: NOT EXECUTED`.
 - `POST /api/v1/workflows/{id}/business-impact`
 - `POST /api/v1/workflows/{id}/recommend`
 - `POST /api/v1/workflows/{id}/run-all`
+- `POST /api/v1/workflows/import-json`
 
 Invalid state transitions return HTTP `409` with the expected state. Model/provider outputs never directly change workflow state.
+
+### Operational JSON import
+
+`POST /api/v1/workflows/import-json` accepts a JSON filename and its JSON content. The backend—not the browser—normalizes the document, creates a new workflow, persists the uploaded source and its SHA-256 hash, calculates the forecast, and replays the 12 deterministic scenarios.
+
+Two input forms are supported:
+
+- a `controls` object containing `traffic_multiplier`, `redis_capacity`, `application_replicas`, and `dependency_latency_ms`;
+- at least three telemetry rows under `telemetry`, `telemetry_points`, `observations`, `points`, `metrics`, `records`, `samples`, `series`, or `data`, with time/minute, request rate, Redis memory percentage, Redis CPU percentage, p50/p95/p99 latency, cache-hit percentage, queue depth, application replicas, and error-rate values. Finite numeric values may be JSON numbers or numeric strings. `redis_capacity` must be supplied in the configuration or latest telemetry point because it cannot be inferred safely from percentages alone.
+
+Common field aliases are normalized. Missing operational metrics return HTTP `409` with a precise explanation; the service does not invent telemetry or present an incident/status document as a calculated prediction. Every successful import retains `PRODUCTION ACTION: NOT EXECUTED`.
 
 ## Human decision
 
