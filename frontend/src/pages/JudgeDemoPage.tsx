@@ -11,6 +11,7 @@ import type {JudgeStageId} from '../features/judge-demo/types';
 import {useGuidedPlayback} from '../features/judge-demo/useGuidedPlayback';
 import '../features/judge-demo/judgeDemo.css';
 import type {NexusRun} from '../types';
+import Navbar from '../components/Navbar';
 
 const initialStage=()=>{const value=new URLSearchParams(location.search).get('stage') as JudgeStageId|null;const index=value?STAGE_IDS.indexOf(value):-1;return index<0?0:index};
 const updateStageUrl=(index:number,mode:'push'|'replace')=>{const url=new URL(location.href);url.searchParams.set('stage',STAGE_IDS[index]);history[mode==='push'?'pushState':'replaceState']({},'',`${url.pathname}${url.search}${url.hash}`)};
@@ -23,8 +24,6 @@ export default function JudgeDemoPage(){
   const rows=workflows.data as NexusRun[]|undefined;
   if(!rows?.length)return undefined;
   const selected=selectedRunId===null?undefined:rows.find(item=>item.id===selectedRunId);
-  // A newly created shell has no evidence to explain. Prefer an explicitly
-  // selected run, then the newest persisted run that has entered the workflow.
   return selected??rows.find(item=>item.state!=='CREATED'||Boolean(item.forecast_json?.predicted_crossing_minutes))??rows[0];
  },[workflows.data,selectedRunId]);
  const telemetry=useQuery({queryKey:['judge-telemetry',run?.id],queryFn:()=>nexusApi.telemetry(run!.id),enabled:Boolean(run),staleTime:15_000,retry:1});
@@ -48,7 +47,8 @@ export default function JudgeDemoPage(){
  useEffect(()=>{const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;const panel=document.getElementById('judge-stage-panel');if(panel&&typeof panel.scrollIntoView==='function')panel.scrollIntoView({behavior:reduced?'auto':'smooth',block:'nearest'})},[playback.index]);
  useEffect(()=>{const pop=()=>playback.select(initialStage(),false);addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop)},[]);
 
- return <div className="product-page judge-demo-v2"><nav><a href="/"><b>SENTINEL<span>OPS NEXUS</span></b></a><div><a href="/command-centre">Command Centre</a><a href="/agents">AI Workforce</a><a href="/architecture">Architecture</a></div></nav>
+ return <div className="product-page judge-demo-v2"><Navbar/>
+
   <div className="jd-safety-pill"><ShieldCheck/> PRODUCTION ACTION: NOT EXECUTED</div>
   <main>
    <header className="jd-hero"><div><small>FIVE-MINUTE INTERACTIVE PRODUCT EXPERIENCE</small><h1>See tomorrow’s bottleneck.<br/><span>Intervene before impact.</span></h1><p>Explore every persisted calculation, AI explanation, deterministic gate, and human-control boundary. Generate persisted deterministic evidence or press Play to prepare it automatically.</p><div className="jd-run-actions"><button className="primary" onClick={()=>bootstrap.mutate()} disabled={busy}><Play/>{bootstrap.isPending?'Generating backend evidence…':'Generate demo evidence'}</button><button className="primary" onClick={()=>execute.mutate()} disabled={!run||busy}><Activity/>{execute.isPending?'Running 12 scenarios…':'Re-run backend workflow'}</button></div></div><div className="jd-hero-signal"><Sparkles/><small>LIVE WORKFLOW</small><strong>{run?.state?.replaceAll('_',' ')??'NOT YET STARTED'}</strong><span>Workflow {run?.id??'—'} · Seed {run?.seed??'—'}</span><b>{run?.production_action_executed?'FAILED':'SAFETY BOUNDARY ENFORCED'}</b></div></header>

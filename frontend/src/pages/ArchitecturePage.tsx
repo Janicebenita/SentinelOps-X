@@ -5,6 +5,7 @@ import {nexusApi} from '../api/client';
 import {ARCHITECTURE_COMPONENTS,ARCHITECTURE_DOMAINS,BIGQUERY_FLOWS,CANONICAL_WORKFLOW,PUBSUB_EVENTS,cloudRunServices,componentStatus} from '../features/architecture/architectureData';
 import type {ArchitectureComponent,ArchitectureDomain,ArchitectureStatus,IntegrationHealth} from '../features/architecture/types';
 import '../features/architecture/architecture.css';
+import Navbar from '../components/Navbar';
 
 const boundaryText='Google Cloud deployment and managed-service integrations are implemented where verified. No endpoint, model, agent, or tool is permitted to deploy, scale, roll back, reconfigure, or modify production infrastructure.';
 const initialComponent=()=>new URLSearchParams(location.search).get('component')??ARCHITECTURE_COMPONENTS[0].id;
@@ -23,7 +24,7 @@ export default function ArchitecturePage(){
  const reset=()=>{setDomain('ALL');setOnlyLive(false);setShowBoundaries(true);setZoom(1);select(ARCHITECTURE_COMPONENTS[0].id)};
  useEffect(()=>{const pop=()=>setSelectedId(initialComponent());addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop)},[]);
  const rows=integrations.data as IntegrationHealth[]|undefined;const services=cloudRunServices(rows);
- return <div className="product-page architecture-page"><nav><a href="/"><b>SENTINEL<span>OPS NEXUS</span></b></a><div><a href="/command-centre">Command Centre</a><a href="/judge-demo">Judge Demo</a><a href="/agents">AI Workforce</a></div></nav><div className="architecture-safety"><ShieldCheck/> PRODUCTION ACTION: NOT EXECUTED</div><main>
+ return <div className="product-page architecture-page"><Navbar/><div className="architecture-safety"><ShieldCheck/> PRODUCTION ACTION: NOT EXECUTED</div><main>
   <header className="architecture-hero"><div><small>GOOGLE-NATIVE ENTERPRISE ARCHITECTURE</small><h1>Explore every authority, evidence, and runtime boundary.</h1><p>{boundaryText}</p></div><div><Cloud/><b>{ARCHITECTURE_COMPONENTS.length} clickable components</b><span>{ARCHITECTURE_DOMAINS.length} architecture domains</span></div></header>
   {(integrations.isError||antigravity.isError)&&<div className="architecture-warning" role="alert">Managed integration status is unavailable. Components remain explorable and display their bounded local or not-yet-executed state.</div>}
   <section className="canonical-flow" aria-labelledby="canonical-title"><header><Waypoints/><div><small>CANONICAL DECISION WORKFLOW</small><h2 id="canonical-title">Safety order is an invariant</h2></div></header><div>{CANONICAL_WORKFLOW.map((step,i)=><span key={step} className={step==='Mandatory Safety Gates'||step==='Verification Agent'?'authority-step':step==='Human Approval'?'human-step':''}><b>{step}</b>{i<CANONICAL_WORKFLOW.length-1&&<ChevronRight/>}</span>)}</div></section>
