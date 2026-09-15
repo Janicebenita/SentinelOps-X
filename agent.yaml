@@ -1,0 +1,8 @@
+spec_version: "0.1.0"
+name: sentinelops-nexus
+version: "1.0.0"
+description: >
+  Human-governed enterprise operational intelligence agent system that predicts
+  emerging bottlenecks, evaluates interventions through deterministic evidence,
+  coordinates specialized AI agents, and supports authorized human decisions
+  without autonomously modifying production infrastructure.
