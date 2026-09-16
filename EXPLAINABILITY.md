@@ -1,194 +1,73 @@
-# EXPLAINABILITY.md
-
 # SentinelOps Nexus — Explainability & Decision Transparency
 
 ## Purpose
 
 SentinelOps Nexus is a human-governed enterprise operational intelligence system designed to help operators understand emerging infrastructure risks, evaluate possible interventions, and make evidence-backed decisions.
 
-The system is intentionally designed so that recommendations are explainable, traceable, and reviewable by a human operator.
+The system is designed so recommendations remain explainable, traceable, and reviewable by a human operator. SentinelOps Nexus does not autonomously modify production infrastructure.
 
-SentinelOps Nexus does not autonomously modify production infrastructure.
+## Decision Reasoning — How It Decides
 
----
+SentinelOps Nexus makes recommendations by combining authoritative operational data, deterministic analysis, specialized agent findings, simulation evidence, and orchestration. Deterministic telemetry and calculations remain the operational source of truth, while AI-generated findings provide interpretation and decision-support context.
 
-## Explainability Principle
+The decision path is: Operational Data → Deterministic Analysis → Specialized Agent Findings → Evidence Aggregation → Orchestrated Recommendation → Human Review → Authorized Decision. The final production decision remains with the authorized human operator.
 
-Every operational recommendation should answer five questions:
+## Inputs and Data Sources Used
 
-1. What condition was detected?
-2. What evidence supports the finding?
-3. Which agent or deterministic component produced the finding?
-4. Why is the proposed intervention recommended?
-5. What remains uncertain or requires human review?
+The agent may use infrastructure telemetry, service-health indicators, capacity measurements, bottleneck predictions, historical operational patterns, simulation results, intervention comparisons, verification results, and specialized agent findings as inputs.
 
-The platform separates observed operational facts from AI-generated interpretation.
+These data sources are treated according to their provenance. Measured facts and deterministic calculations are kept distinct from simulated outcomes and AI-generated interpretations so an operator can understand what evidence supports a recommendation.
 
-Authoritative telemetry and deterministic calculations remain the operational source of truth.
+## Limits, Limitations, Constraints, and Known Issues
 
-AI agents provide analysis, context, prioritization, and recommendations.
+SentinelOps Nexus is a decision-support system and does not guarantee that predicted or simulated outcomes will occur in production. Its recommendations can be limited by incomplete telemetry, stale evidence, missing operational context, disagreement between agents, simulation uncertainty, or unavailable verification evidence.
 
----
+The system must not autonomously execute production infrastructure changes. Recommendations remain advisory, and production authorization is a human responsibility.
 
-## Decision Flow
+## Evidence and Explainability
 
-SentinelOps Nexus follows the decision path:
+Every operational recommendation should identify the detected condition, supporting evidence, responsible analytical component or agent, reason for the proposed intervention, and remaining uncertainty.
 
-Operational Data  
-→ Deterministic Analysis  
-→ Specialized Agent Findings  
-→ Evidence Aggregation  
-→ Orchestrated Recommendation  
-→ Human Review  
-→ Authorized Decision
-
-The final production decision remains with the human operator.
-
----
-
-## Evidence Used
-
-Recommendations may be supported by evidence such as:
-
-- infrastructure telemetry
-- service health indicators
-- capacity measurements
-- bottleneck predictions
-- historical operational patterns
-- simulation results
-- intervention comparisons
-- verification results
-- agent-generated findings
-
-Evidence is presented with the recommendation wherever available.
-
----
+Evidence should be exposed wherever available so operators can distinguish measured facts, calculated results, simulated outcomes, AI interpretation, and recommended actions.
 
 ## Specialized Agent Explainability
 
-SentinelOps Nexus coordinates specialized operational agents.
+Each specialized agent operates within a bounded analytical role and exposes the evidence relevant to its findings. Agent-generated findings are advisory and do not replace authoritative operational facts.
 
-Each agent is responsible for a bounded analytical role and should expose the reasoning inputs and evidence relevant to its recommendation.
-
-Agent findings are treated as advisory information rather than unquestionable operational truth.
-
-Conflicting or incomplete findings should be surfaced to the operator instead of silently resolved through autonomous production action.
-
----
-
-## Deterministic Evidence Boundary
-
-Deterministic calculations and operational telemetry take precedence over generated interpretation when representing current system state.
-
-AI-generated analysis must not overwrite authoritative operational facts.
-
-This separation allows operators to distinguish between:
-
-- measured facts
-- calculated results
-- simulated outcomes
-- AI interpretation
-- recommended actions
-
----
+Conflicting or incomplete agent findings should be surfaced to the human operator rather than silently converted into autonomous production action.
 
 ## Intervention Explainability
 
-When SentinelOps Nexus evaluates an intervention, the system should expose:
+For an intervention, SentinelOps Nexus should expose the detected problem, proposed intervention, expected operational effect, supporting evidence, simulation or deterministic results where available, relevant risks and constraints, uncertainty, and verification requirements.
 
-- the detected operational problem
-- the proposed intervention
-- expected operational effect
-- supporting evidence
-- simulation or deterministic results where available
-- relevant risks or constraints
-- uncertainty or missing evidence
-- verification requirements
+This allows an operator to understand the basis of the recommendation before deciding whether any external action should be authorized.
 
-This enables the operator to understand why one intervention may be preferable to another.
+## Simulation and Digital Twin
 
----
+Digital-twin and simulation outputs represent modeled outcomes rather than guaranteed production behavior. They are used as decision-support evidence for evaluating potential interventions.
 
-## Digital Twin and Simulation
-
-Simulation results represent modeled outcomes rather than guaranteed production behavior.
-
-SentinelOps Nexus uses simulation and digital-twin analysis to help operators evaluate potential interventions before taking action.
-
-Simulation output must therefore be presented as decision-support evidence and not as proof that the same outcome will occur in production.
-
----
+Simulation output must therefore remain distinguishable from observed production telemetry and must not be represented as proof of a future production outcome.
 
 ## Uncertainty
 
-SentinelOps Nexus should surface uncertainty when:
+The system surfaces uncertainty when telemetry is incomplete, evidence is stale, agents disagree, required context is unavailable, simulation confidence is limited, or verification cannot be completed.
 
-- telemetry is incomplete
-- evidence is stale
-- agents disagree
-- required operational context is unavailable
-- simulation confidence is limited
-- verification cannot be completed
-
-The system should prefer an explicit limitation over unsupported certainty.
-
----
+SentinelOps Nexus should prefer an explicit limitation over unsupported certainty.
 
 ## Human Governance
 
-SentinelOps Nexus is human-in-the-loop by design.
+SentinelOps Nexus may detect, predict, analyze, simulate, compare, recommend, explain, and verify. These capabilities support the human decision-maker rather than replace that decision-maker.
 
-The system may:
-
-- detect
-- predict
-- analyze
-- simulate
-- compare
-- recommend
-- explain
-- verify
-
-The system must not autonomously execute production infrastructure changes.
-
-Production authorization remains a human responsibility.
-
----
+The final authority for production changes remains human, and an authorized external human-controlled process is required to execute production action.
 
 ## Safety Boundary
 
-A recommendation is not equivalent to an executed production action.
+A recommendation is not equivalent to an executed production action. SentinelOps Nexus maintains the explicit boundary **PRODUCTION ACTION: NOT EXECUTED** unless an authorized external human-controlled process performs that action.
 
-SentinelOps Nexus maintains the explicit boundary:
-
-**PRODUCTION ACTION: NOT EXECUTED**
-
-unless an authorized external human-controlled process performs that action.
-
----
+This boundary prevents an AI-generated recommendation from being represented as an autonomous infrastructure change.
 
 ## Auditability
 
-Important recommendations should be traceable to their supporting evidence and system components.
+Important recommendations should be traceable to their supporting evidence and system components. Where supported by the implementation, records may include timestamps, telemetry references, agent findings, simulation outputs, recommendation summaries, verification results, and human-review status.
 
-Where supported by the implementation, operational records may include:
-
-- timestamps
-- telemetry references
-- agent findings
-- simulation outputs
-- recommendation summaries
-- verification results
-- human review status
-
-This allows decisions to be inspected after the fact.
-
----
-
-## Explainability Goal
-
-SentinelOps Nexus is designed not merely to produce an answer, but to help an operator understand:
-
-**what is happening, why it matters, what evidence supports the conclusion, what intervention is being proposed, what uncertainty remains, and who retains authority to act.**
-
-The final authority remains human.
+This traceability allows decisions and their supporting evidence to be inspected after the fact.
