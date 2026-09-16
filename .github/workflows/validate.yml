@@ -164,7 +164,7 @@ jobs:
         run: python scripts/health_check.py
       - name: Complete governed workflow
         run: python scripts/nexus_e2e.py
-      -       - name: Evidence verification summary
+      - name: Evidence verification summary
         if: always()
         run: |
           mkdir -p test-results
