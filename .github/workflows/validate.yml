@@ -141,17 +141,36 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: python -m pip install -e ".[dev]"
-      - name: Start deterministic product services
-        run: SENTINELOPS_SKIP_SANDBOX_BUILD=1 make demo > /tmp/sentinelops-demo.log 2>&1 &
+      -       - name: Start deterministic product services
+        run: |
+          SENTINELOPS_SKIP_SANDBOX_BUILD=1 python scripts/ensure_dependencies.py
+
+          nohup python -m uvicorn backend.app.main:app \
+            --host 127.0.0.1 \
+            --port 8000 \
+            > /tmp/sentinelops-backend.log 2>&1 &
+
+          nohup python -m uvicorn demo_app.app.main:app \
+            --host 127.0.0.1 \
+            --port 8001 \
+            > /tmp/sentinelops-demo-app.log 2>&1 &
+
+          cd frontend
+          nohup pnpm dev --host 127.0.0.1 --port 5173 \
+            > /tmp/sentinelops-frontend.log 2>&1 &
+          cd ..
+
       - name: Health and readiness
         run: python scripts/health_check.py
       - name: Complete governed workflow
         run: python scripts/nexus_e2e.py
-      - name: Evidence verification summary
+      -       - name: Evidence verification summary
         if: always()
         run: |
           mkdir -p test-results
-          test ! -f /tmp/sentinelops-demo.log || cp /tmp/sentinelops-demo.log test-results/demo.log
+          test ! -f /tmp/sentinelops-backend.log || cp /tmp/sentinelops-backend.log test-results/backend.log
+          test ! -f /tmp/sentinelops-demo-app.log || cp /tmp/sentinelops-demo-app.log test-results/demo-app.log
+          test ! -f /tmp/sentinelops-frontend.log || cp /tmp/sentinelops-frontend.log test-results/frontend.log
           printf '{"production_action":"NOT_EXECUTED","workflow_script":"scripts/nexus_e2e.py"}\n' > test-results/e2e-summary.json
       - uses: actions/upload-artifact@v4
         if: always()
