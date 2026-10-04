@@ -101,18 +101,24 @@ def main(setup_only: bool = False) -> int:
         if result.returncode:
             return result.returncode
 
-    npm = shutil.which("npm") or shutil.which("npm.cmd")
-    if npm is None:
+    pnpm = shutil.which("pnpm") or shutil.which("pnpm.cmd")
+    if pnpm is None:
         print(
-            "Node.js and npm are missing. Rebuild the Codespace so the official LTS Node "
-            "devcontainer feature can finish setup.",
+            "pnpm is missing. Install or enable pnpm before setting up frontend dependencies.",
             file=sys.stderr,
         )
         return 1
-    vite = ROOT / "frontend" / "node_modules" / ".bin" / ("vite.cmd" if os.name == "nt" else "vite")
+
+    vite = ROOT / "frontend" / "node_modules" / ".bin" / (
+        "vite.cmd" if os.name == "nt" else "vite"
+    )
     if not vite.exists():
-        print("Installing missing frontend dependencies")
-        result = subprocess.run([npm, "install"], cwd=ROOT / "frontend", check=False)
+        print("Installing missing frontend dependencies with pnpm")
+        result = subprocess.run(
+            [pnpm, "install", "--frozen-lockfile"],
+            cwd=ROOT / "frontend",
+            check=False,
+        )
         if result.returncode:
             return result.returncode
 

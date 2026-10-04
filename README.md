@@ -1421,8 +1421,7 @@ AI MAY NOT:
 
 ## 👤 Author
 
-Built by **[Janice Benita F](https://github.com/Janicebenita)** for the
-**National AI Agent Builder Finale**.
+Built by **[Janice Benita F](https://github.com/Janicebenita)**
 
 This repository preserves the evidence-driven, human-governed architecture
 that powered SentinelOps Nexus while defining the system explicitly as a
