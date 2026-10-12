@@ -1,7 +1,7 @@
 # OSS Contribution Candidate
 
 **Prepared:** 2026-10-12  
-**Status:** Implemented and tested locally; **not submitted, not assigned, not merged**
+**Status:** Implemented and tested locally; coordination comment posted; **not assigned, not submitted as a PR, not merged**
 
 ## Candidate
 
@@ -61,7 +61,9 @@ Changed files in the upstream checkout:
 
 The upstream [contribution policy](https://github.com/modelcontextprotocol/python-sdk/blob/main/CONTRIBUTING.md) requires an issue to be assigned before a pull request is opened. Issue #3692 currently has no assignee, and the reporter has already expressed interest in contributing the fix. The responsible next step is therefore to coordinate on the issue and obtain maintainer assignment before pushing or opening a pull request.
 
-No issue comment, fork, push, or pull request has been created. Those are external actions and require Janice's approval. Even after approval, this work must remain described as **prepared** until submitted and **submitted** until an upstream maintainer actually merges it.
+A [coordination comment](https://github.com/modelcontextprotocol/python-sdk/issues/3692#issuecomment-6129047081) was posted from Janice's account on 2026-10-12 after explicit approval. It discloses AI assistance, reports the verification evidence and timing flakes, defers to the reporter, and offers either the patch or an assigned contribution.
+
+The issue remains unassigned. No fork, upstream branch, or pull request has been created. The work must remain described as **prepared** until a PR is submitted and **submitted** until an upstream maintainer actually merges it.
 
 ## Draft upstream communication
 
