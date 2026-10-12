@@ -1,0 +1,70 @@
+{
+  "cases": {
+    "baseline": {
+      "audit_valid": true,
+      "hash_match": true,
+      "migrated_latency": {
+        "max_ms": 215.352,
+        "median_ms": 79.198,
+        "min_ms": 75.166,
+        "p95_ms": 215.352
+      },
+      "native_latency": {
+        "max_ms": 664.143,
+        "median_ms": 77.348,
+        "min_ms": 73.232,
+        "p95_ms": 664.143
+      },
+      "production_action": "NOT EXECUTED",
+      "recommended_candidate": "optimal",
+      "result_hash": "3b7ea47fdc7cfbb614a442cbe07f67fcaf8f8ded6cae3473710f7dcdc430e2d6",
+      "workflow_state": "AWAITING_HUMAN"
+    },
+    "resilient": {
+      "audit_valid": true,
+      "hash_match": true,
+      "migrated_latency": {
+        "max_ms": 82.709,
+        "median_ms": 80.135,
+        "min_ms": 74.175,
+        "p95_ms": 82.709
+      },
+      "native_latency": {
+        "max_ms": 190.065,
+        "median_ms": 75.600,
+        "min_ms": 72.042,
+        "p95_ms": 190.065
+      },
+      "production_action": "NOT EXECUTED",
+      "recommended_candidate": "safe",
+      "result_hash": "528c89dc286c01e01bec4e0993a63e3580e65b5fb1b9d4a54171b0058c8b7aa6",
+      "workflow_state": "AWAITING_HUMAN"
+    },
+    "surge": {
+      "audit_valid": true,
+      "hash_match": true,
+      "migrated_latency": {
+        "max_ms": 88.975,
+        "median_ms": 81.405,
+        "min_ms": 77.447,
+        "p95_ms": 88.975
+      },
+      "native_latency": {
+        "max_ms": 87.515,
+        "median_ms": 73.173,
+        "min_ms": 70.616,
+        "p95_ms": 87.515
+      },
+      "production_action": "NOT EXECUTED",
+      "recommended_candidate": "optimal",
+      "result_hash": "0f68fdae493018db66f2abd0187ec1c6212099bb32fc0b0202355e47d1e72adf",
+      "workflow_state": "AWAITING_HUMAN"
+    }
+  },
+  "execution_mode": "offline-deterministic-tool-routing",
+  "framework": "openai-agents-sdk",
+  "iterations_per_case": 10,
+  "managed_model_evaluation": "NOT RUN: no provider credentials used",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.14"
+}

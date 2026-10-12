@@ -26,6 +26,9 @@ dev = [
   "pytest-cov>=5,<8",
   "ruff>=0.6,<1",
 ]
+migration = [
+  "openai-agents>=0.23,<0.24",
+]
 storytelling = [
   "Pillow>=11,<12",
   "edge-tts==7.2.3",

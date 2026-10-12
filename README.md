@@ -101,6 +101,66 @@
 
 ---
 
+## Portable Reliability Domain Worker
+
+SentinelOps now exposes a single strict, versioned worker contract for external
+verification and cross-runtime comparison:
+
+```http
+POST /api/v1/domain-workers/reliability-analysis
+```
+
+```json
+{
+  "contract_version": "sentinelops.reliability-analysis.v1",
+  "correlation_id": "review-2026-001",
+  "requested_by": "human-reviewer",
+  "name": "Checkout reliability analysis"
+}
+```
+
+The response links the forecast, intervention tournament, business-impact
+estimate, uncertainty, evidence hashes, deterministic safety checks, audit
+validity, and stable result hash. Automated execution always stops at
+`AWAITING_HUMAN`; the worker cannot approve or mutate production.
+
+Run three reproducible cases without credentials or a server:
+
+```bash
+python scripts/domain_worker_demo.py --preset baseline
+python scripts/domain_worker_demo.py --preset surge
+python scripts/domain_worker_demo.py --preset resilient
+```
+
+See [the contract, measured examples, failure behavior, and limitations](docs/hidevs-campaign/DOMAIN_WORKER_CONTRACT.md).
+
+### Optional OpenAI Agents SDK migration
+
+The same contract can run through a real OpenAI Agents SDK `Agent`, `Runner`,
+and strict function tool without transferring safety authority to a model. The
+credential-free evaluator uses an explicitly labelled deterministic routing
+model; it is not represented as a managed-model run.
+
+```bash
+python -m pip install -e ".[dev,migration]"
+python -m pytest backend/tests/test_openai_agents_migration.py -q
+python scripts/migration_evaluation.py --iterations 10
+```
+
+See the [migration guide](docs/hidevs-campaign/MIGRATION_GUIDE.md),
+[technical comparison](docs/hidevs-campaign/TECHNICAL_COMPARISON.md), and
+[measured results](docs/hidevs-campaign/EVALUATION_RESULTS.md).
+
+The competition evidence pack also records the [verified rules and open
+questions](docs/hidevs-campaign/RULES_AND_ELIGIBILITY.md), [submission
+audit](docs/hidevs-campaign/SUBMISSION_AUDIT.md), [leaderboard
+strategy](docs/hidevs-campaign/LEADERBOARD_STRATEGY.md), [publication-ready
+article](docs/hidevs-campaign/TECHNICAL_ARTICLE.md), and [prepared upstream OSS
+contribution](docs/hidevs-campaign/OSS_CONTRIBUTION.md). The OSS patch remains
+local and must not be described as submitted or merged.
+
+---
+
 ## ⚡ SentinelOps Nexus in 30 Seconds
 
 SentinelOps Nexus is a **human-governed enterprise operational intelligence

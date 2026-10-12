@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import math
 import re
 import subprocess
@@ -27,6 +28,10 @@ from ..schemas.nexus_contracts import (
     HumanDecisionInput,
     InterventionCandidate,
     OperationalJsonImport,
+    ReliabilityAnalysisResponse,
+    ReliabilityApprovalBoundary,
+    ReliabilitySafetyCheck,
+    ReliabilityWorkerRequest,
     RunCreate,
     ScenarioResultContract,
     TelemetryPoint,
@@ -44,6 +49,7 @@ SCENARIOS = [
     "cache-policy-correction", "configuration-drift",
 ]
 STATE_ORDER = ["CREATED", "OBSERVED", "PREDICTED", "TWIN_READY", "SIMULATED", "TOURNAMENT_READY", "VERIFIED", "IMPACT_READY", "AWAITING_HUMAN", "DECIDED"]
+logger = logging.getLogger("sentinelops.domain_worker")
 
 
 def canonical(value: Any) -> str:
@@ -763,6 +769,168 @@ def run_all(db: Session, run: NexusRun) -> NexusRun:
     if run.state=="VERIFIED": impact(db,run)
     if run.state=="IMPACT_READY": recommend(db,run)
     return run
+
+
+def analyze_reliability_worker(
+    db: Session, payload: ReliabilityWorkerRequest
+) -> ReliabilityAnalysisResponse:
+    """Run the portable reliability worker and stop at the human boundary.
+
+    Each deterministic stage commits its own evidence and audit event. If a later
+    stage fails, the partial run remains inspectable and receives a bounded failure
+    event instead of being silently discarded or retried.
+    """
+
+    run = create_run(db, RunCreate(name=payload.name, controls=payload.controls))
+    append_event(
+        db,
+        run,
+        "domain_worker.request_received",
+        payload.requested_by,
+        {
+            "contract_version": payload.contract_version,
+            "correlation_id": payload.correlation_id,
+            "production_action": "NOT EXECUTED",
+        },
+    )
+    try:
+        run_all(db, run)
+        if run.state != "AWAITING_HUMAN":
+            raise ValueError(f"Domain worker stopped unexpectedly in state {run.state}")
+
+        forecast_result = ForecastResult.model_validate(run.forecast_json)
+        tournament_result = TournamentResult.model_validate(run.tournament_json)
+        impact_result = BusinessImpactResult.model_validate(run.impact_json)
+        recommendation_result = ExecutiveBrief.model_validate(run.recommendation_json)
+        winner = next(
+            candidate
+            for candidate in tournament_result.candidates
+            if candidate.candidate_id == tournament_result.recommended_candidate_id
+        )
+        evidence_rows = list(
+            db.scalars(
+                select(NexusEvidence)
+                .where(NexusEvidence.run_id == run.id)
+                .order_by(NexusEvidence.id)
+            )
+        )
+        evidence = [
+            EvidenceRecord(
+                evidence_id=row.evidence_id,
+                category=row.category,
+                source=row.source,
+                observed_at=row.observed_at,
+                payload=row.payload_json,
+                summary=row.summary,
+                content_hash=row.content_hash,
+            )
+            for row in evidence_rows
+        ]
+        safety_checks = [
+            ReliabilitySafetyCheck(
+                name=gate.gate,
+                passed=gate.passed,
+                details=gate.details,
+                evidence_ids=gate.evidence_ids,
+            )
+            for gate in winner.gates
+        ]
+        safety_checks.extend(
+            [
+                ReliabilitySafetyCheck(
+                    name="production_execution_disabled",
+                    passed=not run.production_action_executed,
+                    details="The worker can recommend and export evidence but cannot change production.",
+                ),
+                ReliabilitySafetyCheck(
+                    name="human_approval_required",
+                    passed=run.state == "AWAITING_HUMAN",
+                    details="The workflow stopped before any consequential decision.",
+                ),
+            ]
+        )
+        audit_status = verify_audit(db, run.id)
+        stable_result = {
+            "forecast": forecast_result.model_dump(mode="json"),
+            "tournament": tournament_result.model_dump(mode="json"),
+            "business_impact": impact_result.model_dump(mode="json"),
+            "recommendation": recommendation_result.model_dump(mode="json"),
+            "safety_checks": [check.model_dump(mode="json") for check in safety_checks],
+        }
+        response = ReliabilityAnalysisResponse(
+            correlation_id=payload.correlation_id,
+            workflow_id=run.id,
+            workflow_state="AWAITING_HUMAN",
+            forecast=forecast_result,
+            tournament=tournament_result,
+            business_impact=impact_result,
+            recommendation=recommendation_result,
+            evidence=evidence,
+            safety_checks=safety_checks,
+            uncertainty=list(dict.fromkeys(recommendation_result.uncertainty)),
+            limitations=[
+                "This analysis is a bounded decision-support model, not a production action.",
+                "Managed-model reasoning is advisory and is not required for this deterministic result.",
+                *payload.controls.normalization_notes,
+            ],
+            audit_valid=bool(audit_status["valid"]),
+            approval=ReliabilityApprovalBoundary(
+                eligible_candidate_id=tournament_result.recommended_candidate_id
+            ),
+            result_hash=digest(stable_result),
+            completed_at=datetime.now(timezone.utc),
+        )
+        append_event(
+            db,
+            run,
+            "domain_worker.completed",
+            "nexus-orchestrator",
+            {
+                "contract_version": payload.contract_version,
+                "correlation_id": payload.correlation_id,
+                "result_hash": response.result_hash,
+                "workflow_state": response.workflow_state,
+                "production_action": "NOT EXECUTED",
+            },
+        )
+        logger.info(
+            "domain_worker_analysis_complete",
+            extra={
+                "correlation_id": payload.correlation_id,
+                "workflow_id": run.id,
+                "result_hash": response.result_hash,
+                "workflow_state": run.state,
+            },
+        )
+        return response
+    except Exception as exc:
+        append_event(
+            db,
+            run,
+            "domain_worker.failed",
+            "nexus-orchestrator",
+            {
+                "contract_version": payload.contract_version,
+                "correlation_id": payload.correlation_id,
+                "failed_state": run.state,
+                "error_type": type(exc).__name__,
+                "production_action": "NOT EXECUTED",
+            },
+        )
+        logger.error(
+            "domain_worker_analysis_failed",
+            extra={
+                "correlation_id": payload.correlation_id,
+                "workflow_id": run.id,
+                "failed_state": run.state,
+                "error_type": type(exc).__name__,
+            },
+        )
+        if isinstance(exc, ValueError):
+            raise
+        raise ValueError(
+            f"Reliability analysis failed safely in state {run.state}; inspect workflow {run.id}"
+        ) from exc
 
 
 def agent_envelopes(db: Session, run: NexusRun) -> list[AgentEnvelope]:

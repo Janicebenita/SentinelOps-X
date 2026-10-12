@@ -221,3 +221,83 @@ class RunCreate(StrictModel):
         seed=20260808,
         source_label="seeded/payment-service",
     ))
+
+
+RELIABILITY_WORKER_CONTRACT_VERSION: Literal["sentinelops.reliability-analysis.v1"] = (
+    "sentinelops.reliability-analysis.v1"
+)
+
+
+def _default_reliability_controls() -> TwinControls:
+    return TwinControls(
+        traffic_multiplier=1,
+        redis_capacity=12000,
+        application_replicas=4,
+        dependency_latency_ms=20,
+        failover_state="primary",
+        seed=20260808,
+        source_label="seeded/payment-service",
+    )
+
+
+def _senior_developer_roles() -> list[Literal["SENIOR_DEVELOPER"]]:
+    return ["SENIOR_DEVELOPER"]
+
+
+class ReliabilityWorkerRequest(StrictModel):
+    """Portable input contract for the SentinelOps reliability domain worker."""
+
+    contract_version: Literal["sentinelops.reliability-analysis.v1"] = (
+        RELIABILITY_WORKER_CONTRACT_VERSION
+    )
+    correlation_id: str = Field(
+        min_length=8,
+        max_length=100,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+    )
+    requested_by: str = Field("human-operator", min_length=2, max_length=100)
+    name: str = Field("Payment Service reliability analysis", min_length=3, max_length=160)
+    controls: TwinControls = Field(default_factory=_default_reliability_controls)
+
+
+class ReliabilitySafetyCheck(StrictModel):
+    name: str
+    passed: bool
+    deterministic: bool = True
+    details: str
+    evidence_ids: list[str] = Field(default_factory=list)
+
+
+class ReliabilityApprovalBoundary(StrictModel):
+    required: Literal[True] = True
+    workflow_state: Literal["AWAITING_HUMAN"] = "AWAITING_HUMAN"
+    eligible_candidate_id: str
+    authorized_roles: list[Literal["SENIOR_DEVELOPER"]] = Field(
+        default_factory=_senior_developer_roles
+    )
+    next_step: str = "Verify role, review evidence, and record a human decision."
+    production_action: Literal["NOT EXECUTED"] = "NOT EXECUTED"
+
+
+class ReliabilityAnalysisResponse(StrictModel):
+    """Portable, evidence-linked result returned by the domain worker."""
+
+    contract_version: Literal["sentinelops.reliability-analysis.v1"] = (
+        RELIABILITY_WORKER_CONTRACT_VERSION
+    )
+    correlation_id: str
+    workflow_id: int
+    workflow_state: Literal["AWAITING_HUMAN"]
+    operating_mode: Literal["deterministic"] = "deterministic"
+    forecast: ForecastResult
+    tournament: TournamentResult
+    business_impact: BusinessImpactResult
+    recommendation: ExecutiveBrief
+    evidence: list[EvidenceRecord]
+    safety_checks: list[ReliabilitySafetyCheck]
+    uncertainty: list[str]
+    limitations: list[str]
+    audit_valid: bool
+    approval: ReliabilityApprovalBoundary
+    result_hash: str
+    completed_at: datetime
