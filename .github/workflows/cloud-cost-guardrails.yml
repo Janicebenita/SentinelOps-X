@@ -1,0 +1,51 @@
+name: Apply Cloud Cost Guardrails
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    environment: google-cloud-demo
+    env:
+      PROJECT_ID: sentinelops-nexus-finale
+      REGION: asia-south1
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Enforce scale-to-zero and one-instance ceiling
+        shell: bash
+        run: |
+          services=(
+            sentinelops-frontend
+            sentinelops-api-gateway
+            sentinelops-orchestrator
+            sentinelops-forecast-service
+            sentinelops-simulation-service
+            sentinelops-verification-service
+            sentinelops-evidence-service
+            sentinelops-gemma-service
+            sentinelops-mcp-server
+          )
+          for service in "${services[@]}"; do
+            gcloud run services update "$service" \
+              --project "$PROJECT_ID" \
+              --region "$REGION" \
+              --min-instances 0 \
+              --max-instances 1 \
+              --quiet
+          done
+      - name: Verify guardrails
+        shell: bash
+        run: |
+          gcloud run services list \
+            --project "$PROJECT_ID" \
+            --region "$REGION" \
+            --format='table(metadata.name,spec.template.metadata.annotations.autoscaling\.knative\.dev/minScale,spec.template.metadata.annotations.autoscaling\.knative\.dev/maxScale,status.latestReadyRevisionName)'
