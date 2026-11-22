@@ -29,6 +29,12 @@ jobs:
             --region "$REGION" \
             --update-env-vars "API_BASE_URL=$API_BASE_URL" \
             --quiet
+          gcloud run services add-iam-policy-binding "$FRONTEND_SERVICE" \
+            --project "$PROJECT_ID" \
+            --region "$REGION" \
+            --member allUsers \
+            --role roles/run.invoker \
+            --quiet
       - name: Verify the warmed frontend revision
         run: |
           FRONTEND_URL="$(gcloud run services describe "$FRONTEND_SERVICE" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
