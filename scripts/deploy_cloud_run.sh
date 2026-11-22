@@ -18,7 +18,7 @@ deploy_private() {
   gcloud run deploy "$service" --project "$PROJECT_ID" --region "$REGION" --platform managed \
     --image "${REGISTRY}/${image}:${image_revision}" --service-account "${account}@${PROJECT_ID}.iam.gserviceaccount.com" \
     --no-allow-unauthenticated --port 8080 --cpu 1 --memory 512Mi --concurrency 20 --timeout 60 \
-    --min-instances 0 --max-instances 5 --set-env-vars PRODUCTION_EXECUTION=false,ENVIRONMENT=production \
+    --min-instances 0 --max-instances 1 --set-env-vars PRODUCTION_EXECUTION=false,ENVIRONMENT=production \
     "${extra[@]}"
 }
 
@@ -48,7 +48,7 @@ API_URL="$(gcloud run services describe sentinelops-api-gateway --project "$PROJ
 
 gcloud run deploy sentinelops-frontend --project "$PROJECT_ID" --region "$REGION" --platform managed \
   --image "${REGISTRY}/frontend:${REVISION}" --service-account "sentinelops-frontend-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --allow-unauthenticated --port 8080 --cpu 1 --memory 256Mi --concurrency 80 --timeout 60 --min-instances 0 --max-instances 5 \
+  --allow-unauthenticated --port 8080 --cpu 1 --memory 256Mi --concurrency 80 --timeout 60 --min-instances 0 --max-instances 1 \
   --set-env-vars "API_BASE_URL=${API_URL}"
 
 FRONTEND_URL="$(gcloud run services describe sentinelops-frontend --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"

@@ -1,0 +1,52 @@
+name: Repair Cloud Frontend API Routing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    environment: google-cloud-demo
+    env:
+      PROJECT_ID: sentinelops-nexus-finale
+      REGION: asia-south1
+      FRONTEND_SERVICE: sentinelops-frontend
+      API_BASE_URL: https://janicebenita-sentinelops-nexus-api.onrender.com
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Route the existing frontend to the healthy API
+        run: |
+          gcloud run services update "$FRONTEND_SERVICE" \
+            --project "$PROJECT_ID" \
+            --region "$REGION" \
+            --update-env-vars "API_BASE_URL=$API_BASE_URL" \
+            --quiet
+          gcloud run services add-iam-policy-binding "$FRONTEND_SERVICE" \
+            --project "$PROJECT_ID" \
+            --region "$REGION" \
+            --member allUsers \
+            --role roles/run.invoker \
+            --quiet
+      - name: Verify the warmed frontend revision
+        run: |
+          FRONTEND_URL="$(gcloud run services describe "$FRONTEND_SERVICE" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error "$FRONTEND_URL/runtime-config.js" | grep --fixed-strings "$API_BASE_URL"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Print Cloud Run diagnostics
+        if: failure()
+        run: |
+          gcloud run services describe "$FRONTEND_SERVICE" --project "$PROJECT_ID" --region "$REGION" --format=yaml
+          gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="sentinelops-frontend"' --project "$PROJECT_ID" --limit 30 --freshness=30m --format='value(timestamp,severity,textPayload,jsonPayload.message)'

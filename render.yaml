@@ -36,7 +36,7 @@ services:
       - key: DEMO_APP_URL
         value: https://janicebenita-sentinelops-nexus-simulator.onrender.com
       - key: CORS_ORIGINS
-        value: https://janicebenita-sentinelops-nexus.onrender.com
+        value: https://janicebenita-sentinelops-nexus.onrender.com,https://sentinelops-frontend-398391487181.asia-south1.run.app
 
   - type: web
     name: janicebenita-sentinelops-nexus-simulator

@@ -1,0 +1,60 @@
+name: Apply Cloud Cost Guardrails
+
+on:
+  workflow_dispatch:
+    inputs:
+      verify_only:
+        description: Verify existing guardrails without updating services
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    environment: google-cloud-demo
+    env:
+      PROJECT_ID: sentinelops-nexus-finale
+      REGION: asia-south1
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Enforce scale-to-zero and one-instance ceiling
+        if: ${{ !inputs.verify_only }}
+        shell: bash
+        run: |
+          services=(
+            sentinelops-frontend
+            sentinelops-api-gateway
+            sentinelops-orchestrator
+            sentinelops-forecast-service
+            sentinelops-simulation-service
+            sentinelops-verification-service
+            sentinelops-evidence-service
+            sentinelops-gemma-service
+            sentinelops-mcp-server
+          )
+          for service in "${services[@]}"; do
+            gcloud run services update "$service" \
+              --project "$PROJECT_ID" \
+              --region "$REGION" \
+              --min-instances 0 \
+              --max-instances 1 \
+              --quiet
+          done
+      - name: Verify guardrails
+        shell: bash
+        run: |
+          services="$(gcloud run services list --project "$PROJECT_ID" --region "$REGION" --format='value(metadata.name)')"
+          while read -r service; do
+            [[ -n "$service" ]] || continue
+            gcloud run services describe "$service" --project "$PROJECT_ID" --region "$REGION" --format=json | \
+              python -c 'import json,sys; d=json.load(sys.stdin); a=d["spec"]["template"]["metadata"].get("annotations", {}); assert a.get("autoscaling.knative.dev/maxScale") == "1", (d["metadata"]["name"], a); assert a.get("autoscaling.knative.dev/minScale", "0") == "0", (d["metadata"]["name"], a); print(d["metadata"]["name"], "min=0 max=1", d["status"]["latestReadyRevisionName"])'
+          done <<< "$services"
