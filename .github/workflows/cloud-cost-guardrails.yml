@@ -2,6 +2,12 @@ name: Apply Cloud Cost Guardrails
 
 on:
   workflow_dispatch:
+    inputs:
+      verify_only:
+        description: Verify existing guardrails without updating services
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -21,6 +27,7 @@ jobs:
           service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
       - name: Enforce scale-to-zero and one-instance ceiling
+        if: ${{ !inputs.verify_only }}
         shell: bash
         run: |
           services=(
@@ -45,7 +52,9 @@ jobs:
       - name: Verify guardrails
         shell: bash
         run: |
-          gcloud run services list \
-            --project "$PROJECT_ID" \
-            --region "$REGION" \
-            --format='table(metadata.name,spec.template.metadata.annotations.autoscaling\.knative\.dev/minScale,spec.template.metadata.annotations.autoscaling\.knative\.dev/maxScale,status.latestReadyRevisionName)'
+          services="$(gcloud run services list --project "$PROJECT_ID" --region "$REGION" --format='value(metadata.name)')"
+          while read -r service; do
+            [[ -n "$service" ]] || continue
+            gcloud run services describe "$service" --project "$PROJECT_ID" --region "$REGION" --format=json | \
+              python -c 'import json,sys; d=json.load(sys.stdin); a=d["spec"]["template"]["metadata"].get("annotations", {}); assert a.get("autoscaling.knative.dev/maxScale") == "1", (d["metadata"]["name"], a); assert a.get("autoscaling.knative.dev/minScale", "0") == "0", (d["metadata"]["name"], a); print(d["metadata"]["name"], "min=0 max=1", d["status"]["latestReadyRevisionName"])'
+          done <<< "$services"
